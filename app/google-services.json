@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "541805950364",
-    "project_id": "tfg-regala-navidad",
-    "storage_bucket": "tfg-regala-navidad.appspot.com"
+    "project_number": "968976976587",
+    "project_id": "tfg-regala-navidad-691ef",
+    "storage_bucket": "tfg-regala-navidad-691ef.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:541805950364:android:6dd6b472fcb06ebc414459",
+        "mobilesdk_app_id": "1:968976976587:android:624abfc368c8fa3f26a94e",
         "android_client_info": {
           "package_name": "com.example.regalanavidad"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBMH46LEF0lltqpKbVi5uqKuyT4uAl_pXc"
+          "current_key": "AIzaSyAEmh2g4UFuJhoUfeC7VmjPojLF3GQ2A6c"
         }
       ],
       "services": {
