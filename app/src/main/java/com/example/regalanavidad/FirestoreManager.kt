@@ -24,9 +24,6 @@ class FirestoreManager {
     }
 
     suspend fun editaUsuario(usuario: Usuario) {
-        /*val refUsuario = usuario.uid.let { firestore.collection("usuarios").document(it) }
-        refUsuario.update(usuario.toMap()).await()*/
-
         val uid = auth.uid
         if (uid != null) {
             val querySnapshot = listaUsuarios.whereEqualTo("uid", usuario.uid).get().await()
