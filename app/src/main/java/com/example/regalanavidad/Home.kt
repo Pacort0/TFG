@@ -36,6 +36,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
@@ -52,7 +55,7 @@ data class TabBarItem(
     val badgeAmount: Int? = null
 )
 
-val drawerItems = listOf("Contáctanos", "ejemplo1", "ejemplo2")
+val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años", "Cerrar sesión")
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
@@ -73,6 +76,7 @@ class Home : ComponentActivity() {
         val esVoluntario = usuario.nombreRango == "Voluntario"
 
         super.onCreate(savedInstanceState)
+
         setContent {
             if(esVoluntario){
                 VoluntarioHomeScreen()
@@ -163,7 +167,7 @@ fun HomeScreen(modifier: Modifier){
         modifier = Modifier.padding(10.dp)
     ) {
         Text(
-            text = "Hello ${usuario.nombre}!",
+            text = "Hola ${usuario.nombre}!",
             modifier = modifier.padding(0.dp,10.dp)
         )
         Column(modifier = Modifier.fillMaxSize()) {
@@ -176,7 +180,7 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxHeight()
                     .padding(0.dp, 0.dp, 5.dp, 0.dp)) {
                     Column {
-                        Text(text = "Carta 1")
+                        Text(text = "Dinero recaudado: 1€")
                     }
                 }
                 Card(modifier = Modifier
@@ -184,7 +188,7 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxHeight()
                     .padding(5.dp, 0.dp, 0.dp, 0.dp)) {
                     Column {
-                        Text(text = "Carta 2")
+                        Text(text = "Sitios en los que recogemos: ")
                     }
                 }
             }
@@ -197,7 +201,7 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxHeight()
                     .padding(0.dp, 0.dp, 5.dp, 0.dp)) {
                     Column {
-                        Text(text = "Carta 3")
+                        Text(text = "Fechas y eventos")
                     }
                 }
                 Card(modifier = Modifier
@@ -205,7 +209,7 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxHeight()
                     .padding(5.dp, 0.dp, 0.dp, 0.dp)) {
                     Column {
-                        Text(text = "Carta 4")
+                        Text(text = "Redes sociales: ")
                     }
                 }
             }
@@ -233,8 +237,6 @@ fun MoreTabsScreen(modifier: Modifier){
         modifier = modifier
     )
 }
-
-
 
 /* Si hay tiempo retomamos esta idea
 @Composable

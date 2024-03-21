@@ -9,10 +9,8 @@ import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -39,8 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.regalanavidad.AlertsScreen
+import com.example.regalanavidad.HomeScreen
+import com.example.regalanavidad.MoreTabsScreen
 import com.example.regalanavidad.ProfileScreen
 import com.example.regalanavidad.ScreenContent
+import com.example.regalanavidad.SettingsScreen
 import com.example.regalanavidad.TabBarItem
 import com.example.regalanavidad.TabView
 import com.example.regalanavidad.drawerItems
@@ -71,7 +73,23 @@ fun VoluntarioHomeScreen(){
     val tabBarItems = listOf(homeTab, settingsTab, moreTab)
 
     val navController = rememberNavController()
-
+    NavHost(
+        startDestination = "homeScreen",
+        navController = navController
+    ) {
+        composable("homeScreen") {
+            HomeScreen(modifier = Modifier)
+        }
+        composable("alertsScreen") {
+            AlertsScreen(modifier = Modifier)
+        }
+        composable("settingsScreen") {
+            SettingsScreen(modifier = Modifier)
+        }
+        composable("moreTabsScreen") {
+            MoreTabsScreen(modifier = Modifier)
+        }
+    }
     RegalaNavidadTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -89,7 +107,14 @@ fun VoluntarioHomeScreen(){
                             NavigationDrawerItem(
                                 label = { Text(text = item) },
                                 selected = false, // Set the selected state as needed
-                                onClick = { /* Handle item click here */ }
+                                onClick = {
+                                    when (item) {
+                                        "Informacion" -> navController.navigate("homeScreen")
+                                        "Contactanos" -> navController.navigate("alertsScreen")
+                                        "Patrocinadores" -> navController.navigate("settingsScreen")
+                                        "Otros años" -> navController.navigate("moreTabsScreen")
+                                    }
+                                }
                             )
                         }
                     }
@@ -130,24 +155,16 @@ fun VoluntarioHomeScreen(){
                                     startDestination = homeTab.title
                                 ) {
                                     composable(homeTab.title) {
-                                        ScreenContent(
-                                            screenTitle = homeTab.title,
-                                        )
+                                        ScreenContent(screenTitle = homeTab.title)
                                     }
                                     composable(settingsTab.title) {
-                                        ScreenContent(
-                                            screenTitle = settingsTab.title,
-                                        )
+                                        ScreenContent(screenTitle = settingsTab.title)
                                     }
                                     composable(moreTab.title) {
-                                        ScreenContent(
-                                            screenTitle = moreTab.title,
-                                        )
+                                        ScreenContent(screenTitle = moreTab.title)
                                     }
                                     composable("profileScreen"){
-                                        ProfileScreen(
-                                            navController = navController
-                                        )
+                                        ProfileScreen(navController = navController)
                                     }
                                 }
                             }
