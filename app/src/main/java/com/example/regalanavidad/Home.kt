@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -55,11 +56,10 @@ data class TabBarItem(
     val badgeAmount: Int? = null
 )
 
-val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años", "Cerrar sesión")
+val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años")
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
-
 
 class Home : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -139,7 +139,6 @@ fun TabBarIconView(
 // This component helps to clean up the API call from our TabBarIconView above,
 // but could just as easily be added inside the TabBarIconView without creating this custom component
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun TabBarBadgeView(count: Int? = null) {
     if (count != null) {
         Badge {
