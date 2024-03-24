@@ -12,9 +12,11 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -75,17 +77,17 @@ fun VoluntarioHomeScreen(){
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     )
-    val settingsTab = TabBarItem(
-        title = "Settings",
-        selectedIcon = Icons.Filled.Settings,
-        unselectedIcon = Icons.Outlined.Settings
+    val mapsTab = TabBarItem(
+        title = "Mapa",
+        selectedIcon = Icons.Filled.LocationOn,
+        unselectedIcon = Icons.Outlined.LocationOn
     )
     val moreTab = TabBarItem(
         title = "More",
         selectedIcon = Icons.AutoMirrored.Filled.List,
         unselectedIcon = Icons.AutoMirrored.Outlined.List
     )
-    val tabBarItems = listOf(homeTab, settingsTab, moreTab)
+    val tabBarItems = listOf(homeTab, mapsTab, moreTab)
     val navController = rememberNavController()
     RegalaNavidadTheme {
         Surface(
@@ -132,8 +134,8 @@ fun VoluntarioHomeScreen(){
                                 currentTabTitle = title // Update the current tab's title
                             }
                         },
-                        content = { innerPadding ->
-                            VoluntarioNavHost(innerPadding, navController, homeTab, settingsTab, moreTab)
+                        content = { innerPadding -> //NavHost
+                            VoluntarioNavHost(innerPadding, navController, homeTab, mapsTab, moreTab)
                         }
                     )
                 }
@@ -143,7 +145,7 @@ fun VoluntarioHomeScreen(){
 }
 
 @Composable
-fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab:TabBarItem, settingsTab:TabBarItem, moreTab:TabBarItem){
+fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab:TabBarItem, mapsTab:TabBarItem, moreTab:TabBarItem){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,
@@ -152,8 +154,8 @@ fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostContro
             composable(homeTab.title) {
                 ScreenContent(screenTitle = homeTab.title)
             }
-            composable(settingsTab.title) {
-                ScreenContent(screenTitle = settingsTab.title)
+            composable(mapsTab.title) {
+                ScreenContent(screenTitle = mapsTab.title)
             }
             composable(moreTab.title) {
                 ScreenContent(screenTitle = moreTab.title)

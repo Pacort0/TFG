@@ -1,23 +1,19 @@
 package com.example.regalanavidad
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.Card
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -26,26 +22,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -152,7 +146,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String) {
     when (screenTitle){
         "Home" -> HomeScreen(modifier)
         "Alerts" -> AlertsScreen(modifier = modifier)
-        "Settings" -> SettingsScreen(modifier = modifier)
+        "Mapa" -> MapsScreen(modifier = modifier)
         "More" -> MoreTabsScreen(modifier = modifier)
     }
 }
@@ -223,11 +217,21 @@ fun AlertsScreen(modifier: Modifier){
     )
 }
 @Composable
-fun SettingsScreen(modifier: Modifier){
-    Text(
-        text = "Hello ${usuario.correo}!",
-        modifier = modifier
-    )
+fun MapsScreen(modifier: Modifier){
+    val sevillaEspana = LatLng(37.38283, -5.97317)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(sevillaEspana, 10f)
+    }
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState
+    ) {
+        Marker(
+            state = MarkerState(position = sevillaEspana),
+            title = "Sevilla",
+            snippet = "Marker in Sevilla"
+        )
+    }
 }
 @Composable
 fun MoreTabsScreen(modifier: Modifier){

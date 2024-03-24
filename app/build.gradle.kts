@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.gms.google-services")
+    id ("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -39,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -61,6 +63,8 @@ dependencies {
     implementation ("androidx.compose.material:material:1.6.3")
     implementation ("androidx.compose.ui:ui:1.6.3")
     implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    implementation ("com.google.maps.android:maps-compose:2.11.4")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
