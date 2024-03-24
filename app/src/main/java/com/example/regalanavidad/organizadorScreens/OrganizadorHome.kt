@@ -139,24 +139,16 @@ fun OrganizadorHomeScreen(){
                                     startDestination = homeTab.title
                                 ) {
                                     composable(homeTab.title) {
-                                        ScreenContent(
-                                            screenTitle = homeTab.title,
-                                        )
+                                        ScreenContent(screenTitle = homeTab.title, navController = navController)
                                     }
                                     composable(alertsTab.title) {
-                                        ScreenContent(
-                                            screenTitle = alertsTab.title,
-                                        )
+                                        ScreenContent(screenTitle = alertsTab.title, navController = navController)
                                     }
                                     composable(settingsTab.title) {
-                                        ScreenContent(
-                                            screenTitle = settingsTab.title,
-                                        )
+                                        ScreenContent(screenTitle = settingsTab.title, navController = navController)
                                     }
                                     composable(moreTab.title) {
-                                        ScreenContent(
-                                            screenTitle = moreTab.title,
-                                        )
+                                        ScreenContent(screenTitle = moreTab.title, navController = navController)
                                     }
                                     composable("profileScreen") {
                                         ProfileScreen(

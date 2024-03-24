@@ -152,13 +152,13 @@ fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostContro
             startDestination = homeTab.title
         ) {
             composable(homeTab.title) {
-                ScreenContent(screenTitle = homeTab.title)
+                ScreenContent(screenTitle = homeTab.title, navController = navController)
             }
             composable(mapsTab.title) {
-                ScreenContent(screenTitle = mapsTab.title)
+                ScreenContent(screenTitle = mapsTab.title, navController = navController)
             }
             composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title)
+                ScreenContent(screenTitle = moreTab.title, navController = navController)
             }
             composable("profileScreen"){
                 ProfileScreen(navController = navController)
