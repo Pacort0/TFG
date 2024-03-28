@@ -259,7 +259,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                     locationResult.let {
                         for (location in it.locations) {
                             currentLocation = LatLng(location.latitude, location.longitude)
-                            isLoading = false 
+                            isLoading = false
                         }
                     }
                 }
