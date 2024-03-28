@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -238,106 +239,104 @@ fun AlertsScreen(modifier: Modifier){
 fun MapsScreen(modifier: Modifier, navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    // Recuerda el estado del permiso para acceder a la ubicación
     val locationPermissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
-    //Recuerda la posición de la cámara
     val cameraPositionState = rememberCameraPositionState()
-    // Recuerda la localización de la cámara
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var searched by remember { mutableStateOf(false) }
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
+    var isLoading by remember { mutableStateOf(true) } // New loading state
 
     LaunchedEffect(Unit) {
-        // Comprueba si se ha permitido el acceso a la ubicación del dispositivo
         if (locationPermissionState.hasPermission) {
-            // Create a location request
             val locationRequest = LocationRequest.create().apply {
                 interval = 10000
                 fastestInterval = 5000
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             }
-            // Create a location callback
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    //Actualiza la posición actual cuando se recibe un resultado de posición
-                        locationResult.let {
+                    locationResult.let {
                         for (location in it.locations) {
                             currentLocation = LatLng(location.latitude, location.longitude)
+                            isLoading = false 
                         }
                     }
                 }
             }
 
             try {
-                // Pide que se actualice la ubicación
                 fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper()).await()
             } catch (e: SecurityException) {
-                // Muestra un toast cuando la ubicación se ha rechazado
                 Toast.makeText(context, "No se puede acceder a la localización del dispositivo", Toast.LENGTH_SHORT).show()
             }
         } else {
-            // Pide permiso para acceder a la ubicación si no se ha autorizado aún
             locationPermissionState.launchPermissionRequest()
         }
     }
 
-    Column {
-        TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("Buscar sitio") },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                val geocoder = Geocoder(context)
-                val addresses = geocoder.getFromLocationName(searchQuery, 1)
-                if (addresses != null) {
-                    if (addresses.isNotEmpty()) {
-                        val address = addresses[0]
-                        currentLocation = LatLng(address.latitude, address.longitude)
-                        //Actualiza la posición de la cámara a la posición actual
-                        currentLocation?.let {
-                            markerState.value = MarkerState(position = it)
-
-                            //Actualiza la posición de la cámara a la posición actual
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator()
+            Text(
+                text = "Cargando tu posición actual...",
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        } else {
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Buscar sitio") },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    val geocoder = Geocoder(context)
+                    val addresses = geocoder.getFromLocationName(searchQuery, 1)
+                    if (addresses != null) {
+                        if (addresses.isNotEmpty()) {
+                            val address = addresses[0]
+                            currentLocation = LatLng(address.latitude, address.longitude)
+                            currentLocation?.let {
+                                markerState.value = MarkerState(position = it)
+                                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+                            }
+                            searched = true
                         }
-                        searched = true
+                    }
+                }),
+                modifier = Modifier.fillMaxWidth()
+            )
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState
+            ) {
+                if (!searched || searchQuery.isEmpty()) {
+                    currentLocation?.let {
+                        Marker(
+                            state = MarkerState(position = it),
+                            title = "Posición actual",
+                            snippet = "Usted se encuentra aquí"
+                        )
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+                    }
+                } else {
+                    markerState.value?.let { markerState ->
+                        Marker(
+                            state = markerState,
+                            title = "Posición buscada",
+                            snippet = "Resultado de la búsqueda"
+                        )
                     }
                 }
-            }),
-            modifier = Modifier.fillMaxWidth()
-        )
-        GoogleMap( //Muestra un mapa de Google
-                modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
-        ) {
-        if(!searched || searchQuery.isEmpty()){
-            // Si existe una posición actual, la muestra en el mapa
-            currentLocation?.let {
-                Marker(
-                    state = MarkerState(position = it),
-                    title = "Posición actual",
-                    snippet = "Usted se encuentra aquí"
-                )
-                //Actualiza la posición de la cámara a la posición actual
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
-            }
-        } else {
-            //Si se ha buscado un sitio
-            markerState.value?.let { markerState ->
-                Marker(
-                    state = markerState,
-                    title = "Posición buscada",
-                    snippet = "Resultado de la búsqueda"
-                )
             }
         }
     }
 
-    }
     BackHandler {
-        if(searched){
+        if (searched) {
             searched = false
             cameraPositionState.position = CameraPosition.fromLatLngZoom(currentLocation!!, 10f)
         } else {
@@ -345,6 +344,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun MoreTabsScreen(modifier: Modifier){
