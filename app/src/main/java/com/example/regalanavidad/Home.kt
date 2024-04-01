@@ -55,6 +55,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -311,7 +312,14 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
             )
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+                cameraPositionState = cameraPositionState,
+                uiSettings = MapUiSettings(
+                    compassEnabled = true,
+                    zoomControlsEnabled = true,
+                    zoomGesturesEnabled = true,
+                    myLocationButtonEnabled = true,
+                    rotationGesturesEnabled = true
+                )
             ) {
                 if (!searched || searchQuery.isEmpty()) {
                     currentLocation?.let {
