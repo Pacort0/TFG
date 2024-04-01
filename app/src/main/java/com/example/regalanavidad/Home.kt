@@ -318,7 +318,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                     zoomControlsEnabled = true,
                     zoomGesturesEnabled = true,
                     myLocationButtonEnabled = true,
-                    rotationGesturesEnabled = true
+                    rotationGesturesEnabled = true,
+                    scrollGesturesEnabled = true
                 )
             ) {
                 if (!searched || searchQuery.isEmpty()) {
