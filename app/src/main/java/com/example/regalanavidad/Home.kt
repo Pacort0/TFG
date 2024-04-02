@@ -247,6 +247,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
     var searched by remember { mutableStateOf(false) }
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) } // New loading state
+    var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -299,8 +300,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                     if (addresses != null) {
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
-                            currentLocation = LatLng(address.latitude, address.longitude)
-                            currentLocation?.let {
+                            searchedLocation = LatLng(address.latitude, address.longitude)
+                            searchedLocation?.let {
                                 markerState.value = MarkerState(position = it)
                                 cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
                             }
