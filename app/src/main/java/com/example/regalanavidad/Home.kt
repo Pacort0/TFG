@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,6 +28,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,15 +48,13 @@ import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -235,7 +235,9 @@ fun AlertsScreen(modifier: Modifier){
         modifier = modifier
     )
 }
-@OptIn(ExperimentalPermissionsApi::class)
+
+
+/*@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapsScreen(modifier: Modifier, navController: NavController) {
     val context = LocalContext.current
@@ -248,7 +250,14 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) } // New loading state
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var shouldUpdateCamera by remember { mutableStateOf(true) }
 
+
+    DisposableEffect(Unit) {
+        onDispose {
+            shouldUpdateCamera = false
+        }
+    }
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
             val locationRequest = LocationRequest.create().apply {
@@ -353,7 +362,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
             navController.popBackStack()
         }
     }
-}
+}*/
 
 
 @Composable
