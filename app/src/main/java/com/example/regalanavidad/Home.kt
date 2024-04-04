@@ -1,35 +1,25 @@
 package com.example.regalanavidad
 
+import MapsScreen
 import android.annotation.SuppressLint
-import android.location.Geocoder
 import android.os.Bundle
-import android.os.Looper
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,29 +29,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 
 data class TabBarItem(
     val title: String,
@@ -163,10 +139,18 @@ fun TabBarBadgeView(count: Int? = null) {
 @Composable
 fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController) {
     when (screenTitle){
-        "Home" -> HomeScreen(modifier)
-        "Alerts" -> AlertsScreen(modifier = modifier)
-        "Mapa" -> MapsScreen(modifier = modifier, navController)
-        "More" -> MoreTabsScreen(modifier = modifier)
+        "Home" -> {
+            HomeScreen(modifier)
+        }
+        "Alerts" -> {
+            AlertsScreen(modifier = modifier)
+        }
+        "Mapa" -> {
+            MapsScreen(modifier = modifier, navController)
+        }
+        "More" -> {
+            MoreTabsScreen(modifier = modifier)
+        }
     }
 }
 
@@ -236,135 +220,6 @@ fun AlertsScreen(modifier: Modifier){
     )
 }
 
-
-/*@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-fun MapsScreen(modifier: Modifier, navController: NavController) {
-    val context = LocalContext.current
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    val locationPermissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
-    val cameraPositionState = rememberCameraPositionState()
-    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
-    var searched by remember { mutableStateOf(false) }
-    val markerState = remember { mutableStateOf<MarkerState?>(null) }
-    var isLoading by remember { mutableStateOf(true) } // New loading state
-    var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
-    var shouldUpdateCamera by remember { mutableStateOf(true) }
-
-
-    DisposableEffect(Unit) {
-        onDispose {
-            shouldUpdateCamera = false
-        }
-    }
-    LaunchedEffect(Unit) {
-        if (locationPermissionState.hasPermission) {
-            val locationRequest = LocationRequest.create().apply {
-                interval = 10000
-                fastestInterval = 5000
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            }
-            val locationCallback = object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    locationResult.let {
-                        for (location in it.locations) {
-                            currentLocation = LatLng(location.latitude, location.longitude)
-                            isLoading = false
-                        }
-                    }
-                }
-            }
-
-            try {
-                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper()).await()
-            } catch (e: SecurityException) {
-                Toast.makeText(context, "No se puede acceder a la localización del dispositivo", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            locationPermissionState.launchPermissionRequest()
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator()
-            Text(
-                text = "Cargando tu posición actual...",
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        } else {
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Buscar sitio") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    val geocoder = Geocoder(context)
-                    val addresses = geocoder.getFromLocationName(searchQuery, 1)
-                    if (addresses != null) {
-                        if (addresses.isNotEmpty()) {
-                            val address = addresses[0]
-                            searchedLocation = LatLng(address.latitude, address.longitude)
-                            searchedLocation?.let {
-                                markerState.value = MarkerState(position = it)
-                                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
-                            }
-                            searched = true
-                        }
-                    }
-                }),
-                modifier = Modifier.fillMaxWidth()
-            )
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                uiSettings = MapUiSettings(
-                    compassEnabled = true,
-                    zoomControlsEnabled = true,
-                    zoomGesturesEnabled = true,
-                    myLocationButtonEnabled = true,
-                    rotationGesturesEnabled = true,
-                    scrollGesturesEnabled = true
-                )
-            ) {
-                if (!searched || searchQuery.isEmpty()) {
-                    currentLocation?.let {
-                        Marker(
-                            state = MarkerState(position = it),
-                            title = "Posición actual",
-                            snippet = "Usted se encuentra aquí"
-                        )
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
-                    }
-                } else {
-                    markerState.value?.let { markerState ->
-                        Marker(
-                            state = markerState,
-                            title = "Posición buscada",
-                            snippet = "Resultado de la búsqueda"
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    BackHandler {
-        if (searched) {
-            searched = false
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(currentLocation!!, 10f)
-        } else {
-            navController.popBackStack()
-        }
-    }
-}*/
-
-
 @Composable
 fun MoreTabsScreen(modifier: Modifier){
     Text(
@@ -373,7 +228,7 @@ fun MoreTabsScreen(modifier: Modifier){
     )
 }
 
-/* Si hay tiempo retomamos esta idea
+/* Si hay tiempo retomamos esta idea (cambio foto perfil)
 @Composable
 fun SelectProfilePictureScreen(images: List<ImageBitmap>, onImageSelected: (Int) -> Unit) {
     LazyColumn {

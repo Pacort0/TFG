@@ -14,10 +14,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
@@ -65,7 +63,6 @@ import com.example.regalanavidad.drawerItems
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoluntarioHomeScreen(){
@@ -98,6 +95,7 @@ fun VoluntarioHomeScreen(){
             val scope = rememberCoroutineScope()
             ModalNavigationDrawer(
                 drawerState = drawerState,
+                gesturesEnabled = false,
                 drawerContent = {
                     ModalItems(
                         navController = navController,

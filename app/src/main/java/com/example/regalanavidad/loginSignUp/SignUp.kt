@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
@@ -72,23 +73,29 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
         TextField(
             label = { Text(text = "Usuario")},
             value = usuario,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            onValueChange = {usuario = it})
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),            onValueChange = {usuario = it})
 
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
             label = { Text(text = "Correo electrónico")},
             value = email,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            onValueChange = {email = it})
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),            onValueChange = {email = it})
 
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
             label = { Text(text = "Contraseña")},
             value = password,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            onValueChange = {password = it})
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),            onValueChange = {password = it})
         
         Spacer(modifier = Modifier.height(30.dp))
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)){
