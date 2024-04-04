@@ -65,7 +65,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoluntarioHomeScreen(){
+fun VoluntarioHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
 
     // setting up the individual tabs
@@ -73,6 +73,7 @@ fun VoluntarioHomeScreen(){
         title = "Home",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
+
     )
     val mapsTab = TabBarItem(
         title = "Mapa",
@@ -95,7 +96,7 @@ fun VoluntarioHomeScreen(){
             val scope = rememberCoroutineScope()
             ModalNavigationDrawer(
                 drawerState = drawerState,
-                gesturesEnabled = false,
+                gesturesEnabled = drawerAbierto(drawerState.currentValue, mapaAbierto),
                 drawerContent = {
                     ModalItems(
                         navController = navController,
@@ -129,11 +130,11 @@ fun VoluntarioHomeScreen(){
                         },
                         bottomBar = {
                             TabView(tabBarItems, navController) { title ->
-                                currentTabTitle = title // Update the current tab's title
+                                currentTabTitle = title
                             }
                         },
                         content = { innerPadding -> //NavHost
-                            VoluntarioNavHost(innerPadding, navController, homeTab, mapsTab, moreTab)
+                            VoluntarioNavHost(innerPadding, navController, homeTab, mapsTab, moreTab, mapaAbierto, onMapaCambiado)
                         }
                     )
                 }
@@ -143,20 +144,20 @@ fun VoluntarioHomeScreen(){
 }
 
 @Composable
-fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab:TabBarItem, mapsTab:TabBarItem, moreTab:TabBarItem){
+fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab:TabBarItem, mapsTab:TabBarItem, moreTab:TabBarItem, mapaAbierto: Boolean, OnMapaCambiado: (Boolean) -> Unit){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,
             startDestination = homeTab.title
         ) {
             composable(homeTab.title) {
-                ScreenContent(screenTitle = homeTab.title, navController = navController)
+                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
             }
             composable(mapsTab.title) {
-                ScreenContent(screenTitle = mapsTab.title, navController = navController)
+                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
             }
             composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController)
+                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
             }
             composable("profileScreen"){
                 ProfileScreen(navController = navController)
@@ -322,3 +323,12 @@ fun ShowDialog(showDialog: MutableState<Boolean>) {
     }
 }
 
+fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
+    var habilitarGestures = false
+    if(drawerValue == DrawerValue.Open || !mapaAbierto){
+        habilitarGestures = true
+    } else {
+        habilitarGestures = false
+    }
+    return habilitarGestures
+}

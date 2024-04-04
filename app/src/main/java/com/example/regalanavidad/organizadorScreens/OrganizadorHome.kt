@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrganizadorHomeScreen(){
+fun OrganizadorHomeScreen(mapaAbierto: Boolean, OnMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
 
     // setting up the individual tabs
@@ -139,16 +139,16 @@ fun OrganizadorHomeScreen(){
                                     startDestination = homeTab.title
                                 ) {
                                     composable(homeTab.title) {
-                                        ScreenContent(screenTitle = homeTab.title, navController = navController)
+                                        ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
                                     }
                                     composable(alertsTab.title) {
-                                        ScreenContent(screenTitle = alertsTab.title, navController = navController)
+                                        ScreenContent(screenTitle = alertsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
                                     }
                                     composable(settingsTab.title) {
-                                        ScreenContent(screenTitle = settingsTab.title, navController = navController)
+                                        ScreenContent(screenTitle = settingsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
                                     }
                                     composable(moreTab.title) {
-                                        ScreenContent(screenTitle = moreTab.title, navController = navController)
+                                        ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = OnMapaCambiado)
                                     }
                                     composable("profileScreen") {
                                         ProfileScreen(

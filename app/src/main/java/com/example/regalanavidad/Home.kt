@@ -68,10 +68,16 @@ class Home : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            var mapaAbierto by remember { mutableStateOf(false) }
+
             if(esVoluntario){
-                VoluntarioHomeScreen()
+                VoluntarioHomeScreen(mapaAbierto){
+                    abierto -> mapaAbierto = abierto
+                }
             } else {
-                OrganizadorHomeScreen()
+                OrganizadorHomeScreen(mapaAbierto){
+                        abierto -> mapaAbierto = abierto
+                }
             }
         }
     }
@@ -137,19 +143,23 @@ fun TabBarBadgeView(count: Int? = null) {
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController) {
+fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, OnMapaCambiado: (Boolean) -> Unit) {
     when (screenTitle){
         "Home" -> {
             HomeScreen(modifier)
+            OnMapaCambiado(false)
         }
         "Alerts" -> {
             AlertsScreen(modifier = modifier)
+            OnMapaCambiado(false)
         }
         "Mapa" -> {
             MapsScreen(modifier = modifier, navController)
+            OnMapaCambiado(true)
         }
         "More" -> {
             MoreTabsScreen(modifier = modifier)
+            OnMapaCambiado(false)
         }
     }
 }
