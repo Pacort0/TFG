@@ -1,7 +1,6 @@
-package com.example.regalanavidad
+package com.example.regalanavidad.sharedScreens
 
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.regalanavidad.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,7 +57,7 @@ fun ProfileScreen(navController: NavController) {
     ) {
         // Profile picture
         Image(
-            painter = painterResource(id = usuario.pfp),
+            painter = painterResource(id = R.drawable.scoutdefecto),
             contentDescription = "foto de perfil",
             contentScale = ContentScale.Fit,
             modifier = Modifier

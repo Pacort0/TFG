@@ -31,8 +31,8 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
-import com.example.regalanavidad.Home
-import com.example.regalanavidad.MainActivity.Companion.email
+import com.example.regalanavidad.sharedScreens.Home
+import com.example.regalanavidad.sharedScreens.MainActivity.Companion.email
 import com.example.regalanavidad.R
 
 @Composable

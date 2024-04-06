@@ -1,4 +1,4 @@
-package com.example.regalanavidad
+package com.example.regalanavidad.sharedScreens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

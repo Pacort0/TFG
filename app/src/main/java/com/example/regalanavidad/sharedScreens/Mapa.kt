@@ -1,3 +1,5 @@
+package com.example.regalanavidad.sharedScreens
+
 import android.Manifest
 import android.location.Geocoder
 import android.os.Looper
@@ -54,6 +56,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var primeraVez by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -124,17 +127,24 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                     zoomGesturesEnabled = true,
                     myLocationButtonEnabled = true,
                     rotationGesturesEnabled = true,
-                    scrollGesturesEnabled = true
-                )
-            ) {
-                if (!searched || searchQuery.isEmpty()) {
+                    scrollGesturesEnabled = true,
+                    scrollGesturesEnabledDuringRotateOrZoom = true,
+                ),
+                onMapClick = {
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, cameraPositionState.position.zoom)
+                }
+            ){
+                if (!searched || searchQuery.isEmpty() || primeraVez) {
                     currentLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
                             title = "Posición actual",
                             snippet = "Usted se encuentra aquí"
                         )
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
+                        if (primeraVez){
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 7f)
+                            primeraVez = false
+                        }
                     }
                 } else {
                     markerState.value?.let { markerState ->

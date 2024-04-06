@@ -1,25 +1,39 @@
-package com.example.regalanavidad
+package com.example.regalanavidad.sharedScreens
 
-import MapsScreen
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,13 +43,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -68,15 +86,15 @@ class Home : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var mapaAbierto by remember { mutableStateOf(false) }
+            var estadoMapa by remember { mutableStateOf(false) }
 
             if(esVoluntario){
-                VoluntarioHomeScreen(mapaAbierto){
-                    abierto -> mapaAbierto = abierto
+                VoluntarioHomeScreen(estadoMapa){
+                    estado -> estadoMapa = estado
                 }
             } else {
-                OrganizadorHomeScreen(mapaAbierto){
-                        abierto -> mapaAbierto = abierto
+                OrganizadorHomeScreen(estadoMapa){
+                    estado -> estadoMapa = estado
                 }
             }
         }
@@ -166,7 +184,23 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 
 @Composable
 fun HomeScreen(modifier: Modifier){
+    val context = LocalContext.current
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
+    
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            // Aquí puedes personalizar tu dialogo
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Text(text = "Hola") }
+                }
+            }
+        }
+    }
+    
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,7 +218,16 @@ fun HomeScreen(modifier: Modifier){
                 Card(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(0.dp, 0.dp, 5.dp, 0.dp)) {
+                    .padding(0.dp, 0.dp, 5.dp, 0.dp)
+                    .let {
+                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
+                            it.clickable {
+                                Toast
+                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } else it
+                    }) {
                     Column {
                         Text(text = "Dinero recaudado: 1€")
                     }
@@ -192,7 +235,17 @@ fun HomeScreen(modifier: Modifier){
                 Card(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(5.dp, 0.dp, 0.dp, 0.dp)) {
+                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                    .let {
+                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II." || usuario.nombreRango == "Logística") {
+                            it.clickable {
+                                Toast
+                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                    .show()
+                                showDialog = true
+                            }
+                        } else it
+                    }) {
                     Column {
                         Text(text = "Sitios en los que recogemos: ")
                     }
@@ -205,7 +258,16 @@ fun HomeScreen(modifier: Modifier){
                 Card(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(0.dp, 0.dp, 5.dp, 0.dp)) {
+                    .padding(0.dp, 0.dp, 5.dp, 0.dp)
+                    .let {
+                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II.") {
+                            it.clickable {
+                                Toast
+                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } else it
+                    }) {
                     Column {
                         Text(text = "Fechas y eventos")
                     }
@@ -213,7 +275,16 @@ fun HomeScreen(modifier: Modifier){
                 Card(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(5.dp, 0.dp, 0.dp, 0.dp)) {
+                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                    .let {
+                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
+                            it.clickable {
+                                Toast
+                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } else it
+                    }) {
                     Column {
                         Text(text = "Redes sociales: ")
                     }
@@ -236,6 +307,101 @@ fun MoreTabsScreen(modifier: Modifier){
         text = "Hello ${usuario.nombreRango}!",
         modifier = modifier
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, scope: CoroutineScope){
+    val options = listOf("¿Qué es Regala Navidad?", "Datos y objetivos", "¿Cómo puedo ayudar?") // Add your sub-options here
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOptionText by remember { mutableStateOf(options[0]) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        TextField(
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
+            value = "Información",
+            onValueChange = {},
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            options.forEach { selectionOption ->
+                DropdownMenuItem(
+                    text = { Text(selectionOption, fontSize = 16.sp) },
+                    onClick = {
+                        when(selectionOption){
+                            "¿Qué es Regala Navidad?" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("QueEsScreen")
+                            }
+                            "Datos y objetivos" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("DatosYObjetivosScreen")
+                            }
+                            "¿Cómo puedo ayudar?" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("ComoAyudarScreen")
+                            }
+                        }
+                        expanded = false
+                        scope.launch { drawerState.close() }
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowDialog(showDialog: MutableState<Boolean>) {
+    val context = LocalContext.current
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                //Cierra el mensaje de alerta cuando el usuario pincha fuera de la pantalla o en el botón de 'Atrás'
+                showDialog.value = false
+            },
+            title = {
+                Text(text = "¿Está seguro?")
+            },
+            text = {
+                Text("¿Desea cerrar su sesión?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                        auth.signOut()
+                        val intent = Intent(context, MainActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Text("Sí, estoy seguro")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                    }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+}
+
+fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
+    return drawerValue == DrawerValue.Open || !mapaAbierto
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)

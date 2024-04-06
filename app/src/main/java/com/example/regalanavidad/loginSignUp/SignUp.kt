@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.regalanavidad.FirestoreManager
+import com.example.regalanavidad.sharedScreens.FirestoreManager
 import com.example.regalanavidad.ui.theme.Purple40
 import com.example.regalanavidad.modelos.Usuario
 import com.google.firebase.auth.FirebaseAuth
