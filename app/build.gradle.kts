@@ -66,6 +66,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.1.0")
     implementation ("com.google.maps.android:maps-compose:2.11.4")
     implementation ("com.google.accompanist:accompanist-permissions:0.20.2")
+    implementation ("com.google.android.libraries.places:places:3.0.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

@@ -2,10 +2,13 @@ package com.example.regalanavidad.sharedScreens
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.location.Geocoder
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +19,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -27,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -42,8 +51,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -51,8 +63,11 @@ import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -184,20 +199,88 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 
 @Composable
 fun HomeScreen(modifier: Modifier){
-    val context = LocalContext.current
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
-    
-    var showDialog by remember { mutableStateOf(false) }
 
-    if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
-            // Aquí puedes personalizar tu dialogo
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val context = LocalContext.current
+    var agregaSitio by remember { mutableStateOf(false) }
+    var muestraListaSitios by remember { mutableStateOf(false) }
+/*
+    var searchQuery by remember { mutableStateOf("Sevilla") }
+    var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
+    val geocoder = Geocoder(context)
+    val addresses = geocoder.getFromLocationName(searchQuery, 10)
+*/
+
+    if (muestraListaSitios) {
+        Dialog(onDismissRequest = { muestraListaSitios = false }) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(35.dp)
+                .clip(RoundedCornerShape(20.dp))) {
+                LazyColumn(modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center)
+                    .background(color = Color.White)) {
                     item {
-                        Text(text = "Hola") }
+                        Text(text = "Hola", color = Color.Black) }
+                }
+                FloatingActionButton(
+                    onClick = {
+                        agregaSitio = true
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                    Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
                 }
             }
+        }
+        if (agregaSitio) {
+/*            Dialog(onDismissRequest = { agregaSitio = false }) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .clip(RoundedCornerShape(20.dp))){
+                    AnimatedVisibility(
+                        visible = searchQuery.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)) {
+                        LazyColumn (verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (addresses != null) {
+                                items(addresses.size){
+                                    Row (
+                                        modifier.fillMaxWidth()
+                                            .padding(16.dp)
+                                            .clickable{
+                                                val address = addresses[it]
+                                                searchedLocation = LatLng(address.latitude, address.longitude)
+                                                agregaSitio = false
+                                            }
+                                    ) {
+                                        Text(text = addresses[it].getAddressLine(0))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Buscar sitio") },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            if (addresses != null) {
+                                if (addresses.isNotEmpty()) {
+                                    val address = addresses[0]
+                                    searchedLocation = LatLng(address.latitude, address.longitude)
+                                }
+                            }
+                        }),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }*/
         }
     }
     
@@ -242,7 +325,7 @@ fun HomeScreen(modifier: Modifier){
                                 Toast
                                     .makeText(context, "Clickado", Toast.LENGTH_SHORT)
                                     .show()
-                                showDialog = true
+                                muestraListaSitios = true
                             }
                         } else it
                     }) {
