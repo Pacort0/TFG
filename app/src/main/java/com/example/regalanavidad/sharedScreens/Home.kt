@@ -1,8 +1,11 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.location.Address
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -56,9 +59,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.model.PlaceTypes
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -198,6 +211,7 @@ fun HomeScreen(modifier: Modifier){
     var agregaSitio by remember { mutableStateOf(false) }
     var muestraListaSitios by remember { mutableStateOf(false) }
     var textoBusqueda by remember { mutableStateOf("") }
+    val placesClient: PlacesClient = Places.createClient(context)
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -227,13 +241,14 @@ fun HomeScreen(modifier: Modifier){
             Dialog(onDismissRequest = { agregaSitio = false }) {
                 Box(modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.LightGray)
                     .padding(35.dp)
                     .clip(RoundedCornerShape(20.dp))) {
                     OutlinedTextField(
                         value = textoBusqueda,
-                        onValueChange = { newText ->
-                            textoBusqueda = newText
-                            // Llamamos a la API de Places o de Maps para cargar la lista de sugerencias
+                        onValueChange = { nuevaBusqueda ->
+                            textoBusqueda = nuevaBusqueda
+                            fetchAutocompleteResults(textoBusqueda, context)
                         },
                         label = { Text("Buscar") },
                         modifier = Modifier.fillMaxWidth()
@@ -444,6 +459,34 @@ fun ShowDialog(showDialog: MutableState<Boolean>) {
 
 fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
     return drawerValue == DrawerValue.Open || !mapaAbierto
+}
+
+fun fetchAutocompleteResults(query: String, context: Context){
+    val placesClient: PlacesClient = Places.createClient(context)
+    val autocompletedList = mutableListOf<Place>()
+    val token = AutocompleteSessionToken.newInstance()
+    val request = FindAutocompletePredictionsRequest.builder()
+        .setCountries(listOf("ES"))
+        .setTypesFilter(listOf(PlaceTypes.ADDRESS))
+        .setSessionToken(token)
+        .setQuery(query)
+        .build()
+
+    placesClient.findAutocompletePredictions(request).addOnSuccessListener { response ->
+        for (prediction in response.autocompletePredictions) {
+            val placeId = prediction.placeId
+            val placeFields: List<Place.Field> = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS)
+            val fetchPlaceRequest = FetchPlaceRequest.builder(placeId, placeFields).build()
+            placesClient.fetchPlace(fetchPlaceRequest).addOnSuccessListener { fetchPlaceResponse ->
+                val place = fetchPlaceResponse.place
+                autocompletedList += place
+            }.addOnFailureListener{ exception ->
+                Log.e("Error", "Error al obtener la dirección: ${exception.message}")
+            }
+        }
+    }.addOnFailureListener { exception ->
+        Log.e("Error", "Error al obtener las predicciones: ${exception.message}")
+    }
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)

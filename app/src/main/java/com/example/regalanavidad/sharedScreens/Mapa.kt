@@ -103,7 +103,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = {
                     val geocoder = Geocoder(context)
-                    val addresses = geocoder.getFromLocationName(searchQuery, 1)
+                    val addresses = geocoder.getFromLocationName(searchQuery, 1, Geocoder.GeocodeListener {  })
                     if (addresses != null) {
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
