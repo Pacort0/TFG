@@ -1,10 +1,13 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.Manifest
+import android.location.Address
 import android.location.Geocoder
+import android.os.Build
 import android.os.Looper
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +46,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.tasks.await
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapsScreen(modifier: Modifier, navController: NavController) {
@@ -103,8 +107,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = {
                     val geocoder = Geocoder(context)
-                    val addresses = geocoder.getFromLocationName(searchQuery, 1, Geocoder.GeocodeListener {  })
-                    if (addresses != null) {
+                    val addresses: ArrayList<Address> = geocoder.getFromLocationName(searchQuery, 1, Geocoder.GeocodeListener {  }) as ArrayList<Address>
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
                             searchedLocation = LatLng(address.latitude, address.longitude)
@@ -114,7 +117,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                             }
                             searched = true
                         }
-                    }
+
                 }),
                 modifier = Modifier.fillMaxWidth()
             )
