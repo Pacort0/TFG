@@ -4,11 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.location.Address
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
@@ -91,9 +94,12 @@ var usuario = Usuario()
 val firestore = FirestoreManager()
 
 class Home : ComponentActivity() {
+    private lateinit var placesClient: PlacesClient
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         val correo = intent.getStringExtra("correo")
+        Places.initialize(this, MAPS_API_KEY)
+        placesClient = Places.createClient(this)
 
         runBlocking {
             val task = launch {
@@ -181,6 +187,7 @@ fun TabBarBadgeView(count: Int? = null) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, OnMapaCambiado: (Boolean) -> Unit) {
     when (screenTitle){
@@ -211,7 +218,6 @@ fun HomeScreen(modifier: Modifier){
     var agregaSitio by remember { mutableStateOf(false) }
     var muestraListaSitios by remember { mutableStateOf(false) }
     var textoBusqueda by remember { mutableStateOf("") }
-    val placesClient: PlacesClient = Places.createClient(context)
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -248,7 +254,6 @@ fun HomeScreen(modifier: Modifier){
                         value = textoBusqueda,
                         onValueChange = { nuevaBusqueda ->
                             textoBusqueda = nuevaBusqueda
-                            fetchAutocompleteResults(textoBusqueda, context)
                         },
                         label = { Text("Buscar") },
                         modifier = Modifier.fillMaxWidth()
@@ -459,34 +464,6 @@ fun ShowDialog(showDialog: MutableState<Boolean>) {
 
 fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
     return drawerValue == DrawerValue.Open || !mapaAbierto
-}
-
-fun fetchAutocompleteResults(query: String, context: Context){
-    val placesClient: PlacesClient = Places.createClient(context)
-    val autocompletedList = mutableListOf<Place>()
-    val token = AutocompleteSessionToken.newInstance()
-    val request = FindAutocompletePredictionsRequest.builder()
-        .setCountries(listOf("ES"))
-        .setTypesFilter(listOf(PlaceTypes.ADDRESS))
-        .setSessionToken(token)
-        .setQuery(query)
-        .build()
-
-    placesClient.findAutocompletePredictions(request).addOnSuccessListener { response ->
-        for (prediction in response.autocompletePredictions) {
-            val placeId = prediction.placeId
-            val placeFields: List<Place.Field> = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS)
-            val fetchPlaceRequest = FetchPlaceRequest.builder(placeId, placeFields).build()
-            placesClient.fetchPlace(fetchPlaceRequest).addOnSuccessListener { fetchPlaceResponse ->
-                val place = fetchPlaceResponse.place
-                autocompletedList += place
-            }.addOnFailureListener{ exception ->
-                Log.e("Error", "Error al obtener la dirección: ${exception.message}")
-            }
-        }
-    }.addOnFailureListener { exception ->
-        Log.e("Error", "Error al obtener las predicciones: ${exception.message}")
-    }
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)

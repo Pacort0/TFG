@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.regalanavidad.modelos.SitioRecogida
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationCallback
@@ -39,6 +40,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.model.Place
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -61,6 +63,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     var primeraVez by remember { mutableStateOf(false) }
+    var addresses: MutableList<Place> = mutableListOf()
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -105,12 +108,20 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                 onValueChange = { searchQuery = it },
                 label = { Text("Buscar sitio") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    val geocoder = Geocoder(context)
-                    val addresses: ArrayList<Address> = geocoder.getFromLocationName(searchQuery, 1, Geocoder.GeocodeListener {  }) as ArrayList<Address>
+                keyboardActions = KeyboardActions(onSearch = {/*
+                    fetchAutocompleteResults(searchQuery, context){ places ->
+                        // Handle the places here
+                        // For example, you can print the names of the places
+                        places.forEach { place ->
+                            addresses.add(place)
+                        }
+                    }
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
-                            searchedLocation = LatLng(address.latitude, address.longitude)
+                            val latlng = address.latLng
+                            val lat = latlng.latitude
+                            val lng = latlng.longitude
+                            searchedLocation = LatLng(lat, lng)
                             searchedLocation?.let {
                                 markerState.value = MarkerState(position = it)
                                 cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
@@ -118,7 +129,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                             searched = true
                         }
 
-                }),
+                */}),
                 modifier = Modifier.fillMaxWidth()
             )
             GoogleMap(
