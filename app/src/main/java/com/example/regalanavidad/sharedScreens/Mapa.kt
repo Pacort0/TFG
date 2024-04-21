@@ -48,7 +48,7 @@ import kotlinx.coroutines.tasks.await
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapsScreen(modifier: Modifier, navController: NavController) {
+fun MapsScreen(modifier: Modifier, navController: NavController, lat: Double, lng: Double) {
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -91,6 +93,7 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
+val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
 private lateinit var placesClient: PlacesClient
 
 class Home : ComponentActivity() {
@@ -196,15 +199,18 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Alerts" -> {
-            AlertsScreen(modifier = modifier)
+            AlertsScreen(modifier)
             onMapaCambiado(false)
         }
         "Mapa" -> {
-            MapsScreen(modifier = modifier, navController)
+            //Si se navega al mapa desde el menú de abajo, se pone por defecto en Sevilla.
+            val lat = 37.38283
+            val lng = -5.97317
+            MapsScreen(modifier, navController, lat, lng)
             onMapaCambiado(true)
         }
         "More" -> {
-            MoreTabsScreen(modifier = modifier)
+            MoreTabsScreen(modifier)
             onMapaCambiado(false)
         }
     }
@@ -219,6 +225,10 @@ fun HomeScreen(modifier: Modifier){
     var muestraListaSitios by remember { mutableStateOf(false) }
     var textoBusqueda by remember { mutableStateOf("") }
     val firestore = FirestoreManager()
+    val scope = CoroutineScope(Dispatchers.Main)
+    var haySitios by remember { mutableStateOf(false) }
+    var recargarDatos by remember { mutableStateOf(true) }
+    var sitiosLoading by remember { mutableStateOf(true) }
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -230,8 +240,11 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxSize()
                     .align(Alignment.Center)
                     .background(color = Color.White)) {
-                    item {
-                        Text(text = "Hola", color = Color.Black) }
+                }
+                if (haySitios && !sitiosLoading){
+                    ListaSitiosConfirmados(sitiosRecogidaConfirmados)
+                } else {
+                    Text(text = "No hay sitios de recogida confirmados")
                 }
                 FloatingActionButton(
                     onClick = {
@@ -245,13 +258,13 @@ fun HomeScreen(modifier: Modifier){
             }
         }
         if (agregaSitio) {
-            var sitiosRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
-            val scope = CoroutineScope(Dispatchers.Main)
+            var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
 
             Dialog(onDismissRequest = { agregaSitio = false }) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .height(320.dp)
                         .background(Color.LightGray)
                         .padding(35.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -262,26 +275,29 @@ fun HomeScreen(modifier: Modifier){
                             onValueChange = { nuevaBusqueda ->
                                 textoBusqueda = nuevaBusqueda
                                 scope.launch {
-                                    sitiosRecogida = obtenerPredicciones(nuevaBusqueda)
+                                    prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
                                 }
                             },
                             label = { Text("Buscar") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         LazyColumn {
-                            items(sitiosRecogida.size) { index ->
+                            items(prediccionesNuevoSitioRecogida.size) { index ->
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
                                             scope.launch(Dispatchers.IO) {
-                                                firestore.insertaSitioRecogida(sitiosRecogida[index])
+                                                firestore.insertaSitioRecogida(prediccionesNuevoSitioRecogida[index])
+                                                textoBusqueda = ""
+                                                recargarDatos = true
+                                                agregaSitio = false
                                             }
                                         }
                                         .padding(0.dp, 5.dp)
                                 ) {
                                     Column {
-                                        Text(text = sitiosRecogida[index].nombreSitio)
+                                        Text(text = prediccionesNuevoSitioRecogida[index].nombreSitio)
                                     }
                                 }
                             }
@@ -339,6 +355,26 @@ fun HomeScreen(modifier: Modifier){
                     }) {
                     Column {
                         Text(text = "Sitios en los que recogemos: ")
+                        LaunchedEffect(key1 = recargarDatos){
+                            sitiosLoading = true
+                            sitiosRecogidaConfirmados.clear()
+                            val sitiosRecogida = firestore.getSitiosRecogida()
+                            sitiosRecogida.forEach { sitioRecogida ->
+                                sitiosRecogidaConfirmados.add(sitioRecogida)
+                            }
+                            haySitios = sitiosRecogidaConfirmados.size != 0
+                            recargarDatos = false
+                            sitiosLoading = false
+                        }
+                        if (sitiosLoading) {
+                            Text(text = "Cargando...")
+                        } else {
+                            if (haySitios){
+                                ListaSitiosConfirmados(sitiosRecogidaConfirmados)
+                            } else {
+                                Text(text = "No hay sitios de recogida confirmados")
+                            }
+                        }
                     }
                 }
             }
@@ -538,6 +574,22 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
     return sitiosRecogida
 }
 
+@Composable
+fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>){
+    LazyColumn {
+        items(sitiosRecogidaConfirmados.size) { index ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 5.dp)
+            ) {
+                Column {
+                    Text(text = sitiosRecogidaConfirmados[index].nombreSitio)
+                }
+            }
+        }
+    }
+}
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)
 @Composable

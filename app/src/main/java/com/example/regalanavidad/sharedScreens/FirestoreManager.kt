@@ -28,6 +28,11 @@ class FirestoreManager {
         }
     }
 
+    suspend fun getSitiosRecogida(): List<SitioRecogida> {
+        val querySnapshot = firestore.collection("sitiosRecogida").get().await()
+        return querySnapshot.toObjects(SitioRecogida::class.java)
+    }
+
     suspend fun editaUsuario(usuario: Usuario) {
         val uid = auth.uid
         if (uid != null) {
