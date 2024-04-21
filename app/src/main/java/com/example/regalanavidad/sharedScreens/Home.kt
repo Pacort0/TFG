@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -37,6 +39,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
@@ -120,11 +123,11 @@ class Home : ComponentActivity() {
 
             if(esVoluntario){
                 VoluntarioHomeScreen(estadoMapa){
-                    estado -> estadoMapa = estado
+                        estado -> estadoMapa = estado
                 }
             } else {
                 OrganizadorHomeScreen(estadoMapa){
-                    estado -> estadoMapa = estado
+                        estado -> estadoMapa = estado
                 }
             }
         }
@@ -229,6 +232,7 @@ fun HomeScreen(modifier: Modifier){
     var haySitios by remember { mutableStateOf(false) }
     var recargarDatos by remember { mutableStateOf(true) }
     var sitiosLoading by remember { mutableStateOf(true) }
+    var canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -242,7 +246,9 @@ fun HomeScreen(modifier: Modifier){
                     .background(color = Color.White)) {
                 }
                 if (haySitios && !sitiosLoading){
-                    ListaSitiosConfirmados(sitiosRecogidaConfirmados)
+                    ListaSitiosConfirmados(sitiosRecogidaConfirmados, false, canEditSitios){
+                            elementoEliminado -> recargarDatos = elementoEliminado
+                    }
                 } else {
                     Text(text = "No hay sitios de recogida confirmados")
                 }
@@ -264,7 +270,7 @@ fun HomeScreen(modifier: Modifier){
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(320.dp)
+                        .height(305.dp)
                         .background(Color.LightGray)
                         .padding(35.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -285,10 +291,13 @@ fun HomeScreen(modifier: Modifier){
                             items(prediccionesNuevoSitioRecogida.size) { index ->
                                 Card(
                                     modifier = Modifier
+                                        .padding(2.dp)
                                         .fillMaxWidth()
                                         .clickable {
-                                            scope.launch(Dispatchers.IO) {
-                                                firestore.insertaSitioRecogida(prediccionesNuevoSitioRecogida[index])
+                                            scope.launch(Dispatchers.Main) {
+                                                firestore.insertaSitioRecogida(
+                                                    prediccionesNuevoSitioRecogida[index]
+                                                )
                                                 textoBusqueda = ""
                                                 recargarDatos = true
                                                 agregaSitio = false
@@ -296,8 +305,10 @@ fun HomeScreen(modifier: Modifier){
                                         }
                                         .padding(0.dp, 5.dp)
                                 ) {
-                                    Column {
-                                        Text(text = prediccionesNuevoSitioRecogida[index].nombreSitio)
+                                    LazyRow {
+                                        if(index < prediccionesNuevoSitioRecogida.size - 1){
+                                            item{Text(text = prediccionesNuevoSitioRecogida[index].nombreSitio + " - " + prediccionesNuevoSitioRecogida[index].direccionSitio)}
+                                        }
                                     }
                                 }
                             }
@@ -307,7 +318,7 @@ fun HomeScreen(modifier: Modifier){
             }
         }
     }
-    
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -344,7 +355,7 @@ fun HomeScreen(modifier: Modifier){
                     .fillMaxHeight()
                     .padding(5.dp, 0.dp, 0.dp, 0.dp)
                     .let {
-                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II." || usuario.nombreRango == "Logística") {
+                        if (canEditSitios) {
                             it.clickable {
                                 Toast
                                     .makeText(context, "Clickado", Toast.LENGTH_SHORT)
@@ -370,7 +381,9 @@ fun HomeScreen(modifier: Modifier){
                             Text(text = "Cargando...")
                         } else {
                             if (haySitios){
-                                ListaSitiosConfirmados(sitiosRecogidaConfirmados)
+                                ListaSitiosConfirmados(sitiosRecogidaConfirmados, true, canEditSitios){
+                                    elementoEliminado -> recargarDatos = elementoEliminado
+                                }
                             } else {
                                 Text(text = "No hay sitios de recogida confirmados")
                             }
@@ -544,7 +557,7 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
     }
 
     val fetchPlaceRequests = response.autocompletePredictions.map { prediction ->
-        FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.NAME, Place.Field.LAT_LNG))
+        FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS))
     }
 
     val deferreds = fetchPlaceRequests.map { fetchPlaceRequest ->
@@ -555,8 +568,9 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
                 SitioRecogida(
                     nombreSitio = place.name!!,
                     latitudSitio = place.latLng!!.latitude,
-                    longitudSitio = place.latLng!!.longitude
-                )
+                    longitudSitio = place.latLng!!.longitude,
+                    direccionSitio = place.address!!
+                    )
             } catch (exception: ApiException) {
                 Log.e("Error", "Place not found: " + exception.statusCode)
                 null
@@ -575,20 +589,39 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
 }
 
 @Composable
-fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>){
-    LazyColumn {
-        items(sitiosRecogidaConfirmados.size) { index ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp, 5.dp)
-            ) {
-                Column {
-                    Text(text = sitiosRecogidaConfirmados[index].nombreSitio)
+fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit){
+    if(sitiosRecogidaConfirmados.size > 0) {
+        LazyColumn {
+            items(sitiosRecogidaConfirmados.size) { index ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp, 5.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = sitiosRecogidaConfirmados[index].nombreSitio)
+                        if(canEdit && !isHomePage){
+                            IconButton(onClick = {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[index])
+                                    onElementoEliminado(true)
+                                }
+                            }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio")
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+fun checkIfCanEditSitios(rol: String):Boolean{
+    return rol == "Coordinador" || rol == "RR.II." || rol == "Logística"
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)

@@ -75,7 +75,6 @@ fun MapsScreen(modifier: Modifier, navController: NavController, lat: Double, ln
                     }
                 }
             }
-
             try {
                 fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper()).await()
             } catch (e: SecurityException) {
