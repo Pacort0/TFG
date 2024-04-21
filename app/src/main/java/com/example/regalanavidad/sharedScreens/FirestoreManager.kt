@@ -1,6 +1,7 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.util.Log
+import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -11,6 +12,10 @@ class FirestoreManager {
 
     suspend fun insertaUsuario(usuario: Usuario) {
         firestore.collection("usuarios").add(usuario).await()
+    }
+
+    suspend fun insertaSitioRecogida(sitioRecogida: SitioRecogida){
+        firestore.collection("sitiosRecogida").add(sitioRecogida).await()
     }
 
     suspend fun findUserByEmail(email: String): Usuario? {
@@ -38,6 +43,18 @@ class FirestoreManager {
             }
         } else {
             Log.w("ProfileScreen", "User UID is null. Unable to update document.")
+        }
+    }
+
+    suspend fun eliminaSitioRecogida(sitioRecogida: SitioRecogida){
+        val querySnapshot = firestore.collection("sitiosRecogida").whereEqualTo("nombreSitio", sitioRecogida.nombreSitio).get().await()
+        val idDocumentoSitioRecogida = querySnapshot.documents[0].id
+        val refSitioRecogida = firestore.collection("sitiosRecogida").document(idDocumentoSitioRecogida)
+        try {
+            refSitioRecogida.delete().await()
+            Log.d("ProfileScreen", "Sitio de recogida eliminado con éxito")
+        } catch (e: Exception) {
+            Log.w("ProfileScreen", "Error deleting document", e)
         }
     }
 }

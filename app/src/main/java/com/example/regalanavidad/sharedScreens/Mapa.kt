@@ -1,8 +1,6 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.Manifest
-import android.location.Address
-import android.location.Geocoder
 import android.os.Build
 import android.os.Looper
 import android.widget.Toast
@@ -30,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.regalanavidad.modelos.SitioRecogida
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationCallback
@@ -61,9 +58,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
     var searched by remember { mutableStateOf(false) }
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     var primeraVez by remember { mutableStateOf(false) }
-    var addresses: MutableList<Place> = mutableListOf()
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -108,28 +103,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController) {
                 onValueChange = { searchQuery = it },
                 label = { Text("Buscar sitio") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {/*
-                    fetchAutocompleteResults(searchQuery, context){ places ->
-                        // Handle the places here
-                        // For example, you can print the names of the places
-                        places.forEach { place ->
-                            addresses.add(place)
-                        }
-                    }
-                        if (addresses.isNotEmpty()) {
-                            val address = addresses[0]
-                            val latlng = address.latLng
-                            val lat = latlng.latitude
-                            val lng = latlng.longitude
-                            searchedLocation = LatLng(lat, lng)
-                            searchedLocation?.let {
-                                markerState.value = MarkerState(position = it)
-                                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 10f)
-                            }
-                            searched = true
-                        }
-
-                */}),
+                keyboardActions = KeyboardActions(onSearch = {}),
                 modifier = Modifier.fillMaxWidth()
             )
             GoogleMap(

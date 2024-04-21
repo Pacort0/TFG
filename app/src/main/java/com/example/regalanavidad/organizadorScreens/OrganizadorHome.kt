@@ -1,5 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -64,6 +66,7 @@ import com.example.regalanavidad.voluntarioScreens.QueEs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrganizadorHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
@@ -150,6 +153,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Uni
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit){
     Box(modifier = Modifier.padding(innerPadding)) {
@@ -158,16 +162,16 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
             startDestination = homeTab.title
         ) {
             composable(homeTab.title) {
-                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable(alertsTab.title) {
-                ScreenContent(screenTitle = alertsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = alertsTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable(mapsTab.title) {
-                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable("profileScreen"){
                 ProfileScreen(navController = navController)

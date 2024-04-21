@@ -1,5 +1,7 @@
 package com.example.regalanavidad.voluntarioScreens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -136,6 +138,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit){
     Box(modifier = Modifier.padding(innerPadding)) {
@@ -144,13 +147,13 @@ fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostContro
             startDestination = homeTab.title
         ) {
             composable(homeTab.title) {
-                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable(mapsTab.title) {
-                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, OnMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
             }
             composable("profileScreen"){
                 ProfileScreen(navController = navController)

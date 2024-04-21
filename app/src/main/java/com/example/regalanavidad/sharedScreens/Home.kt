@@ -1,9 +1,7 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
-import android.location.Address
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -66,20 +64,21 @@ import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.AutocompleteSessionToken
 import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.model.PlaceTypes
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.android.libraries.places.widget.Autocomplete
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 data class TabBarItem(
     val title: String,
@@ -92,9 +91,10 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
+private lateinit var placesClient: PlacesClient
 
 class Home : ComponentActivity() {
-    private lateinit var placesClient: PlacesClient
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         val correo = intent.getStringExtra("correo")
@@ -189,23 +189,23 @@ fun TabBarBadgeView(count: Int? = null) {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, OnMapaCambiado: (Boolean) -> Unit) {
+fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
     when (screenTitle){
         "Home" -> {
             HomeScreen(modifier)
-            OnMapaCambiado(false)
+            onMapaCambiado(false)
         }
         "Alerts" -> {
             AlertsScreen(modifier = modifier)
-            OnMapaCambiado(false)
+            onMapaCambiado(false)
         }
         "Mapa" -> {
             MapsScreen(modifier = modifier, navController)
-            OnMapaCambiado(true)
+            onMapaCambiado(true)
         }
         "More" -> {
             MoreTabsScreen(modifier = modifier)
-            OnMapaCambiado(false)
+            onMapaCambiado(false)
         }
     }
 }
@@ -218,6 +218,7 @@ fun HomeScreen(modifier: Modifier){
     var agregaSitio by remember { mutableStateOf(false) }
     var muestraListaSitios by remember { mutableStateOf(false) }
     var textoBusqueda by remember { mutableStateOf("") }
+    val firestore = FirestoreManager()
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -244,20 +245,48 @@ fun HomeScreen(modifier: Modifier){
             }
         }
         if (agregaSitio) {
+            var sitiosRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+            val scope = CoroutineScope(Dispatchers.Main)
+
             Dialog(onDismissRequest = { agregaSitio = false }) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.LightGray)
-                    .padding(35.dp)
-                    .clip(RoundedCornerShape(20.dp))) {
-                    OutlinedTextField(
-                        value = textoBusqueda,
-                        onValueChange = { nuevaBusqueda ->
-                            textoBusqueda = nuevaBusqueda
-                        },
-                        label = { Text("Buscar") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.LightGray)
+                        .padding(35.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                ) {
+                    Column {
+                        OutlinedTextField(
+                            value = textoBusqueda,
+                            onValueChange = { nuevaBusqueda ->
+                                textoBusqueda = nuevaBusqueda
+                                scope.launch {
+                                    sitiosRecogida = obtenerPredicciones(nuevaBusqueda)
+                                }
+                            },
+                            label = { Text("Buscar") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        LazyColumn {
+                            items(sitiosRecogida.size) { index ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            scope.launch(Dispatchers.IO) {
+                                                firestore.insertaSitioRecogida(sitiosRecogida[index])
+                                            }
+                                        }
+                                        .padding(0.dp, 5.dp)
+                                ) {
+                                    Column {
+                                        Text(text = sitiosRecogida[index].nombreSitio)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -465,6 +494,50 @@ fun ShowDialog(showDialog: MutableState<Boolean>) {
 fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
     return drawerValue == DrawerValue.Open || !mapaAbierto
 }
+
+suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogida> {
+    val sitiosRecogida = mutableListOf<SitioRecogida>()
+
+    val request = FindAutocompletePredictionsRequest.builder()
+        .setCountries(listOf("ES"))
+        .setQuery(textoBusqueda)
+        .build()
+
+    val response = withContext(Dispatchers.IO) {
+        Tasks.await(placesClient.findAutocompletePredictions(request))
+    }
+
+    val fetchPlaceRequests = response.autocompletePredictions.map { prediction ->
+        FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.NAME, Place.Field.LAT_LNG))
+    }
+
+    val deferreds = fetchPlaceRequests.map { fetchPlaceRequest ->
+        CoroutineScope(Dispatchers.IO).async {
+            try {
+                val fetchPlaceResponse = Tasks.await(placesClient.fetchPlace(fetchPlaceRequest))
+                val place = fetchPlaceResponse.place
+                SitioRecogida(
+                    nombreSitio = place.name!!,
+                    latitudSitio = place.latLng!!.latitude,
+                    longitudSitio = place.latLng!!.longitude
+                )
+            } catch (exception: ApiException) {
+                Log.e("Error", "Place not found: " + exception.statusCode)
+                null
+            }
+        }
+    }
+
+    deferreds.forEach { deferred ->
+        val sitioRecogida = deferred.await()
+        if (sitioRecogida != null) {
+            sitiosRecogida.add(sitioRecogida)
+        }
+    }
+
+    return sitiosRecogida
+}
+
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)
 @Composable
