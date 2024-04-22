@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
@@ -198,7 +199,7 @@ fun TabBarBadgeView(count: Int? = null) {
 fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
     when (screenTitle){
         "Home" -> {
-            HomeScreen(modifier)
+            HomeScreen(modifier, navController)
             onMapaCambiado(false)
         }
         "Alerts" -> {
@@ -206,10 +207,8 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Mapa" -> {
-            //Si se navega al mapa desde el menú de abajo, se pone por defecto en Sevilla.
-            val lat = 37.38283
-            val lng = -5.97317
-            MapsScreen(modifier, navController, lat, lng)
+            val sitioRecogida = SitioRecogida()
+            MapsScreen(modifier, navController, sitioRecogida, false)
             onMapaCambiado(true)
         }
         "More" -> {
@@ -219,8 +218,9 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeScreen(modifier: Modifier){
+fun HomeScreen(modifier: Modifier, navController: NavController){
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
@@ -232,7 +232,9 @@ fun HomeScreen(modifier: Modifier){
     var haySitios by remember { mutableStateOf(false) }
     var recargarDatos by remember { mutableStateOf(true) }
     var sitiosLoading by remember { mutableStateOf(true) }
-    var canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
+    val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
+    var sitioEscogido = SitioRecogida()
+    var navegaSitio by remember { mutableStateOf(false) }
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -246,9 +248,15 @@ fun HomeScreen(modifier: Modifier){
                     .background(color = Color.White)) {
                 }
                 if (haySitios && !sitiosLoading){
-                    ListaSitiosConfirmados(sitiosRecogidaConfirmados, false, canEditSitios){
-                            elementoEliminado -> recargarDatos = elementoEliminado
-                    }
+                    ListaSitiosConfirmados(
+                        sitiosRecogidaConfirmados,
+                        false,
+                        canEditSitios,
+                        onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
+                        onSitioEscogido = { sitioRecogida -> sitioEscogido = sitioRecogida
+                            navegaSitio = true
+                        }
+                    )
                 } else {
                     Text(text = "No hay sitios de recogida confirmados")
                 }
@@ -381,9 +389,15 @@ fun HomeScreen(modifier: Modifier){
                             Text(text = "Cargando...")
                         } else {
                             if (haySitios){
-                                ListaSitiosConfirmados(sitiosRecogidaConfirmados, true, canEditSitios){
-                                    elementoEliminado -> recargarDatos = elementoEliminado
-                                }
+                                ListaSitiosConfirmados(
+                                    sitiosRecogidaConfirmados,
+                                    true,
+                                    canEditSitios,
+                                    onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
+                                    onSitioEscogido = { sitioRecogida ->
+                                        sitioEscogido = sitioRecogida
+                                    }
+                                )
                             } else {
                                 Text(text = "No hay sitios de recogida confirmados")
                             }
@@ -431,6 +445,13 @@ fun HomeScreen(modifier: Modifier){
                 }
             }
         }
+    }
+    if(navegaSitio){
+        agregaSitio = false
+        muestraListaSitios = false
+        MapsScreen(modifier, navController, sitioEscogido, true)
+        navController.navigate("Mapa")
+        navegaSitio = false
     }
 }
 @Composable
@@ -570,7 +591,7 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
                     latitudSitio = place.latLng!!.latitude,
                     longitudSitio = place.latLng!!.longitude,
                     direccionSitio = place.address!!
-                    )
+                )
             } catch (exception: ApiException) {
                 Log.e("Error", "Place not found: " + exception.statusCode)
                 null
@@ -589,7 +610,7 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
 }
 
 @Composable
-fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit){
+fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
@@ -597,6 +618,13 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(0.dp, 5.dp)
+                        .let {
+                            if (!isHomePage) {
+                                it.clickable {
+                                    onSitioEscogido(sitiosRecogidaConfirmados[index])
+                                }
+                            } else it
+                        }
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -619,7 +647,6 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
         }
     }
 }
-
 fun checkIfCanEditSitios(rol: String):Boolean{
     return rol == "Coordinador" || rol == "RR.II." || rol == "Logística"
 }

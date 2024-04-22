@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.regalanavidad.modelos.SitioRecogida
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationCallback
@@ -48,7 +49,7 @@ import kotlinx.coroutines.tasks.await
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapsScreen(modifier: Modifier, navController: NavController, lat: Double, lng: Double) {
+fun MapsScreen(modifier: Modifier, navController: NavController, sitioRecogida: SitioRecogida, searchSitioRecogida: Boolean) {
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
