@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.regalanavidad.modelos.SitioRecogida
+import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationCallback
@@ -38,7 +38,6 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.Place
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -49,7 +48,7 @@ import kotlinx.coroutines.tasks.await
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapsScreen(modifier: Modifier, navController: NavController, sitioRecogida: SitioRecogida, searchSitioRecogida: Boolean) {
+fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM) {
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -60,6 +59,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController, sitioRecogida: 
     val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var primeraVez by remember { mutableStateOf(false) }
+    val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
+    val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -122,7 +123,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, sitioRecogida: 
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(it, cameraPositionState.position.zoom)
                 }
             ){
-                if (!searched || searchQuery.isEmpty() || primeraVez) {
+                if (searchSitioRecogida.value == false && (!searched || searchQuery.isEmpty() || primeraVez)) {
                     currentLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -133,6 +134,22 @@ fun MapsScreen(modifier: Modifier, navController: NavController, sitioRecogida: 
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 7f)
                             primeraVez = false
                         }
+                    }
+                } else if (searchSitioRecogida.value == true && !searched || searchQuery.isEmpty()){
+                    currentLocation?.let {
+                        Marker(
+                            state = MarkerState(position = it),
+                            title = "Posición actual",
+                            snippet = "Usted se encuentra aquí"
+                        )
+                    }
+                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null){
+                        Marker(
+                            state = MarkerState(position = LatLng(sitioRecogida.value!!.latitudSitio, sitioRecogida.value!!.longitudSitio)),
+                            title = "Sitio de recogida ${sitioRecogida.value!!.nombreSitio}",
+                            snippet = sitioRecogida.value!!.direccionSitio
+                        )
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(sitioRecogida.value!!.latitudSitio , sitioRecogida.value!!.longitudSitio), 8f)
                     }
                 } else {
                     markerState.value?.let { markerState ->

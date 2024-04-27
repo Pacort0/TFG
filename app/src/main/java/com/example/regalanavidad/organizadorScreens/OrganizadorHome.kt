@@ -57,6 +57,7 @@ import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.sharedScreens.drawerItems
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
+import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.ComoAyudar
 import com.example.regalanavidad.voluntarioScreens.ContactanosScreen
 import com.example.regalanavidad.voluntarioScreens.DatosYObjetivos
@@ -69,7 +70,7 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrganizadorHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
+fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
 
     // setting up the individual tabs
@@ -144,7 +145,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Uni
                             }
                         },
                         content = { innerPadding -> //NavHost
-                            OrganizadorNavHost(innerPadding, navController, homeTab, alertsTab, mapsTab, moreTab, mapaAbierto, onMapaCambiado)
+                            OrganizadorNavHost(innerPadding, navController, homeTab, alertsTab, mapsTab, moreTab, onMapaCambiado, mapaOrganizadorVM)
                         }
                     )
                 }
@@ -155,23 +156,23 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Uni
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit){
+fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,
             startDestination = homeTab.title
         ) {
             composable(homeTab.title) {
-                ScreenContent(screenTitle = homeTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = homeTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable(alertsTab.title) {
-                ScreenContent(screenTitle = alertsTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = alertsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable(mapsTab.title) {
-                ScreenContent(screenTitle = mapsTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = mapsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController, mapaAbierto = mapaAbierto, onMapaCambiado = onMapaCambiado)
+                ScreenContent(screenTitle = moreTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable("profileScreen"){
                 ProfileScreen(navController = navController)

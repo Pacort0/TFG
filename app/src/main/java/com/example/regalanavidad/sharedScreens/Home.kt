@@ -64,11 +64,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
+import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Tasks
@@ -116,6 +116,7 @@ class Home : ComponentActivity() {
         }
 
         val esVoluntario = usuario.nombreRango == "Voluntario"
+        val mapaOrganizadorVM = mapaOrganizadorVM()
 
         super.onCreate(savedInstanceState)
 
@@ -123,11 +124,11 @@ class Home : ComponentActivity() {
             var estadoMapa by remember { mutableStateOf(false) }
 
             if(esVoluntario){
-                VoluntarioHomeScreen(estadoMapa){
+                VoluntarioHomeScreen(estadoMapa, mapaOrganizadorVM){
                         estado -> estadoMapa = estado
                 }
             } else {
-                OrganizadorHomeScreen(estadoMapa){
+                OrganizadorHomeScreen(estadoMapa, mapaOrganizadorVM){
                         estado -> estadoMapa = estado
                 }
             }
@@ -196,10 +197,10 @@ fun TabBarBadgeView(count: Int? = null) {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, mapaAbierto: Boolean, onMapaCambiado: (Boolean) -> Unit) {
+fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM) {
     when (screenTitle){
         "Home" -> {
-            HomeScreen(modifier, navController)
+            HomeScreen(modifier, navController, mapaOrganizadorVM)
             onMapaCambiado(false)
         }
         "Alerts" -> {
@@ -207,8 +208,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Mapa" -> {
-            val sitioRecogida = SitioRecogida()
-            MapsScreen(modifier, navController, sitioRecogida, false)
+            MapsScreen(modifier, navController, mapaOrganizadorVM)
             onMapaCambiado(true)
         }
         "More" -> {
@@ -220,7 +220,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeScreen(modifier: Modifier, navController: NavController){
+fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM){
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
@@ -233,7 +233,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController){
     var recargarDatos by remember { mutableStateOf(true) }
     var sitiosLoading by remember { mutableStateOf(true) }
     val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
-    var sitioEscogido = SitioRecogida()
     var navegaSitio by remember { mutableStateOf(false) }
 
     if (muestraListaSitios) {
@@ -253,7 +252,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController){
                         false,
                         canEditSitios,
                         onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
-                        onSitioEscogido = { sitioRecogida -> sitioEscogido = sitioRecogida
+                        onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
                             navegaSitio = true
                         }
                     )
@@ -395,7 +394,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController){
                                     canEditSitios,
                                     onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
                                     onSitioEscogido = { sitioRecogida ->
-                                        sitioEscogido = sitioRecogida
+                                        mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
                                     }
                                 )
                             } else {
@@ -447,9 +446,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController){
         }
     }
     if(navegaSitio){
+        mapaOrganizadorVM.searchSitioRecogida.value = true
         agregaSitio = false
         muestraListaSitios = false
-        MapsScreen(modifier, navController, sitioEscogido, true)
+
+        MapsScreen(modifier, navController, mapaOrganizadorVM)
         navController.navigate("Mapa")
         navegaSitio = false
     }
@@ -630,14 +631,15 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = sitiosRecogidaConfirmados[index].nombreSitio)
+                        Text(text = sitiosRecogidaConfirmados[index].nombreSitio, modifier = Modifier.weight(1f))
                         if(canEdit && !isHomePage){
                             IconButton(onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[index])
                                     onElementoEliminado(true)
                                 }
-                            }) {
+                            },
+                                modifier = Modifier.weight(0.3f)) {
                                 Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio")
                             }
                         }
@@ -649,6 +651,10 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
 }
 fun checkIfCanEditSitios(rol: String):Boolean{
     return rol == "Coordinador" || rol == "RR.II." || rol == "Logística"
+}
+
+fun checkIfCanManageEmails(rol: String):Boolean{
+    return rol == "Coordinador" || rol == "Secretaría"
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)
