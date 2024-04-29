@@ -1,7 +1,10 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.BitmapFactory.Options
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -60,9 +64,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.modelos.SitioRecogida
@@ -481,8 +488,65 @@ fun MailScreen(){
     var correoContacto by remember { mutableStateOf("") }
     var asuntoCorreo by remember { mutableStateOf("") }
     var mensajeCorreo by remember { mutableStateOf("") }
+    val contexto = LocalContext.current
 
-    
+    Column (
+        modifier = Modifier.padding(10.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TextField(
+            label = { Text(text = "Nombre") },
+            value = nombreContacto,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            onValueChange = { nombreContacto = it }
+        )
+        TextField(
+            label = { Text(text = "Correo") },
+            value = correoContacto,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            onValueChange = { correoContacto = it }
+        )
+        TextField(
+            label = { Text(text = "Asunto") },
+            value = asuntoCorreo,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            onValueChange = { asuntoCorreo = it }
+        )
+        TextField(
+            label = { Text(text = "Mensaje") },
+            value = mensajeCorreo,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            onValueChange = { mensajeCorreo = it }
+        )
+        Button(onClick = {
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.setDataAndType(Uri.parse("mailto:"), "text/plain")
+            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(correoContacto))
+            intent.putExtra(Intent.EXTRA_SUBJECT, asuntoCorreo)
+            intent.putExtra(Intent.EXTRA_TEXT, mensajeCorreo)
+
+            try {
+                contexto.startActivity(Intent.createChooser(intent, "Enviar correo"))
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(contexto, "No hay aplicaciones de correo instaladas", Toast.LENGTH_SHORT).show()
+            }
+        }) {
+            Text(text = "Enviar")
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
