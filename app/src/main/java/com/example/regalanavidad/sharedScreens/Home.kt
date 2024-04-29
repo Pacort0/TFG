@@ -207,6 +207,10 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             AlertsScreen(modifier)
             onMapaCambiado(false)
         }
+        "Mail" -> {
+            MailScreen()
+            onMapaCambiado(false)
+        }
         "Mapa" -> {
             MapsScreen(modifier, navController, mapaOrganizadorVM)
             onMapaCambiado(true)
@@ -469,6 +473,16 @@ fun MoreTabsScreen(modifier: Modifier){
         text = "Hello ${usuario.nombreRango}!",
         modifier = modifier
     )
+}
+
+@Composable
+fun MailScreen(){
+    var nombreContacto by remember { mutableStateOf("") }
+    var correoContacto by remember { mutableStateOf("") }
+    var asuntoCorreo by remember { mutableStateOf("") }
+    var mensajeCorreo by remember { mutableStateOf("") }
+
+    
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
