@@ -533,7 +533,7 @@ fun MailScreen(){
         )
         Button(onClick = {
             val intent = Intent(Intent.ACTION_SEND)
-            intent.setDataAndType(Uri.parse("mailto:"), "text/plain")
+            intent.type = "message/rfc822"
             intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(correoContacto))
             intent.putExtra(Intent.EXTRA_SUBJECT, asuntoCorreo)
             intent.putExtra(Intent.EXTRA_TEXT, mensajeCorreo)
