@@ -3,8 +3,6 @@ package com.example.regalanavidad.sharedScreens
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.BitmapFactory.Options
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -69,9 +67,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
+import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
@@ -105,6 +103,8 @@ val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
 val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
+var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
+const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
 
 class Home : ComponentActivity() {
@@ -144,7 +144,7 @@ class Home : ComponentActivity() {
 }
 
 @Composable
-fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, onTabSelected: (String) -> Unit) {
+fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM, onTabSelected: (String) -> Unit) {
     var selectedTabIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -158,6 +158,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, onTabSe
                     selectedTabIndex = index
                     onTabSelected(tabBarItem.title) // Invoke the callback with the selected tab's title
                     navController.navigate(tabBarItem.title)
+                    mapaOrganizadorVM.searchSitioRecogida.value = false
                 },
                 icon = {
                     TabBarIconView(
@@ -207,7 +208,7 @@ fun TabBarBadgeView(count: Int? = null) {
 fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM) {
     when (screenTitle){
         "Home" -> {
-            HomeScreen(modifier, navController, mapaOrganizadorVM)
+            HomeScreen(modifier, navController, mapaOrganizadorVM, onMapaCambiado)
             onMapaCambiado(false)
         }
         "Alerts" -> {
@@ -231,7 +232,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM){
+fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit){
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
@@ -243,6 +244,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var haySitios by remember { mutableStateOf(false) }
     var recargarDatos by remember { mutableStateOf(true) }
     var sitiosLoading by remember { mutableStateOf(true) }
+    var recaudacionsLoading by remember { mutableStateOf(true) }
     val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
     var navegaSitio by remember { mutableStateOf(false) }
 
@@ -365,7 +367,20 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         } else it
                     }) {
                     Column {
-                        Text(text = "Dinero recaudado: 1€")
+                        LaunchedEffect(key1 = Unit) {
+                            recaudacionsLoading = true
+                            val donacionResponse = getDataFromGoogleSheet(donacionesSheetId, "donaciones")
+                            dineroRecaudado.value = donacionResponse.donaciones
+                            recaudacionsLoading = false
+                        }
+                        if (recaudacionsLoading) {
+                            Text(text = "Cargando...")
+                        } else {
+                            Text(text = "Dinero recaudado:")
+                            dineroRecaudado.value.forEach { donacion ->
+                                Text(text = "${donacion.tipo}: ${donacion.cantidad}")
+                            }
+                        }
                     }
                 }
                 Card(modifier = Modifier
@@ -462,6 +477,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         muestraListaSitios = false
 
         MapsScreen(modifier, navController, mapaOrganizadorVM)
+        onMapaCambiado(true)
         navController.navigate("Mapa")
         navegaSitio = false
     }
@@ -484,26 +500,18 @@ fun MoreTabsScreen(modifier: Modifier){
 
 @Composable
 fun MailScreen(){
-    var nombreContacto by remember { mutableStateOf("") }
     var correoContacto by remember { mutableStateOf("") }
     var asuntoCorreo by remember { mutableStateOf("") }
     var mensajeCorreo by remember { mutableStateOf("") }
     val contexto = LocalContext.current
 
     Column (
-        modifier = Modifier.padding(10.dp),
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextField(
-            label = { Text(text = "Nombre") },
-            value = nombreContacto,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            onValueChange = { nombreContacto = it }
-        )
         TextField(
             label = { Text(text = "Correo") },
             value = correoContacto,
@@ -540,6 +548,9 @@ fun MailScreen(){
 
             try {
                 contexto.startActivity(Intent.createChooser(intent, "Enviar correo"))
+                correoContacto = ""
+                asuntoCorreo = ""
+                mensajeCorreo = ""
             } catch (e: ActivityNotFoundException) {
                 Toast.makeText(contexto, "No hay aplicaciones de correo instaladas", Toast.LENGTH_SHORT).show()
             }

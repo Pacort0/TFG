@@ -136,12 +136,16 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                                         scope.launch {
                                             drawerState.open()
                                         }
+                                        mapaOrganizadorVM.searchSitioRecogida.value = false
                                     }) {
                                         Icon(Icons.Filled.Menu, contentDescription = "Localized description")
                                     }
                                 },
                                 actions = {
-                                    IconButton(onClick = { navController.navigate("profileScreen") }) {
+                                    IconButton(onClick = {
+                                        navController.navigate("profileScreen")
+                                        mapaOrganizadorVM.searchSitioRecogida.value = false
+                                    }) {
                                         Icon(
                                             Icons.Filled.AccountCircle,
                                             "Localized description",
@@ -151,7 +155,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                             )
                         },
                         bottomBar = {
-                            TabView(tabBarItems, navController) { title ->
+                            TabView(tabBarItems, navController, mapaOrganizadorVM) { title ->
                                 currentTabTitle = title
                             }
                         },

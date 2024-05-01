@@ -127,7 +127,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizado
                             )
                         },
                         bottomBar = {
-                            TabView(tabBarItems, navController) { title ->
+                            TabView(tabBarItems, navController, mapaOrganizadorVM) { title ->
                                 currentTabTitle = title
                             }
                         },

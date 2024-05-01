@@ -131,11 +131,11 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             snippet = "Usted se encuentra aquí"
                         )
                         if (primeraVez){
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 7f)
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 0.5f)
                             primeraVez = false
                         }
                     }
-                } else if (searchSitioRecogida.value == true && !searched || searchQuery.isEmpty()){
+                } else if (searchSitioRecogida.value == true && (!searched || searchQuery.isEmpty())){
                     currentLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -149,7 +149,6 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             title = "Sitio de recogida ${sitioRecogida.value!!.nombreSitio}",
                             snippet = sitioRecogida.value!!.direccionSitio
                         )
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(sitioRecogida.value!!.latitudSitio , sitioRecogida.value!!.longitudSitio), 8f)
                     }
                 } else {
                     markerState.value?.let { markerState ->
@@ -170,6 +169,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             cameraPositionState.position = CameraPosition.fromLatLngZoom(currentLocation!!, 10f)
         } else {
             navController.popBackStack()
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
     }
 }
