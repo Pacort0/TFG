@@ -10,14 +10,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -65,6 +60,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var primeraVez by remember { mutableStateOf(false) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
+    var start:String
+    var end:String
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -104,7 +101,13 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             )
         } else {
             if(searchSitioRecogida.value == true){
-                Button(onClick = { /*TODO*/ }) {
+                Button(onClick = {
+                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation != null){
+                        start = "${currentLocation!!.latitude},${currentLocation!!.longitude}"
+                        end = "${sitioRecogida.value!!.latitudSitio},${sitioRecogida.value!!.longitudSitio}"
+                        createRoute(start, end)
+                    }
+                }) {
                     Text(text = "Trazar ruta")
                 }
             }
@@ -169,9 +172,9 @@ fun getRetrofit():Retrofit{
         .build()
 }
 
-fun createRoute(){
+fun createRoute(start:String, end:String){
     CoroutineScope(Dispatchers.IO).launch {
-        val call = getRetrofit().create(ApiRouteService::class.java).getRoute("", "", "")
+        val call = getRetrofit().create(ApiRouteService::class.java).getRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
         if(call.isSuccessful){
             Log.d("Ruta","Llamada exitosa")
         }
