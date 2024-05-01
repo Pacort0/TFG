@@ -3,6 +3,7 @@ package com.example.regalanavidad.sharedScreens
 import android.Manifest
 import android.os.Build
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -43,7 +45,12 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
@@ -54,9 +61,6 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val cameraPositionState = rememberCameraPositionState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
-    var searched by remember { mutableStateOf(false) }
-    val markerState = remember { mutableStateOf<MarkerState?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var primeraVez by remember { mutableStateOf(false) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
@@ -99,14 +103,11 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 modifier = Modifier.padding(top = 8.dp)
             )
         } else {
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Buscar sitio") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {}),
-                modifier = Modifier.fillMaxWidth()
-            )
+            if(searchSitioRecogida.value == true){
+                Button(onClick = { /*TODO*/ }) {
+                    Text(text = "Trazar ruta")
+                }
+            }
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
@@ -123,7 +124,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(it, cameraPositionState.position.zoom)
                 }
             ){
-                if (searchSitioRecogida.value == false && (!searched || searchQuery.isEmpty() || primeraVez)) {
+                if (searchSitioRecogida.value == false) {
                     currentLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -135,7 +136,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             primeraVez = false
                         }
                     }
-                } else if (searchSitioRecogida.value == true && (!searched || searchQuery.isEmpty())){
+                } else{
                     currentLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -150,26 +151,29 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             snippet = sitioRecogida.value!!.direccionSitio
                         )
                     }
-                } else {
-                    markerState.value?.let { markerState ->
-                        Marker(
-                            state = markerState,
-                            title = "Posición buscada",
-                            snippet = "Resultado de la búsqueda"
-                        )
-                    }
                 }
             }
         }
     }
 
     BackHandler {
-        if (searched) {
-            searched = false
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(currentLocation!!, 10f)
-        } else {
-            navController.popBackStack()
-            mapaOrganizadorVM.searchSitioRecogida.value = false
+        navController.popBackStack()
+        mapaOrganizadorVM.searchSitioRecogida.value = false
+    }
+}
+
+fun getRetrofit():Retrofit{
+    return Retrofit.Builder()
+        .baseUrl("https://api.openrouteservice.org /")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+}
+
+fun createRoute(){
+    CoroutineScope(Dispatchers.IO).launch {
+        val call = getRetrofit().create(ApiRouteService::class.java).getRoute("", "", "")
+        if(call.isSuccessful){
+            Log.d("Ruta","Llamada exitosa")
         }
     }
 }
