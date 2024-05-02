@@ -41,6 +41,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,8 @@ import kotlinx.coroutines.tasks.await
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+var cargaRuta = mutableStateOf(false)
+var route = mutableListOf<LatLng>()
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -62,7 +65,6 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var primeraVez by remember { mutableStateOf(false) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
-    val route = remember { mutableStateOf<PolylineOptions?>(null) }
     var start:String
     var end:String
 
@@ -135,8 +137,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
                 }
             ){
-                route.value?.let {
-                    /*TODO*/
+                if(cargaRuta.value){
+                    Polyline(points = route)
                 }
                 if (searchSitioRecogida.value == false) {
                     currentLocation?.let {
@@ -187,7 +189,7 @@ fun createRoute(start:String, end:String){
     CoroutineScope(Dispatchers.IO).launch {
         val call = getRetrofit().create(ApiRouteService::class.java).getRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
         if(call.isSuccessful){
-            drawRoute(call.body())
+            route = drawRoute(call.body())
             Log.d("Ruta","Llamada exitosa")
         } else {
             Log.d("Ruta","Llamada fallida")
@@ -195,10 +197,11 @@ fun createRoute(start:String, end:String){
     }
 }
 
-fun drawRoute(routeResponse: RouteResponse?):PolylineOptions{
-    val polylineOptions = PolylineOptions()
+fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
+    val listaCoordenadas = mutableListOf<LatLng>()
     routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
-        polylineOptions.add(LatLng(it[1], it[0]))
+        listaCoordenadas.add(LatLng(it[1], it[0]))
     }
-    return polylineOptions
+    cargaRuta.value = true
+    return listaCoordenadas
 }
