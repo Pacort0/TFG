@@ -1,4 +1,4 @@
-package com.example.regalanavidad.sharedScreens
+package com.example.regalanavidad.apiRouteService
 
 import retrofit2.Response
 import retrofit2.http.GET
