@@ -33,8 +33,10 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -60,6 +62,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var primeraVez by remember { mutableStateOf(false) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
+    val route = remember { mutableStateOf<PolylineOptions?>(null) }
     var start:String
     var end:String
 
@@ -102,10 +105,15 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         } else {
             if(searchSitioRecogida.value == true){
                 Button(onClick = {
-                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation != null){
-                        start = "${currentLocation!!.latitude},${currentLocation!!.longitude}"
-                        end = "${sitioRecogida.value!!.latitudSitio},${sitioRecogida.value!!.longitudSitio}"
+                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation?.latitude != 37.4219983 && currentLocation?.longitude != -122.084){
+                        start = "${currentLocation!!.longitude},${currentLocation!!.latitude}"
+                        end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
                         createRoute(start, end)
+                    } else {
+                        start = "-5.986495,37.391524"
+                        end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
+                        createRoute(start, end)
+                        Toast.makeText(context, "No se puede trazar la ruta", Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Text(text = "Trazar ruta")
@@ -123,10 +131,13 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     scrollGesturesEnabled = true,
                     scrollGesturesEnabledDuringRotateOrZoom = true,
                 ),
-                onMapClick = {
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(it, cameraPositionState.position.zoom)
+                onMapClick = {latLng:LatLng ->
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
                 }
             ){
+                route.value?.let {
+                    /*TODO*/
+                }
                 if (searchSitioRecogida.value == false) {
                     currentLocation?.let {
                         Marker(
@@ -167,7 +178,7 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 
 fun getRetrofit():Retrofit{
     return Retrofit.Builder()
-        .baseUrl("https://api.openrouteservice.org /")
+        .baseUrl("https://api.openrouteservice.org/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 }
@@ -176,7 +187,18 @@ fun createRoute(start:String, end:String){
     CoroutineScope(Dispatchers.IO).launch {
         val call = getRetrofit().create(ApiRouteService::class.java).getRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
         if(call.isSuccessful){
+            drawRoute(call.body())
             Log.d("Ruta","Llamada exitosa")
+        } else {
+            Log.d("Ruta","Llamada fallida")
         }
     }
+}
+
+fun drawRoute(routeResponse: RouteResponse?):PolylineOptions{
+    val polylineOptions = PolylineOptions()
+    routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
+        polylineOptions.add(LatLng(it[1], it[0]))
+    }
+    return polylineOptions
 }
