@@ -7,12 +7,21 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,9 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.regalanavidad.R
 import com.example.regalanavidad.apiRouteService.ApiRouteService
 import com.example.regalanavidad.apiRouteService.RouteResponse
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -47,11 +59,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 var cargaRuta = mutableStateOf(false)
 var route = mutableListOf<LatLng>()
+var muestraRuta = mutableStateOf(false)
+var calcularAPie = mutableStateOf(true)
+var calcularCoche = mutableStateOf(false)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -65,8 +81,9 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var primeraVez by remember { mutableStateOf(false) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
-    var start:String
-    var end:String
+    var rutaLoading by remember { mutableStateOf(false) }
+    var start by remember { mutableStateOf("0,0") }
+    var end by remember { mutableStateOf("0,0") }
 
     LaunchedEffect(Unit) {
         if (locationPermissionState.hasPermission) {
@@ -115,10 +132,65 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         start = "-5.986495,37.391524"
                         end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
                         createRoute(start, end)
-                        Toast.makeText(context, "No se puede trazar la ruta", Toast.LENGTH_SHORT).show()
                     }
+                    rutaLoading = true
                 }) {
                     Text(text = "Trazar ruta")
+                }
+                Row (
+                    modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.Transparent),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    IconButton(
+                        onClick = {
+                            calcularAPie.value = true
+                            calcularCoche.value = false
+                            rutaLoading = true
+                            if(muestraRuta.value){
+                                muestraRuta.value = false
+                                createRoute(start, end)
+                            } },
+                        modifier = Modifier
+                            .background(Color.LightGray)
+                            .padding(end = 10.dp) // Agrega espacio a la derecha del botón
+                            .border(1.dp, Color.Black, RoundedCornerShape(15))
+                    ) {
+                        Icon(painterResource(id = R.drawable.apie), "A pie")
+                    }
+                    IconButton(
+                        onClick = {
+                            calcularAPie.value = false
+                            calcularCoche.value = true
+                            rutaLoading = true
+                            if(muestraRuta.value){
+                                muestraRuta.value = false
+                                createRoute(start, end)
+                            } },
+                        modifier = Modifier
+                            .background(Color.LightGray)
+                            .border(1.dp, Color.Black, RoundedCornerShape(15))
+                    ) {
+                        Icon(painterResource(id = R.drawable.coche_icon), "En coche")
+                    }
+                    if(rutaLoading){
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Cargando ruta...",
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    } else if(muestraRuta.value){
+                        if(calcularAPie.value){
+                            Text(text = "Borrar ruta a pie", Modifier.padding(end = 2.dp))
+                        } else {
+                            Text(text = "Borrar ruta en coche", Modifier.padding(end = 2.dp))
+                        }
+                        IconButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { muestraRuta.value = false }
+                        ) {
+                            Icon(Icons.Filled.Clear, contentDescription = "Borrar ruta")
+                        }
+                    }
                 }
             }
             GoogleMap(
@@ -137,7 +209,8 @@ fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
                 }
             ){
-                if(cargaRuta.value){
+                if(cargaRuta.value && muestraRuta.value){
+                    rutaLoading = false
                     Polyline(points = route)
                 }
                 if (searchSitioRecogida.value == false) {
@@ -186,8 +259,13 @@ fun getRetrofit():Retrofit{
 }
 
 fun createRoute(start:String, end:String){
+    var call: Response<RouteResponse>
     CoroutineScope(Dispatchers.IO).launch {
-        val call = getRetrofit().create(ApiRouteService::class.java).getRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
+        call = if (calcularAPie.value){
+            getRetrofit().create(ApiRouteService::class.java).getWalkableRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
+        } else {
+            getRetrofit().create(ApiRouteService::class.java).getDrivingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
+        }
         if(call.isSuccessful){
             route = drawRoute(call.body())
             Log.d("Ruta","Llamada exitosa")
@@ -203,5 +281,6 @@ fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
         listaCoordenadas.add(LatLng(it[1], it[0]))
     }
     cargaRuta.value = true
+    muestraRuta.value = true
     return listaCoordenadas
 }

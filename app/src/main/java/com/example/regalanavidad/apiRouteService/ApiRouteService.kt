@@ -6,7 +6,14 @@ import retrofit2.http.Query
 
 interface ApiRouteService {
     @GET("/v2/directions/foot-walking")
-    suspend fun getRoute(
+    suspend fun getWalkableRoute(
+        @Query("api_key") key:String,
+                 @Query("start", encoded = true) start:String,
+                 @Query("end", encoded = true) end:String
+    ): Response<RouteResponse>
+
+    @GET("/v2/directions/driving-car")
+    suspend fun getDrivingRoute(
         @Query("api_key") key:String,
                  @Query("start", encoded = true) start:String,
                  @Query("end", encoded = true) end:String
