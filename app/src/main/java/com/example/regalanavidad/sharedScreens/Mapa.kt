@@ -71,7 +71,7 @@ var calcularCoche = mutableStateOf(false)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapsScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM) {
+fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM) {
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)

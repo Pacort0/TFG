@@ -195,7 +195,7 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                 }
             }
             composable("profileScreen"){
-                ProfileScreen(navController = navController)
+                ProfileScreen()
             }
             composable("QueEsScreen"){
                 QueEs()

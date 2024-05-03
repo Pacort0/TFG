@@ -1,6 +1,5 @@
 package com.example.regalanavidad.modelos
 
-import android.media.Image
 import com.example.regalanavidad.R
 
 data class Usuario (

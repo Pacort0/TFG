@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
-    val mapaOrganizadorVM: mapaOrganizadorVM = remember { mapaOrganizadorVM() }
 
     // setting up the individual tabs
     val homeTab = TabBarItem(
@@ -159,7 +158,7 @@ fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostContro
                 ScreenContent(screenTitle = moreTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable("profileScreen"){
-                ProfileScreen(navController = navController)
+                ProfileScreen()
             }
             composable("QueEsScreen"){
                 QueEs()

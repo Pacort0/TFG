@@ -42,7 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen() {
     val context = LocalContext.current
     var settingsForm by remember { mutableStateOf(TextFieldValue(usuario.nombre)) }
     var isNameChanged by remember { mutableStateOf(false) }

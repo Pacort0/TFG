@@ -220,7 +220,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Mapa" -> {
-            MapsScreen(modifier, navController, mapaOrganizadorVM)
+            MapsScreen(navController, mapaOrganizadorVM)
             onMapaCambiado(true)
         }
         "More" -> {
@@ -476,7 +476,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         agregaSitio = false
         muestraListaSitios = false
 
-        MapsScreen(modifier, navController, mapaOrganizadorVM)
+        MapsScreen(navController, mapaOrganizadorVM)
         onMapaCambiado(true)
         navController.navigate("Mapa")
         navegaSitio = false

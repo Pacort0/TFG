@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                             Login(navController, auth)
                         }
                         composable("recuperaPassword"){
-                            PantallaOlvidoContrasena(navController, auth)
+                            PantallaOlvidoContrasena(auth)
                         }
                         composable("registroCuenta"){
                             SignUpScreen(navController, auth)
