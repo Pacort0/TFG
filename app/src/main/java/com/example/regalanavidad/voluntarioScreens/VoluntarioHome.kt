@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
@@ -46,14 +44,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.regalanavidad.sharedScreens.InformacionSubMenu
 import com.example.regalanavidad.sharedScreens.ProfileScreen
 import com.example.regalanavidad.sharedScreens.ScreenContent
+import com.example.regalanavidad.sharedScreens.ShowDialog
 import com.example.regalanavidad.sharedScreens.TabBarItem
 import com.example.regalanavidad.sharedScreens.TabView
-import com.example.regalanavidad.sharedScreens.drawerItems
-import com.example.regalanavidad.sharedScreens.InformacionSubMenu
-import com.example.regalanavidad.sharedScreens.ShowDialog
 import com.example.regalanavidad.sharedScreens.drawerAbierto
+import com.example.regalanavidad.sharedScreens.drawerItems
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import kotlinx.coroutines.CoroutineScope
@@ -77,12 +75,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizado
         selectedIcon = Icons.Filled.LocationOn,
         unselectedIcon = Icons.Outlined.LocationOn
     )
-    val moreTab = TabBarItem(
-        title = "More",
-        selectedIcon = Icons.AutoMirrored.Filled.List,
-        unselectedIcon = Icons.AutoMirrored.Outlined.List
-    )
-    val tabBarItems = listOf(homeTab, mapsTab, moreTab)
+    val tabBarItems = listOf(homeTab, mapsTab)
     val navController = rememberNavController()
     RegalaNavidadTheme {
         Surface(
@@ -131,7 +124,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizado
                             }
                         },
                         content = { innerPadding -> //NavHost
-                            VoluntarioNavHost(innerPadding, navController, homeTab, mapsTab, moreTab, onMapaCambiado, mapaOrganizadorVM)
+                            VoluntarioNavHost(innerPadding, navController, homeTab, mapsTab, onMapaCambiado, mapaOrganizadorVM)
                         }
                     )
                 }
@@ -142,7 +135,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizado
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
+fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, mapsTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,
@@ -153,9 +146,6 @@ fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostContro
             }
             composable(mapsTab.title) {
                 ScreenContent(screenTitle = mapsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
-            }
-            composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable("profileScreen"){
                 ProfileScreen()

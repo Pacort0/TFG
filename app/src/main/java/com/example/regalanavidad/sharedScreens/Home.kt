@@ -73,6 +73,7 @@ import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
+import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
@@ -223,8 +224,8 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             MapsScreen(navController, mapaOrganizadorVM)
             onMapaCambiado(true)
         }
-        "More" -> {
-            MoreTabsScreen(modifier)
+        "Roles" -> {
+            RolesTabScreen()
             onMapaCambiado(false)
         }
     }
@@ -486,14 +487,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 fun AlertsScreen(modifier: Modifier){
     Text(
         text = "Hello ${usuario.uid}!",
-        modifier = modifier
-    )
-}
-
-@Composable
-fun MoreTabsScreen(modifier: Modifier){
-    Text(
-        text = "Hello ${usuario.nombreRango}!",
         modifier = modifier
     )
 }

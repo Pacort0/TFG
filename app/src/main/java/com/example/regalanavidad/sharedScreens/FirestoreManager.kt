@@ -28,6 +28,16 @@ class FirestoreManager {
         }
     }
 
+    suspend fun getUsers(): MutableList<Usuario> {
+        val usuarios = mutableListOf<Usuario>()
+        val querySnapshot = firestore.collection("usuarios").get().await()
+        for (document in querySnapshot) {
+            val usuario = document.toObject(Usuario::class.java)
+            usuarios += usuario
+        }
+        return usuarios
+    }
+
     suspend fun getSitiosRecogida(): List<SitioRecogida> {
         val querySnapshot = firestore.collection("sitiosRecogida").get().await()
         return querySnapshot.toObjects(SitioRecogida::class.java)

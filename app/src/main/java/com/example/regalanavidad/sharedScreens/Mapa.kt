@@ -15,10 +15,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,6 +69,7 @@ var route = mutableListOf<LatLng>()
 var muestraRuta = mutableStateOf(false)
 var calcularAPie = mutableStateOf(true)
 var calcularCoche = mutableStateOf(false)
+var duracionTrayecto = 0
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -123,22 +125,11 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
             )
         } else {
             if(searchSitioRecogida.value == true){
-                Button(onClick = {
-                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation?.latitude != 37.4219983 && currentLocation?.longitude != -122.084){
-                        start = "${currentLocation!!.longitude},${currentLocation!!.latitude}"
-                        end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                        createRoute(start, end)
-                    } else {
-                        start = "-5.986495,37.391524"
-                        end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                        createRoute(start, end)
-                    }
-                    rutaLoading = true
-                }) {
-                    Text(text = "Trazar ruta")
-                }
                 Row (
-                    modifier = Modifier.padding(10.dp).fillMaxWidth().background(Color.Transparent),
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .background(Color.Transparent),
                     horizontalArrangement = Arrangement.Start
                 ) {
                     IconButton(
@@ -146,6 +137,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             calcularAPie.value = true
                             calcularCoche.value = false
                             rutaLoading = true
+                            muestraRuta.value = true
                             if(muestraRuta.value){
                                 muestraRuta.value = false
                                 createRoute(start, end)
@@ -162,6 +154,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             calcularAPie.value = false
                             calcularCoche.value = true
                             rutaLoading = true
+                            muestraRuta.value = true
                             if(muestraRuta.value){
                                 muestraRuta.value = false
                                 createRoute(start, end)
@@ -194,7 +187,9 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                 }
             }
             GoogleMap(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .weight(0.8f)
+                    .fillMaxWidth(),
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(
                     compassEnabled = true,
@@ -207,6 +202,20 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                 ),
                 onMapClick = {latLng:LatLng ->
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
+                },
+                onMapLoaded = {
+                    if(searchSitioRecogida.value == true){
+                        if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation?.latitude != 37.4219983 && currentLocation?.longitude != -122.084){
+                            start = "${currentLocation!!.longitude},${currentLocation!!.latitude}"
+                            end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
+                            createRoute(start, end)
+                        } else {
+                            start = "-5.986495,37.391524"
+                            end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
+                            createRoute(start, end)
+                        }
+                        rutaLoading = true
+                    }
                 }
             ){
                 if(cargaRuta.value && muestraRuta.value){
@@ -221,7 +230,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             snippet = "Usted se encuentra aquí"
                         )
                         if (primeraVez){
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 0.5f)
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
                             primeraVez = false
                         }
                     }
@@ -232,6 +241,10 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             title = "Posición actual",
                             snippet = "Usted se encuentra aquí"
                         )
+                        if (primeraVez){
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                            primeraVez = false
+                        }
                     }
                     if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null){
                         Marker(
@@ -239,6 +252,39 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             title = "Sitio de recogida ${sitioRecogida.value!!.nombreSitio}",
                             snippet = sitioRecogida.value!!.direccionSitio
                         )
+                    }
+                }
+            }
+            if(searchSitioRecogida.value == true && muestraRuta.value && cargaRuta.value){
+                Row (modifier = Modifier.fillMaxWidth()) {
+                    Column (modifier = Modifier.weight(0.33f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start) {
+                        Column {
+                            Text(text = "Salida:")
+                            Text(text = "Posición actual")
+                        }
+                    }
+                    Column (modifier = Modifier.weight(0.33f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally){
+                        Column {
+                            if(calcularAPie.value){
+                                Text(text = "A pie")
+                            } else {
+                                Text(text = "En coche")
+                            }
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Flecha", Modifier.size(24.dp))
+                            Text(text = "$duracionTrayecto minutos")
+                        }
+                    }
+                    Column (modifier = Modifier.weight(0.33f),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.End){
+                        Column {
+                            Text(text = "Destino:")
+                            Text(text = "${sitioRecogida.value?.nombreSitio}")
+                        }
                     }
                 }
             }
@@ -268,6 +314,7 @@ fun createRoute(start:String, end:String){
         }
         if(call.isSuccessful){
             route = drawRoute(call.body())
+            duracionTrayecto = (getDuration(call.body())/60)
             Log.d("Ruta","Llamada exitosa")
         } else {
             Log.d("Ruta","Llamada fallida")
@@ -283,4 +330,8 @@ fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
     cargaRuta.value = true
     muestraRuta.value = true
     return listaCoordenadas
+}
+
+fun getDuration(routeResponse: RouteResponse?): Int {
+    return routeResponse?.features?.first()?.properties?.segments?.first()?.duration?.toInt() ?: 0
 }

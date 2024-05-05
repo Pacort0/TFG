@@ -9,18 +9,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,12 +76,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
-    // setting up the individual tabs
     val homeTab = TabBarItem(
         title = "Home",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
-
     )
     val alertsTab = TabBarItem(
         title = "Alerts",
@@ -99,14 +97,16 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
         selectedIcon = Icons.Filled.LocationOn,
         unselectedIcon = Icons.Outlined.LocationOn
     )
-    val moreTab = TabBarItem(
-        title = "More",
-        selectedIcon = Icons.AutoMirrored.Filled.List,
-        unselectedIcon = Icons.AutoMirrored.Outlined.List
+    val rolesTab = TabBarItem(
+        title = "Roles",
+        selectedIcon = Icons.Filled.Star,
+        unselectedIcon = Icons.Outlined.Star
     )
-    var tabBarItems = listOf(homeTab, alertsTab, mapsTab, moreTab)
-    if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Secretaría"){
-        tabBarItems = listOf(homeTab, alertsTab, mailTab, mapsTab, moreTab)
+    var tabBarItems = listOf(homeTab, alertsTab, mapsTab)
+    if (usuario.nombreRango == "Coordinador"){
+        tabBarItems = listOf(homeTab, alertsTab, mailTab, mapsTab, rolesTab)
+    } else if(usuario.nombreRango == "Secretaría"){
+        tabBarItems = listOf(homeTab, alertsTab, mailTab, mapsTab)
     }
     val navController = rememberNavController()
     RegalaNavidadTheme {
@@ -160,7 +160,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                             }
                         },
                         content = { innerPadding -> //NavHost
-                            OrganizadorNavHost(innerPadding, navController, homeTab, alertsTab, mapsTab, moreTab, mailTab, onMapaCambiado, mapaOrganizadorVM)
+                            OrganizadorNavHost(innerPadding, navController, homeTab, alertsTab, mapsTab, rolesTab, mailTab, onMapaCambiado, mapaOrganizadorVM)
                         }
                     )
                 }
@@ -171,7 +171,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, moreTab: TabBarItem, mailTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
+fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, rolesTab: TabBarItem, mailTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,
@@ -186,8 +186,10 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
             composable(mapsTab.title) {
                 ScreenContent(screenTitle = mapsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
-            composable(moreTab.title) {
-                ScreenContent(screenTitle = moreTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
+            if (usuario.nombreRango == "Coordinador"){
+                composable(rolesTab.title) {
+                    ScreenContent(screenTitle = rolesTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
+                }
             }
             if(checkIfCanManageEmails(usuario.nombreRango)){
                 composable(mailTab.title){
