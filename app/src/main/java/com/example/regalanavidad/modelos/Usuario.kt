@@ -8,7 +8,7 @@ data class Usuario (
     val password: String = "",
     val uid: String = "",
     val rango: Int = 0,
-    val nombreRango:String = "Voluntario",
+    var nombreRango:String = "Voluntario",
     val pfp:Int = R.drawable.scoutdefecto
 ) {
     fun toMap(): Map<String, Any> {

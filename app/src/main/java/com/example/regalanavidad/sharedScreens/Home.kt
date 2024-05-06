@@ -273,14 +273,16 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 } else {
                     Text(text = "No hay sitios de recogida confirmados")
                 }
-                FloatingActionButton(
-                    onClick = {
-                        agregaSitio = true
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
-                    Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
+                if(canEditSitios){
+                    FloatingActionButton(
+                        onClick = {
+                            agregaSitio = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                        Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
+                    }
                 }
             }
         }
@@ -388,16 +390,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                    .let {
-                        if (canEditSitios) {
-                            it.clickable {
-                                Toast
-                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                    .show()
-                                muestraListaSitios = true
-                            }
-                        } else it
-                    }) {
+                    .clickable { muestraListaSitios = true })
+                {
                     Column {
                         Text(text = "Sitios en los que recogemos: ")
                         LaunchedEffect(key1 = recargarDatos){
