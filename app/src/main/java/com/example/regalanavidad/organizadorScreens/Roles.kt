@@ -1,5 +1,6 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,10 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -34,14 +34,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.sharedScreens.firestore
-import com.example.regalanavidad.sharedScreens.usuario
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.example.regalanavidad.R
 
 var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 var listaUsuarios = mutableStateOf(emptyList<Usuario>())
@@ -53,6 +55,13 @@ fun RolesTabScreen(){
     var usuariosCargados by remember { mutableStateOf(false) }
     var guardarCambios by remember { mutableStateOf(false) }
 
+    LaunchedEffect(key1 = guardarCambios) {
+            listaUsuariosCambiados.value.forEach { usuario ->
+                firestore.editaUsuario(usuario)
+            }
+            listaUsuariosCambiados.value = emptyList()
+            guardarCambios = false
+    }
     LaunchedEffect(key1 = Unit) {
         val usuarios = firestore.getUsers()
         listaUsuarios.value = usuarios
@@ -74,17 +83,19 @@ fun RolesTabScreen(){
                         .weight(0.8f)
                         .padding(8.dp)) {
                     items(listaUsuarios.value) { usuarioRegistrado ->
-                        Card (
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                                .height(50.dp)) {
-                            Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                                Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
-                                }
-                                Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                        if (usuarioRegistrado.nombreRango != "Coordinador"){
+                            Card (
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(4.dp)
+                                    .height(50.dp)) {
+                                Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+                                    Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                        Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
+                                    }
+                                    Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                        RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                                    }
                                 }
                             }
                         }
@@ -93,14 +104,19 @@ fun RolesTabScreen(){
             }
         }
         if(usuariosCargados){
+            val context = LocalContext.current
             FloatingActionButton(
                 onClick = {
-                    guardarCambios = true
+                    if(listaUsuariosCambiados.value.isNotEmpty()){
+                        guardarCambios = true
+                        Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(0.dp, 0.dp, 20.dp, 20.dp)) {
-                Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
+                    .padding(0.dp, 0.dp, 20.dp, 20.dp)
+                    .size(70.dp)) {
+                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Agregar sitio")
             }
         }
     }
@@ -111,7 +127,7 @@ fun RolesTabScreen(){
 fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistrado: Usuario){
     val options = listOf("Secretaría", "Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
     var expanded by remember { mutableStateOf(false) }
-    var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
+    var rolSeleccionado by remember { mutableStateOf(usuarioRegistrado.nombreRango) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -133,11 +149,10 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                 DropdownMenuItem(
                     text = { Text(selectionOption, fontSize = 18.sp) },
                     onClick = {
-                        if(rolSeleccionado != usuarioRegistrado.nombreRango){
+                        if(selectionOption != usuarioRegistrado.nombreRango){
                             rolSeleccionado = selectionOption
                             usuarioRegistrado.nombreRango = selectionOption
                             listaUsuariosCambiados.value += usuarioRegistrado
-                            //crear la funcion en el firestoremanager para actualizar los roles de los usuarios guardados
                         }
                         expanded = false
                         scope.launch { drawerState.close() }
