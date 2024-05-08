@@ -1,6 +1,7 @@
 package com.example.regalanavidad.sharedScreens
 
 import android.util.Log
+import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
@@ -67,9 +68,30 @@ class FirestoreManager {
         val refSitioRecogida = firestore.collection("sitiosRecogida").document(idDocumentoSitioRecogida)
         try {
             refSitioRecogida.delete().await()
-            Log.d("ProfileScreen", "Sitio de recogida eliminado con éxito")
+            Log.d("SitioRecogida", "Sitio de recogida eliminado con éxito")
         } catch (e: Exception) {
-            Log.w("ProfileScreen", "Error deleting document", e)
+            Log.w("SitioRecogida", "Error eliminando sitio de recogida", e)
+        }
+    }
+
+    suspend fun insertaEvento(evento: Evento){
+        firestore.collection("eventos").add(evento).await()
+    }
+
+    suspend fun getEventos(): List<Evento> {
+        val querySnapshot = firestore.collection("eventos").get().await()
+        return querySnapshot.toObjects(Evento::class.java)
+    }
+
+    suspend fun eliminaEvento(evento: Evento){
+        val querySnapshot = firestore.collection("eventos").whereEqualTo("titulo", evento.titulo).get().await()
+        val idDocumentoEvento = querySnapshot.documents[0].id
+        val refEvento = firestore.collection("eventos").document(idDocumentoEvento)
+        try {
+            refEvento.delete().await()
+            Log.d("Evento", "Evento eliminado con éxito")
+        } catch (e: Exception) {
+            Log.w("Evento", "Error eliminando evento", e)
         }
     }
 }

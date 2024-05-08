@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,6 +51,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -69,7 +72,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
+import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.DonacionItem
+import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
@@ -91,6 +96,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 data class TabBarItem(
     val title: String,
@@ -104,10 +113,11 @@ val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
 val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
+val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-
+private var idEventos = 0
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -237,17 +247,23 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
-    var agregaSitio by remember { mutableStateOf(false) }
-    var muestraListaSitios by remember { mutableStateOf(false) }
     var textoBusqueda by remember { mutableStateOf("") }
     val firestore = FirestoreManager()
     val scope = CoroutineScope(Dispatchers.Main)
+    var agregaSitio by remember { mutableStateOf(false) }
+    var muestraListaSitios by remember { mutableStateOf(false) }
     var haySitios by remember { mutableStateOf(false) }
-    var recargarDatos by remember { mutableStateOf(true) }
+    var recargarSitios by remember { mutableStateOf(true) }
     var sitiosLoading by remember { mutableStateOf(true) }
     var recaudacionsLoading by remember { mutableStateOf(true) }
     val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
     var navegaSitio by remember { mutableStateOf(false) }
+    var muestraListaEventos by remember{ mutableStateOf(false) }
+    var agregaEvento by remember{ mutableStateOf(false) }
+    var hayEventos by remember { mutableStateOf(false) }
+    var recargarEventos by remember { mutableStateOf(true) }
+    var eventosLoading by remember { mutableStateOf(true) }
+    val canEditEventos = checkIfCanEditEventos(usuario.nombreRango)
 
     if (muestraListaSitios) {
         Dialog(onDismissRequest = { muestraListaSitios = false }) {
@@ -265,7 +281,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         sitiosRecogidaConfirmados,
                         false,
                         canEditSitios,
-                        onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
+                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
                         onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
                             navegaSitio = true
                         }
@@ -322,7 +338,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     prediccionesNuevoSitioRecogida[index]
                                                 )
                                                 textoBusqueda = ""
-                                                recargarDatos = true
+                                                recargarSitios = true
                                                 agregaSitio = false
                                             }
                                         }
@@ -336,6 +352,77 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+    if (muestraListaEventos) {
+        Dialog(onDismissRequest = { muestraListaEventos = false }) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(35.dp)
+                .clip(RoundedCornerShape(20.dp))) {
+                LazyColumn(modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center)
+                    .background(color = Color.White)) {
+                }
+                if (hayEventos && !eventosLoading){
+                    ListaEventosConfirmados(
+                        eventosConfirmados,
+                        false,
+                        canEditSitios,
+                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                        onEventoEscogido = { evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                            navegaSitio = true
+                        }
+                    )
+                } else {
+                    Text(text = "No hay eventos confirmados")
+                }
+                if(canEditEventos){
+                    FloatingActionButton(
+                        onClick = {
+                            agregaEvento = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                        Icon(Icons.Filled.Add, contentDescription = "Agregar evento")
+                    }
+                }
+            }
+        }
+        if (agregaEvento) {
+            var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+            var nombreEvento by remember { mutableStateOf("") }
+            var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
+            var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
+            val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
+            val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(horaEscogida) } }
+
+            Dialog(onDismissRequest = { agregaEvento = false }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(305.dp)
+                        .background(Color.LightGray)
+                        .padding(35.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                ) {
+                    Column (
+                        Modifier
+                            .fillMaxSize()
+                            .padding(6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        TextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = fechaFormateada, Modifier.clickable { /*TODO*/ })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = horaFormateada, Modifier.clickable { /*TODO*/ })
                     }
                 }
             }
@@ -394,7 +481,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 {
                     Column {
                         Text(text = "Sitios en los que recogemos: ")
-                        LaunchedEffect(key1 = recargarDatos){
+                        LaunchedEffect(key1 = recargarSitios){
                             sitiosLoading = true
                             sitiosRecogidaConfirmados.clear()
                             val sitiosRecogida = firestore.getSitiosRecogida()
@@ -402,7 +489,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 sitiosRecogidaConfirmados.add(sitioRecogida)
                             }
                             haySitios = sitiosRecogidaConfirmados.size != 0
-                            recargarDatos = false
+                            recargarSitios = false
                             sitiosLoading = false
                         }
                         if (sitiosLoading) {
@@ -413,7 +500,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     sitiosRecogidaConfirmados,
                                     true,
                                     canEditSitios,
-                                    onElementoEliminado = {elementoEliminado -> recargarDatos = elementoEliminado},
+                                    onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
                                     onSitioEscogido = { sitioRecogida ->
                                         mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
                                     }
@@ -432,18 +519,39 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 Card(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(0.dp, 0.dp, 5.dp, 0.dp)
-                    .let {
-                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II.") {
-                            it.clickable {
-                                Toast
-                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        } else it
-                    }) {
+                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                    .clickable { muestraListaEventos = true })
+                {
                     Column {
-                        Text(text = "Fechas y eventos")
+                        Text(text = "Eventos próximos: ")
+                        LaunchedEffect(key1 = recargarEventos){
+                            eventosLoading = true
+                            sitiosRecogidaConfirmados.clear()
+                            val eventos = firestore.getEventos()
+                            eventos.forEach { evento ->
+                                eventosConfirmados.add(evento)
+                            }
+                            hayEventos = eventosConfirmados.size != 0
+                            recargarEventos = false
+                            eventosLoading = false
+                        }
+                        if (eventosLoading) {
+                            Text(text = "Cargando...")
+                        } else {
+                            if (hayEventos){
+                                ListaEventosConfirmados(
+                                    eventosConfirmados,
+                                    true,
+                                    canEditSitios,
+                                    onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                                    onEventoEscogido = { evento ->
+                                        mapaOrganizadorVM.evento.value = evento
+                                    }
+                                )
+                            } else {
+                                Text(text = "No hay eventos confirmados")
+                            }
+                        }
                     }
                 }
                 Card(modifier = Modifier
@@ -724,6 +832,45 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
             }
         }
     }
+}@Composable
+fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
+    if(eventosConfirmados.size > 0) {
+        LazyColumn {
+            items(eventosConfirmados.size) { index ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp, 5.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        eventosConfirmados[index].titulo?.let { Text(text = it, modifier = Modifier.weight(1f)) }
+                        IconButton(onClick = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                onEventoEscogido(eventosConfirmados[index])
+                            }
+                        },
+                            modifier = Modifier.weight(0.3f)) {
+                            Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Eliminar evento")
+                        }
+                        if(canEdit && !isHomePage){
+                            IconButton(onClick = {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    firestore.eliminaEvento(eventosConfirmados[index])
+                                    onElementoEliminado(true)
+                                }
+                            },
+                                modifier = Modifier.weight(0.3f)) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar evento")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 fun checkIfCanEditSitios(rol: String):Boolean{
     return rol == "Coordinador" || rol == "RR.II." || rol == "Logística"
@@ -731,6 +878,10 @@ fun checkIfCanEditSitios(rol: String):Boolean{
 
 fun checkIfCanManageEmails(rol: String):Boolean{
     return rol == "Coordinador" || rol == "Secretaría"
+}
+
+fun checkIfCanEditEventos(rol:String):Boolean{
+    return rol == "Coordinador" || rol == "RR.II."
 }
 
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)
