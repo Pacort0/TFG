@@ -61,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -90,13 +91,17 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.time.timepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -117,7 +122,7 @@ val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-private var idEventos = 0
+private var     idEventos = 0
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -373,8 +378,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         eventosConfirmados,
                         false,
                         canEditSitios,
-                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                        onEventoEscogido = { evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                        onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                        onEventoEscogido = {
+                            evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
                             navegaSitio = true
                         }
                     )
@@ -396,17 +402,22 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         }
         if (agregaEvento) {
             var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+            var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
             var nombreEvento by remember { mutableStateOf("") }
             var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
             var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
             val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
             val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(horaEscogida) } }
+            val fechaDialogState = rememberMaterialDialogState()
+            val horaDialogState = rememberMaterialDialogState()
+            var alturaDialogo by remember { mutableStateOf(410.dp) }
+            var buscarSitio by remember{mutableStateOf(false)}
 
             Dialog(onDismissRequest = { agregaEvento = false }) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(305.dp)
+                        .height(alturaDialogo)
                         .background(Color.LightGray)
                         .padding(35.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -418,11 +429,135 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        TextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
+                        OutlinedTextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = fechaFormateada, Modifier.clickable { /*TODO*/ })
+                        OutlinedTextField(
+                            value = textoBusqueda,
+                            onValueChange = { nuevaBusqueda ->
+                                textoBusqueda = nuevaBusqueda
+                                buscarSitio = true
+                                scope.launch {
+                                    prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda)
+                                }
+                            },
+                            label = { Text("Lugar del evento:") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    buscarSitio = focusState.isFocused
+                                }
+                        )
+                        if(buscarSitio){
+                            LazyColumn {
+                                alturaDialogo = 600.dp
+                                items(prediccionesNuevoSitioEvento.size) { index ->
+                                    Card(
+                                        modifier = Modifier
+                                            .padding(2.dp)
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                sitioEvento = prediccionesNuevoSitioEvento[index]
+                                                alturaDialogo = 410.dp
+                                                textoBusqueda = prediccionesNuevoSitioEvento[index].nombreSitio
+                                                buscarSitio = false
+                                            }
+                                            .padding(0.dp, 5.dp)
+                                    ) {
+                                        LazyRow {
+                                            if(index < prediccionesNuevoSitioEvento.size - 1){
+                                                item{Text(text = prediccionesNuevoSitioEvento[index].nombreSitio + " - " + prediccionesNuevoSitioEvento[index].direccionSitio)}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = horaFormateada, Modifier.clickable { /*TODO*/ })
+                        Text(text = fechaFormateada, Modifier.clickable { fechaDialogState.show() })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = horaFormateada, Modifier.clickable { horaDialogState.show() })
+                    }
+                    MaterialDialog(
+                        dialogState = fechaDialogState,
+                        buttons = {
+                            positiveButton("Guardar") {
+                                fechaDialogState.hide()
+                            }
+                            negativeButton("Cancelar") {
+                                fechaDialogState.hide()
+                            }
+                        }
+                    ) {
+                        datepicker(
+                            initialDate = LocalDate.now(),
+                            title = "Selecciona la fecha del evento",
+                            onDateChange = { fechaEscogida = it },
+                            allowedDateValidator = { fecha ->
+                                // Permitir solo fechas iguales o posteriores a la fecha actual
+                                !fecha.isBefore(LocalDate.now())
+                            }
+                        )
+                    }
+
+                    MaterialDialog(
+                        dialogState = horaDialogState,
+                        buttons = {
+                            positiveButton("Guardar") {
+                                fechaDialogState.hide()
+                            }
+                            negativeButton("Cancelar"){
+                                fechaDialogState.hide()
+                            }
+                        }
+                    ) {
+                        timepicker(
+                            initialTime = LocalTime.NOON,
+                            title = "Selecciona la fecha del evento",
+                            onTimeChange = { horaEscogida = it },
+                            colors = TimePickerDefaults.colors(
+                                activeBackgroundColor = Color.Black, //Fondo horas
+                                inactiveBackgroundColor = Color.LightGray, //Fondo que no está activo
+                                activeTextColor = Color.White, //Color de texto activo
+                                inactiveTextColor = Color.Black, //Color de texto inactivo
+                                inactivePeriodBackground = Color.LightGray, //Fondo de la parte inactiva
+                                selectorColor = Color.Blue, //Selector horas
+                                selectorTextColor = Color.White,
+                                headerTextColor = Color.White, //Titulo
+                                borderColor = Color.White
+                            ),
+                            is24HourClock = true
+                        )
+                    }
+                    Row (modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                        Button(onClick = { agregaEvento = false}, Modifier.background(Color.Transparent)) {
+                            Text(text = "Cancelar")
+                        }
+                        Button(onClick = {
+                            if(sitioEvento.nombreSitio == ""){
+                                Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
+                            } else if(nombreEvento == ""){
+                                Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
+                            } else {
+                                idEventos++
+                                val evento = Evento(
+                                    id = idEventos,
+                                    titulo = nombreEvento,
+                                    startDate = fechaFormateada,
+                                    horaComienzo = horaFormateada,
+                                    lugar = sitioEvento
+                                )
+                                scope.launch {
+                                    firestore.insertaEvento(evento)
+                                    recargarEventos = true
+                                    agregaEvento = false
+                                }
+                            }
+                        }, Modifier.background(Color.Transparent)) {
+                            Text(text = "Guardar")
+                        }
                     }
                 }
             }
@@ -526,7 +661,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         Text(text = "Eventos próximos: ")
                         LaunchedEffect(key1 = recargarEventos){
                             eventosLoading = true
-                            sitiosRecogidaConfirmados.clear()
+                            eventosConfirmados.clear()
                             val eventos = firestore.getEventos()
                             eventos.forEach { evento ->
                                 eventosConfirmados.add(evento)
@@ -545,7 +680,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     canEditSitios,
                                     onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
                                     onEventoEscogido = { evento ->
-                                        mapaOrganizadorVM.evento.value = evento
+                                        mapaOrganizadorVM.sitioRecogida.value = evento.lugar
                                     }
                                 )
                             } else {
@@ -578,6 +713,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         mapaOrganizadorVM.searchSitioRecogida.value = true
         agregaSitio = false
         muestraListaSitios = false
+        agregaEvento = false
+        muestraListaEventos = false
 
         MapsScreen(navController, mapaOrganizadorVM)
         onMapaCambiado(true)
@@ -847,15 +984,13 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         eventosConfirmados[index].titulo?.let { Text(text = it, modifier = Modifier.weight(1f)) }
-                        IconButton(onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                onEventoEscogido(eventosConfirmados[index])
-                            }
-                        },
-                            modifier = Modifier.weight(0.3f)) {
-                            Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Eliminar evento")
-                        }
                         if(canEdit && !isHomePage){
+                            IconButton(onClick = {
+                                onEventoEscogido(eventosConfirmados[index])
+                            },
+                                modifier = Modifier.weight(0.3f)) {
+                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Navegar a mapa")
+                            }
                             IconButton(onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     firestore.eliminaEvento(eventosConfirmados[index])

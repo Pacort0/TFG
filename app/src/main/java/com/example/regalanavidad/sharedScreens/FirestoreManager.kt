@@ -76,6 +76,7 @@ class FirestoreManager {
 
     suspend fun insertaEvento(evento: Evento){
         firestore.collection("eventos").add(evento).await()
+        Log.d("Evento", "Evento insertado con éxito")
     }
 
     suspend fun getEventos(): List<Evento> {
@@ -84,7 +85,7 @@ class FirestoreManager {
     }
 
     suspend fun eliminaEvento(evento: Evento){
-        val querySnapshot = firestore.collection("eventos").whereEqualTo("titulo", evento.titulo).get().await()
+        val querySnapshot = firestore.collection("eventos").whereEqualTo("id", evento.id).get().await()
         val idDocumentoEvento = querySnapshot.documents[0].id
         val refEvento = firestore.collection("eventos").document(idDocumentoEvento)
         try {

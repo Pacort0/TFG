@@ -8,5 +8,4 @@ import com.example.regalanavidad.modelos.SitioRecogida
 class mapaOrganizadorVM:ViewModel() {
     var sitioRecogida = MutableLiveData<SitioRecogida>()
     var searchSitioRecogida = MutableLiveData<Boolean>()
-    var evento = MutableLiveData<Evento>()
 }
