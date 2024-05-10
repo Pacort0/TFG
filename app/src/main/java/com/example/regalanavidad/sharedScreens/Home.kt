@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -71,6 +72,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.R
@@ -105,6 +107,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 data class TabBarItem(
     val title: String,
@@ -971,6 +974,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
     }
 }@Composable
 fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
+    val contexto = LocalContext.current
     if(eventosConfirmados.size > 0) {
         LazyColumn {
             items(eventosConfirmados.size) { index ->
@@ -984,21 +988,47 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         eventosConfirmados[index].titulo?.let { Text(text = it, modifier = Modifier.weight(1f)) }
-                        if(canEdit && !isHomePage){
+                        if(!isHomePage){
+                            IconButton(onClick = {
+                                val startMillis: Long = Calendar.getInstance().run {
+                                    set(2024, 5, 19, 7, 30)
+                                    timeInMillis
+                                }
+                                val endMillis: Long = Calendar.getInstance().run {
+                                    set(2024, 5, 19, 10, 30)
+                                    timeInMillis
+                                }
+
+                                Intent(Intent.ACTION_INSERT).apply {
+                                    data = CalendarContract.Events.CONTENT_URI
+                                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
+                                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                                    putExtra(CalendarContract.Events.TITLE, "Mi evento")
+                                    putExtra(CalendarContract.Events.DESCRIPTION, "Descripción del evento")
+                                    putExtra(CalendarContract.Events.EVENT_LOCATION, "Ubicación del evento")
+                                    putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                }.also { intent ->
+                                    startActivity(contexto, intent, null)
+                                }
+                            }, modifier = Modifier.weight(0.3f)) {
+                                Icon(painter = painterResource(id = R.drawable.calendar), contentDescription = "Añadir al calendario")
+                            }
                             IconButton(onClick = {
                                 onEventoEscogido(eventosConfirmados[index])
                             },
                                 modifier = Modifier.weight(0.3f)) {
                                 Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Navegar a mapa")
                             }
-                            IconButton(onClick = {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    firestore.eliminaEvento(eventosConfirmados[index])
-                                    onElementoEliminado(true)
+                            if(canEdit){
+                                IconButton(onClick = {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        firestore.eliminaEvento(eventosConfirmados[index])
+                                        onElementoEliminado(true)
+                                    }
+                                },
+                                    modifier = Modifier.weight(0.3f)) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Eliminar evento")
                                 }
-                            },
-                                modifier = Modifier.weight(0.3f)) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar evento")
                             }
                         }
                     }
