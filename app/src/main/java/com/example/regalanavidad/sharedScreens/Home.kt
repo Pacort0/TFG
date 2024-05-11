@@ -990,12 +990,14 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         eventosConfirmados[index].titulo?.let { Text(text = it, modifier = Modifier.weight(1f)) }
                         if(!isHomePage){
                             IconButton(onClick = {
+                                val arrayFecha = eventosConfirmados[index].startDate.split("/")
+                                val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
                                 val startMillis: Long = Calendar.getInstance().run {
-                                    set(2024, 5, 19, 7, 30)
+                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
                                     timeInMillis
                                 }
                                 val endMillis: Long = Calendar.getInstance().run {
-                                    set(2024, 5, 19, 10, 30)
+                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt()+2, arrayHora[1].toInt()+2)
                                     timeInMillis
                                 }
 
@@ -1003,10 +1005,11 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                     data = CalendarContract.Events.CONTENT_URI
                                     putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
                                     putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
-                                    putExtra(CalendarContract.Events.TITLE, "Mi evento")
-                                    putExtra(CalendarContract.Events.DESCRIPTION, "Descripción del evento")
-                                    putExtra(CalendarContract.Events.EVENT_LOCATION, "Ubicación del evento")
+                                    putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
+                                    putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
                                     putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                    putExtra(CalendarContract.Events.DESCRIPTION, "Evento organizado por Regala Navidad")
+                                    putExtra(CalendarContract.Events.HAS_ALARM, 1)
                                 }.also { intent ->
                                     startActivity(contexto, intent, null)
                                 }
