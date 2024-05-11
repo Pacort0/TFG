@@ -410,7 +410,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
             var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
             val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
-            val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("hh:mm").format(horaEscogida) } }
+            val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida) } }
             val fechaDialogState = rememberMaterialDialogState()
             val horaDialogState = rememberMaterialDialogState()
             var alturaDialogo by remember { mutableStateOf(410.dp) }
@@ -997,7 +997,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                     timeInMillis
                                 }
                                 val endMillis: Long = Calendar.getInstance().run {
-                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt()+2, arrayHora[1].toInt()+2)
+                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt()+2, arrayHora[1].toInt())
                                     timeInMillis
                                 }
 
