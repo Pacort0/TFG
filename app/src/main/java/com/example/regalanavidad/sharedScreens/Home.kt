@@ -9,6 +9,7 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -23,12 +24,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -85,9 +89,11 @@ import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -108,6 +114,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import kotlin.random.Random
 
 data class TabBarItem(
     val title: String,
@@ -125,7 +132,6 @@ val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-private var     idEventos = 0
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -230,12 +236,12 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             HomeScreen(modifier, navController, mapaOrganizadorVM, onMapaCambiado)
             onMapaCambiado(false)
         }
-        "Alerts" -> {
+        "Alertas" -> {
             AlertsScreen(modifier)
             onMapaCambiado(false)
         }
         "Mail" -> {
-            MailScreen()
+            MailScreen(navController)
             onMapaCambiado(false)
         }
         "Mapa" -> {
@@ -244,6 +250,10 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
         }
         "Roles" -> {
             RolesTabScreen()
+            onMapaCambiado(false)
+        }
+        "Excel" -> {
+            ExcelScreen()
             onMapaCambiado(false)
         }
     }
@@ -272,457 +282,518 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var recargarEventos by remember { mutableStateOf(true) }
     var eventosLoading by remember { mutableStateOf(true) }
     val canEditEventos = checkIfCanEditEventos(usuario.nombreRango)
+    var redactaEmail by remember { mutableStateOf(false) }
 
-    if (muestraListaSitios) {
-        Dialog(onDismissRequest = { muestraListaSitios = false }) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(35.dp)
-                .clip(RoundedCornerShape(20.dp))) {
-                LazyColumn(modifier = Modifier
+    Box(modifier = modifier
+        .fillMaxSize()
+        .padding(10.dp)){
+        if (muestraListaSitios) {
+            Dialog(onDismissRequest = { muestraListaSitios = false }) {
+                Box(modifier = Modifier
                     .fillMaxSize()
-                    .align(Alignment.Center)
-                    .background(color = Color.White)) {
-                }
-                if (haySitios && !sitiosLoading){
-                    ListaSitiosConfirmados(
-                        sitiosRecogidaConfirmados,
-                        false,
-                        canEditSitios,
-                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                        onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                            navegaSitio = true
-                        }
-                    )
-                } else {
-                    Text(text = "No hay sitios de recogida confirmados")
-                }
-                if(canEditSitios){
-                    FloatingActionButton(
-                        onClick = {
-                            agregaSitio = true
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
-                        Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
+                    .padding(35.dp)
+                    .clip(RoundedCornerShape(20.dp))) {
+                    LazyColumn(modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                        .background(color = Color.White)) {
                     }
-                }
-            }
-        }
-        if (agregaSitio) {
-            var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
-
-            Dialog(onDismissRequest = { agregaSitio = false }) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(305.dp)
-                        .background(Color.LightGray)
-                        .padding(35.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                ) {
-                    Column {
-                        OutlinedTextField(
-                            value = textoBusqueda,
-                            onValueChange = { nuevaBusqueda ->
-                                textoBusqueda = nuevaBusqueda
-                                scope.launch {
-                                    prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
-                                }
-                            },
-                            label = { Text("Buscar") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        LazyColumn {
-                            items(prediccionesNuevoSitioRecogida.size) { index ->
-                                Card(
-                                    modifier = Modifier
-                                        .padding(2.dp)
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            scope.launch(Dispatchers.Main) {
-                                                firestore.insertaSitioRecogida(
-                                                    prediccionesNuevoSitioRecogida[index]
-                                                )
-                                                textoBusqueda = ""
-                                                recargarSitios = true
-                                                agregaSitio = false
-                                            }
-                                        }
-                                        .padding(0.dp, 5.dp)
-                                ) {
-                                    LazyRow {
-                                        if(index < prediccionesNuevoSitioRecogida.size - 1){
-                                            item{Text(text = prediccionesNuevoSitioRecogida[index].nombreSitio + " - " + prediccionesNuevoSitioRecogida[index].direccionSitio)}
-                                        }
-                                    }
-                                }
+                    if (haySitios && !sitiosLoading){
+                        ListaSitiosConfirmados(
+                            sitiosRecogidaConfirmados,
+                            false,
+                            canEditSitios,
+                            onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                            onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                navegaSitio = true
                             }
-                        }
+                        )
+                    } else {
+                        Text(text = "No hay sitios de recogida confirmados")
                     }
-                }
-            }
-        }
-    }
-    if (muestraListaEventos) {
-        Dialog(onDismissRequest = { muestraListaEventos = false }) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(35.dp)
-                .clip(RoundedCornerShape(20.dp))) {
-                LazyColumn(modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.Center)
-                    .background(color = Color.White)) {
-                }
-                if (hayEventos && !eventosLoading){
-                    ListaEventosConfirmados(
-                        eventosConfirmados,
-                        false,
-                        canEditSitios,
-                        onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                        onEventoEscogido = {
-                            evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
-                            navegaSitio = true
-                        }
-                    )
-                } else {
-                    Text(text = "No hay eventos confirmados")
-                }
-                if(canEditEventos){
-                    FloatingActionButton(
-                        onClick = {
-                            agregaEvento = true
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
-                        Icon(Icons.Filled.Add, contentDescription = "Agregar evento")
-                    }
-                }
-            }
-        }
-        if (agregaEvento) {
-            var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
-            var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
-            var nombreEvento by remember { mutableStateOf("") }
-            var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
-            var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
-            val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
-            val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida) } }
-            val fechaDialogState = rememberMaterialDialogState()
-            val horaDialogState = rememberMaterialDialogState()
-            var alturaDialogo by remember { mutableStateOf(410.dp) }
-            var buscarSitio by remember{mutableStateOf(false)}
-
-            Dialog(onDismissRequest = { agregaEvento = false }) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(alturaDialogo)
-                        .background(Color.LightGray)
-                        .padding(35.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                ) {
-                    Column (
-                        Modifier
-                            .fillMaxSize()
-                            .padding(6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        OutlinedTextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = textoBusqueda,
-                            onValueChange = { nuevaBusqueda ->
-                                textoBusqueda = nuevaBusqueda
-                                buscarSitio = true
-                                scope.launch {
-                                    prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda)
-                                }
+                    if(canEditSitios){
+                        FloatingActionButton(
+                            onClick = {
+                                agregaSitio = true
                             },
-                            label = { Text("Lugar del evento:") },
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .onFocusChanged { focusState ->
-                                    buscarSitio = focusState.isFocused
-                                }
-                        )
-                        if(buscarSitio){
-                            LazyColumn {
-                                alturaDialogo = 600.dp
-                                items(prediccionesNuevoSitioEvento.size) { index ->
-                                    Card(
-                                        modifier = Modifier
-                                            .padding(2.dp)
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                sitioEvento = prediccionesNuevoSitioEvento[index]
-                                                alturaDialogo = 410.dp
-                                                textoBusqueda = prediccionesNuevoSitioEvento[index].nombreSitio
-                                                buscarSitio = false
+                                .align(Alignment.BottomEnd)
+                                .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                            Icon(Icons.Filled.Add, contentDescription = "Agregar sitio")
+                        }
+                    }
+                }
+            }
+            if (agregaSitio) {
+                var alturaDialogo by remember { mutableStateOf(150.dp) }
+                var buscarSitio by remember{mutableStateOf(false)}
+                var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+
+                Dialog(onDismissRequest = { agregaSitio = false }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(alturaDialogo)
+                            .background(Color.LightGray)
+                            .padding(35.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                    ) {
+                        Column {
+                            OutlinedTextField(
+                                value = textoBusqueda,
+                                onValueChange = { nuevaBusqueda ->
+                                    textoBusqueda = nuevaBusqueda
+                                    buscarSitio = true
+                                    scope.launch {
+                                        prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
+                                    }
+                                },
+                                label = { Text("Buscar") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        buscarSitio = focusState.isFocused
+                                    }
+                            )
+                            if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
+                                LazyColumn {
+                                    alturaDialogo = 400.dp
+                                    val topSitios = prediccionesNuevoSitioRecogida.take(4)
+                                    items(topSitios.size) { index ->
+                                        Card(
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .fillMaxWidth()
+                                                .height(70.dp)
+                                                .clickable {
+                                                    scope.launch(Dispatchers.Main) {
+                                                        firestore.insertaSitioRecogida(topSitios[index])
+                                                        textoBusqueda = ""
+                                                        alturaDialogo = 150.dp
+                                                        buscarSitio = false
+                                                        recargarSitios = true
+                                                        agregaSitio = false
+                                                    }
+                                                }
+                                                .padding(0.dp, 5.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(8.dp)
+                                            ) {
+                                                if(topSitios[index].nombreSitio != ""){
+                                                    LazyRow {
+                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp) }
+                                                    }
+                                                    LazyRow {
+                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp) }
+                                                    }
+                                                }
                                             }
-                                            .padding(0.dp, 5.dp)
-                                    ) {
-                                        LazyRow {
-                                            if(index < prediccionesNuevoSitioEvento.size - 1){
-                                                item{Text(text = prediccionesNuevoSitioEvento[index].nombreSitio + " - " + prediccionesNuevoSitioEvento[index].direccionSitio)}
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (muestraListaEventos) {
+            Dialog(onDismissRequest = { muestraListaEventos = false }) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(35.dp)
+                    .clip(RoundedCornerShape(20.dp))) {
+                    LazyColumn(modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                        .background(color = Color.White)) {
+                    }
+                    if (hayEventos && !eventosLoading){
+                        ListaEventosConfirmados(
+                            eventosConfirmados,
+                            false,
+                            canEditSitios,
+                            onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                            onEventoEscogido = {
+                                    evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                navegaSitio = true
+                            }
+                        )
+                    } else {
+                        Text(text = "No hay eventos confirmados")
+                    }
+                    if(canEditEventos){
+                        FloatingActionButton(
+                            onClick = {
+                                agregaEvento = true
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                            Icon(Icons.Filled.Add, contentDescription = "Agregar evento")
+                        }
+                    }
+                }
+            }
+            if (agregaEvento) {
+                var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+                var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
+                var nombreEvento by remember { mutableStateOf("") }
+                var descripcionEvento by remember {mutableStateOf("")}
+                var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
+                var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
+                val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
+                val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida) } }
+                val fechaDialogState = rememberMaterialDialogState()
+                val horaDialogState = rememberMaterialDialogState()
+                var alturaDialogo by remember { mutableStateOf(450.dp) }
+                var buscarSitio by remember{mutableStateOf(false)}
+
+                Dialog(onDismissRequest = { agregaEvento = false }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(alturaDialogo)
+                            .background(Color.LightGray)
+                            .padding(35.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                    ) {
+                        Column (
+                            Modifier
+                                .fillMaxSize()
+                                .padding(6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            OutlinedTextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(value = descripcionEvento, onValueChange = {descripcionEvento = it}, label = {Text("Descripción del evento")})
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = textoBusqueda,
+                                onValueChange = { nuevaBusqueda ->
+                                    textoBusqueda = nuevaBusqueda
+                                    buscarSitio = true
+                                    scope.launch {
+                                        prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda)
+                                    }
+                                },
+                                label = { Text("Lugar del evento:") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        buscarSitio = focusState.isFocused
+                                    }
+                            )
+                            if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty()){
+                                LazyColumn {
+                                    alturaDialogo = 610.dp
+                                    val topSitios = prediccionesNuevoSitioEvento.take(4)
+                                    items(topSitios.size) { index ->
+                                        Card(
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .height(70.dp)
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    sitioEvento =
+                                                        prediccionesNuevoSitioEvento[index]
+                                                    alturaDialogo = 450.dp
+                                                    textoBusqueda =
+                                                        prediccionesNuevoSitioEvento[index].nombreSitio
+                                                    buscarSitio = false
+                                                }
+                                                .padding(0.dp, 5.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(8.dp)
+                                            ) {
+                                                if(topSitios[index].nombreSitio != ""){
+                                                    LazyRow {
+                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp) }
+                                                    }
+                                                    LazyRow {
+                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp) }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = fechaFormateada, Modifier.clickable { fechaDialogState.show() })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = horaFormateada, Modifier.clickable { horaDialogState.show() })
-                    }
-                    MaterialDialog(
-                        dialogState = fechaDialogState,
-                        buttons = {
-                            positiveButton("Guardar") {
-                                fechaDialogState.hide()
-                            }
-                            negativeButton("Cancelar") {
-                                fechaDialogState.hide()
-                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = fechaFormateada, Modifier.clickable { fechaDialogState.show() })
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = horaFormateada, Modifier.clickable { horaDialogState.show() })
                         }
-                    ) {
-                        datepicker(
-                            initialDate = LocalDate.now(),
-                            title = "Selecciona la fecha del evento",
-                            onDateChange = { fechaEscogida = it },
-                            allowedDateValidator = { fecha ->
-                                // Permitir solo fechas iguales o posteriores a la fecha actual
-                                !fecha.isBefore(LocalDate.now())
-                            }
-                        )
-                    }
-
-                    MaterialDialog(
-                        dialogState = horaDialogState,
-                        buttons = {
-                            positiveButton("Guardar") {
-                                fechaDialogState.hide()
-                            }
-                            negativeButton("Cancelar"){
-                                fechaDialogState.hide()
-                            }
-                        }
-                    ) {
-                        timepicker(
-                            initialTime = LocalTime.NOON,
-                            title = "Selecciona la fecha del evento",
-                            onTimeChange = { horaEscogida = it },
-                            colors = TimePickerDefaults.colors(
-                                activeBackgroundColor = Color.Black, //Fondo horas
-                                inactiveBackgroundColor = Color.LightGray, //Fondo que no está activo
-                                activeTextColor = Color.White, //Color de texto activo
-                                inactiveTextColor = Color.Black, //Color de texto inactivo
-                                inactivePeriodBackground = Color.LightGray, //Fondo de la parte inactiva
-                                selectorColor = Color.Blue, //Selector horas
-                                selectorTextColor = Color.White,
-                                headerTextColor = Color.White, //Titulo
-                                borderColor = Color.White
-                            ),
-                            is24HourClock = true
-                        )
-                    }
-                    Row (modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
-                        Button(onClick = { agregaEvento = false}, Modifier.background(Color.Transparent)) {
-                            Text(text = "Cancelar")
-                        }
-                        Button(onClick = {
-                            if(sitioEvento.nombreSitio == ""){
-                                Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
-                            } else if(nombreEvento == ""){
-                                Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
-                            } else {
-                                idEventos++
-                                val evento = Evento(
-                                    id = idEventos,
-                                    titulo = nombreEvento,
-                                    startDate = fechaFormateada,
-                                    horaComienzo = horaFormateada,
-                                    lugar = sitioEvento
-                                )
-                                scope.launch {
-                                    firestore.insertaEvento(evento)
-                                    recargarEventos = true
-                                    agregaEvento = false
+                        MaterialDialog(
+                            dialogState = fechaDialogState,
+                            buttons = {
+                                positiveButton("Guardar") {
+                                    fechaDialogState.hide()
+                                }
+                                negativeButton("Cancelar") {
+                                    fechaDialogState.hide()
                                 }
                             }
-                        }, Modifier.background(Color.Transparent)) {
-                            Text(text = "Guardar")
+                        ) {
+                            datepicker(
+                                initialDate = LocalDate.now(),
+                                title = "Selecciona la fecha del evento",
+                                onDateChange = { fechaEscogida = it },
+                                allowedDateValidator = { fecha ->
+                                    // Permitir solo fechas iguales o posteriores a la fecha actual
+                                    !fecha.isBefore(LocalDate.now())
+                                }
+                            )
+                        }
+
+                        MaterialDialog(
+                            dialogState = horaDialogState,
+                            buttons = {
+                                positiveButton("Guardar") {
+                                    fechaDialogState.hide()
+                                }
+                                negativeButton("Cancelar"){
+                                    fechaDialogState.hide()
+                                }
+                            }
+                        ) {
+                            timepicker(
+                                initialTime = LocalTime.NOON,
+                                title = "Selecciona la fecha del evento",
+                                onTimeChange = { horaEscogida = it },
+                                colors = TimePickerDefaults.colors(
+                                    activeBackgroundColor = Color.Black, //Fondo horas
+                                    inactiveBackgroundColor = Color.LightGray, //Fondo que no está activo
+                                    activeTextColor = Color.White, //Color de texto activo
+                                    inactiveTextColor = Color.Black, //Color de texto inactivo
+                                    inactivePeriodBackground = Color.LightGray, //Fondo de la parte inactiva
+                                    selectorColor = Color.Blue, //Selector horas
+                                    selectorTextColor = Color.White,
+                                    headerTextColor = Color.White, //Titulo
+                                    borderColor = Color.White
+                                ),
+                                is24HourClock = true
+                            )
+                        }
+                        Row (modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                            Button(onClick = { agregaEvento = false}, Modifier.background(Color.Transparent)) {
+                                Text(text = "Cancelar")
+                            }
+                            Button(onClick = {
+                                if(sitioEvento.nombreSitio == ""){
+                                    Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
+                                } else if(nombreEvento == ""){
+                                    Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    val evento = Evento(
+                                        id = generarClaveAleatoria(15),
+                                        titulo = nombreEvento,
+                                        descripcion = descripcionEvento,
+                                        startDate = fechaFormateada,
+                                        horaComienzo = horaFormateada,
+                                        lugar = sitioEvento
+                                    )
+                                    scope.launch {
+                                        firestore.insertaEvento(evento)
+                                        recargarEventos = true
+                                        agregaEvento = false
+                                    }
+                                }
+                            }, Modifier.background(Color.Transparent)) {
+                                Text(text = "Guardar")
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(10.dp)
-    ) {
-        Text(
-            text = "Hola ${usuario.nombre}!",
-            modifier = modifier.padding(0.dp,10.dp)
-        )
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(0.dp, 5.dp)) {
-                Card(modifier = Modifier
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(10.dp)
+        ) {
+            Text(
+                text = "Hola ${usuario.nombre}!",
+                modifier = modifier.padding(0.dp,10.dp)
+            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
                     .weight(1f)
-                    .fillMaxHeight()
-                    .padding(0.dp, 0.dp, 5.dp, 0.dp)
-                    .let {
-                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
-                            it.clickable {
-                                Toast
-                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                    .show()
+                    .padding(0.dp, 5.dp)) {
+                    Card(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(0.dp, 0.dp, 5.dp, 0.dp)
+                        .let {
+                            if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
+                                it.clickable {
+                                    Toast
+                                        .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            } else it
+                        }) {
+                        Column {
+                            LaunchedEffect(key1 = Unit) {
+                                recaudacionsLoading = true
+                                val donacionResponse = getDataFromGoogleSheet(donacionesSheetId, "donaciones")
+                                dineroRecaudado.value = donacionResponse.donaciones
+                                recaudacionsLoading = false
                             }
-                        } else it
-                    }) {
-                    Column {
-                        LaunchedEffect(key1 = Unit) {
-                            recaudacionsLoading = true
-                            val donacionResponse = getDataFromGoogleSheet(donacionesSheetId, "donaciones")
-                            dineroRecaudado.value = donacionResponse.donaciones
-                            recaudacionsLoading = false
-                        }
-                        if (recaudacionsLoading) {
-                            Text(text = "Cargando...")
-                        } else {
-                            Text(text = "Dinero recaudado:")
-                            dineroRecaudado.value.forEach { donacion ->
-                                Text(text = "${donacion.tipo}: ${donacion.cantidad}")
-                            }
-                        }
-                    }
-                }
-                Card(modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                    .clickable { muestraListaSitios = true })
-                {
-                    Column {
-                        Text(text = "Sitios en los que recogemos: ")
-                        LaunchedEffect(key1 = recargarSitios){
-                            sitiosLoading = true
-                            sitiosRecogidaConfirmados.clear()
-                            val sitiosRecogida = firestore.getSitiosRecogida()
-                            sitiosRecogida.forEach { sitioRecogida ->
-                                sitiosRecogidaConfirmados.add(sitioRecogida)
-                            }
-                            haySitios = sitiosRecogidaConfirmados.size != 0
-                            recargarSitios = false
-                            sitiosLoading = false
-                        }
-                        if (sitiosLoading) {
-                            Text(text = "Cargando...")
-                        } else {
-                            if (haySitios){
-                                ListaSitiosConfirmados(
-                                    sitiosRecogidaConfirmados,
-                                    true,
-                                    canEditSitios,
-                                    onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                    onSitioEscogido = { sitioRecogida ->
-                                        mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                    }
-                                )
+                            if (recaudacionsLoading) {
+                                Text(text = "Cargando...")
                             } else {
-                                Text(text = "No hay sitios de recogida confirmados")
+                                Text(text = "Dinero recaudado:")
+                                dineroRecaudado.value.forEach { donacion ->
+                                    Text(text = "${donacion.tipo}: ${donacion.cantidad}")
+                                }
                             }
                         }
                     }
-                }
-            }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(5.dp, 0.dp)) {
-                Card(modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                    .clickable { muestraListaEventos = true })
-                {
-                    Column {
-                        Text(text = "Eventos próximos: ")
-                        LaunchedEffect(key1 = recargarEventos){
-                            eventosLoading = true
-                            eventosConfirmados.clear()
-                            val eventos = firestore.getEventos()
-                            eventos.forEach { evento ->
-                                eventosConfirmados.add(evento)
+                    Card(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                        .clickable { muestraListaSitios = true })
+                    {
+                        Column {
+                            Text(text = "Sitios en los que recogemos: ")
+                            LaunchedEffect(key1 = recargarSitios){
+                                sitiosLoading = true
+                                sitiosRecogidaConfirmados.clear()
+                                val sitiosRecogida = firestore.getSitiosRecogida()
+                                sitiosRecogida.forEach { sitioRecogida ->
+                                    sitiosRecogidaConfirmados.add(sitioRecogida)
+                                }
+                                haySitios = sitiosRecogidaConfirmados.size != 0
+                                recargarSitios = false
+                                sitiosLoading = false
                             }
-                            hayEventos = eventosConfirmados.size != 0
-                            recargarEventos = false
-                            eventosLoading = false
-                        }
-                        if (eventosLoading) {
-                            Text(text = "Cargando...")
-                        } else {
-                            if (hayEventos){
-                                ListaEventosConfirmados(
-                                    eventosConfirmados,
-                                    true,
-                                    canEditSitios,
-                                    onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                                    onEventoEscogido = { evento ->
-                                        mapaOrganizadorVM.sitioRecogida.value = evento.lugar
-                                    }
-                                )
+                            if (sitiosLoading) {
+                                Text(text = "Cargando...")
                             } else {
-                                Text(text = "No hay eventos confirmados")
+                                if (haySitios){
+                                    ListaSitiosConfirmados(
+                                        sitiosRecogidaConfirmados,
+                                        true,
+                                        canEditSitios,
+                                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                                        onSitioEscogido = { sitioRecogida ->
+                                            mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                        }
+                                    )
+                                } else {
+                                    Text(text = "No hay sitios de recogida confirmados")
+                                }
                             }
                         }
                     }
                 }
-                Card(modifier = Modifier
+                Row(modifier = Modifier
+                    .fillMaxWidth()
                     .weight(1f)
-                    .fillMaxHeight()
-                    .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                    .let {
-                        if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
-                            it.clickable {
-                                Toast
-                                    .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                    .show()
+                    .padding(5.dp, 0.dp)) {
+                    Card(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                        .clickable { muestraListaEventos = true })
+                    {
+                        Column {
+                            Text(text = "Eventos próximos: ")
+                            LaunchedEffect(key1 = recargarEventos){
+                                eventosLoading = true
+                                eventosConfirmados.clear()
+                                val eventos = firestore.getEventos()
+                                eventos.forEach { evento ->
+                                    eventosConfirmados.add(evento)
+                                }
+                                hayEventos = eventosConfirmados.size != 0
+                                recargarEventos = false
+                                eventosLoading = false
                             }
-                        } else it
-                    }) {
-                    Column {
-                        Text(text = "Redes sociales: ")
+                            if (eventosLoading) {
+                                Text(text = "Cargando...")
+                            } else {
+                                if (hayEventos){
+                                    ListaEventosConfirmados(
+                                        eventosConfirmados,
+                                        true,
+                                        canEditSitios,
+                                        onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                                        onEventoEscogido = { evento ->
+                                            mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                        }
+                                    )
+                                } else {
+                                    Text(text = "No hay eventos confirmados")
+                                }
+                            }
+                        }
+                    }
+                    Card(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                        .let {
+                            if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
+                                it.clickable {
+                                    Toast
+                                        .makeText(context, "Clickado", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            } else it
+                        }) {
+                        Column {
+                            Text(text = "Redes sociales: ")
+                        }
                     }
                 }
             }
         }
-    }
-    if(navegaSitio){
-        mapaOrganizadorVM.searchSitioRecogida.value = true
-        agregaSitio = false
-        muestraListaSitios = false
-        agregaEvento = false
-        muestraListaEventos = false
+        if(navegaSitio){
+            mapaOrganizadorVM.searchSitioRecogida.value = true
+            agregaSitio = false
+            muestraListaSitios = false
+            agregaEvento = false
+            muestraListaEventos = false
 
-        MapsScreen(navController, mapaOrganizadorVM)
-        onMapaCambiado(true)
-        navController.navigate("Mapa")
-        navegaSitio = false
+            MapsScreen(navController, mapaOrganizadorVM)
+            onMapaCambiado(true)
+            navController.navigate("Mapa")
+            navegaSitio = false
+        }
+        if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Secretaría"){
+            FloatingActionButton(
+                onClick = { redactaEmail = true },
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(0.dp, 0.dp, 12.dp, 12.dp)
+                    .height(45.dp)
+                    .width(180.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(30.dp))
+                    Text(text = "Redactar correo")
+                }
+            }
+        }
+        if(redactaEmail){
+            navController.navigate("Mail")
+            redactaEmail = false
+        }
     }
 }
 @Composable
@@ -734,7 +805,7 @@ fun AlertsScreen(modifier: Modifier){
 }
 
 @Composable
-fun MailScreen(){
+fun MailScreen(navController: NavController){
     var correoContacto by remember { mutableStateOf("") }
     var asuntoCorreo by remember { mutableStateOf("") }
     var mensajeCorreo by remember { mutableStateOf("") }
@@ -793,6 +864,9 @@ fun MailScreen(){
             Text(text = "Enviar")
         }
     }
+    BackHandler {
+        navController.popBackStack()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -846,6 +920,24 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
 }
 
 @Composable
+fun ExcelScreen(){
+    when(usuario.nombreRango){
+        "Coordinador" -> {
+            Text(text = "Hola coordinador")
+        }
+        "Secretaría" -> {
+            Text(text = "Hola secretari@")
+        }
+        "Tesorería" -> {
+            Text(text = "Hola tesorer@")
+        }
+        "RR.II." -> {
+            Text(text = "Hola relaciones institucionales")
+
+        }
+    }
+}
+@Composable
 fun ShowDialog(showDialog: MutableState<Boolean>) {
     val context = LocalContext.current
 
@@ -892,9 +984,15 @@ fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
 
 suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogida> {
     val sitiosRecogida = mutableListOf<SitioRecogida>()
+    val sevillaBounds = RectangularBounds.newInstance(
+        LatLng(37.0, -6.1), // Suroeste de Sevilla
+        LatLng(37.6, -5.5)  // Noreste de Sevilla
+    )
+
 
     val request = FindAutocompletePredictionsRequest.builder()
         .setCountries(listOf("ES"))
+        .setLocationBias(sevillaBounds)
         .setQuery(textoBusqueda)
         .build()
 
@@ -1001,6 +1099,10 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                     timeInMillis
                                 }
 
+                                val descripcion = eventosConfirmados[index].descripcion.ifEmpty {
+                                    "Evento organizado por Regala Navidad"
+                                }
+
                                 Intent(Intent.ACTION_INSERT).apply {
                                     data = CalendarContract.Events.CONTENT_URI
                                     putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
@@ -1008,19 +1110,19 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                     putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
                                     putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
                                     putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
-                                    putExtra(CalendarContract.Events.DESCRIPTION, "Evento organizado por Regala Navidad")
+                                    putExtra(CalendarContract.Events.DESCRIPTION, descripcion)
                                     putExtra(CalendarContract.Events.HAS_ALARM, 1)
                                 }.also { intent ->
                                     startActivity(contexto, intent, null)
                                 }
                             }, modifier = Modifier.weight(0.3f)) {
-                                Icon(painter = painterResource(id = R.drawable.calendar), contentDescription = "Añadir al calendario")
+                                Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario", Modifier.size(25.dp))
                             }
                             IconButton(onClick = {
                                 onEventoEscogido(eventosConfirmados[index])
                             },
                                 modifier = Modifier.weight(0.3f)) {
-                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Navegar a mapa")
+                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Navegar a mapa", Modifier.size(25.dp))
                             }
                             if(canEdit){
                                 IconButton(onClick = {
@@ -1052,6 +1154,18 @@ fun checkIfCanEditEventos(rol:String):Boolean{
     return rol == "Coordinador" || rol == "RR.II."
 }
 
+fun generarClaveAleatoria(longitud: Int): String {
+    val caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    var id: String
+
+    do {
+        id = List(longitud) {
+            caracteres[Random.nextInt(caracteres.length)]
+        }.joinToString("")
+    } while (eventosConfirmados.any { it.id == id })
+
+    return id
+}
 /* Si hay tiempo retomamos esta idea (cambio foto perfil)
 @Composable
 fun SelectProfilePictureScreen(images: List<ImageBitmap>, onImageSelected: (Int) -> Unit) {
