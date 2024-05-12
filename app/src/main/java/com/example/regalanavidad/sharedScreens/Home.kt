@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -84,6 +85,7 @@ import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Usuario
+import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -645,7 +647,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         Column {
                             LaunchedEffect(key1 = Unit) {
                                 recaudacionsLoading = true
-                                val donacionResponse = getDataFromGoogleSheet(donacionesSheetId, "donaciones")
+                                val donacionResponse = getDonationDataFromGoogleSheet(donacionesSheetId, "donaciones")
                                 dineroRecaudado.value = donacionResponse.donaciones
                                 recaudacionsLoading = false
                             }
@@ -915,25 +917,6 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun ExcelScreen(){
-    when(usuario.nombreRango){
-        "Coordinador" -> {
-            Text(text = "Hola coordinador")
-        }
-        "Secretaría" -> {
-            Text(text = "Hola secretari@")
-        }
-        "Tesorería" -> {
-            Text(text = "Hola tesorer@")
-        }
-        "RR.II." -> {
-            Text(text = "Hola relaciones institucionales")
-
         }
     }
 }

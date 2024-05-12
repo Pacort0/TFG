@@ -8,8 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-
-suspend fun getDataFromGoogleSheet(spreadsheetId: String, sheetName: String): DonacionResponse {
+suspend fun getDonationDataFromGoogleSheet(spreadsheetId: String, sheetName: String): DonacionResponse {
     return withContext(Dispatchers.IO) {
         val url = "https://script.google.com/macros/s/AKfycbyzekY3d0lcbUuFSBrYVQeTNnDhgANMZomqFwS33qn92gEqyeMM_3VTGg1aoqD_4hnLwA/exec?spreadsheetId=$spreadsheetId&sheet=$sheetName"
         val request = Request.Builder().url(url).build()
@@ -30,3 +29,4 @@ suspend fun getDataFromGoogleSheet(spreadsheetId: String, sheetName: String): Do
         }
     }
 }
+
