@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -83,6 +84,7 @@ fun PaginaContactosCentrosEducativos(navController: NavController) {
                         })
                     }
                 }
+                Spacer(modifier = Modifier.padding(10.dp))
                 Row (
                     Modifier
                         .fillMaxWidth()
@@ -91,7 +93,7 @@ fun PaginaContactosCentrosEducativos(navController: NavController) {
                             navegaCorreo = true
                         }) {
                     Column (Modifier.weight(0.8f)) {
-                        Text(text = centroEducativoElegido.correoCentro, fontSize = 10.sp)
+                        Text(text = centroEducativoElegido.correoCentro, fontSize = 14.sp)
                     }
                     Column (Modifier.weight(0.2f), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Filled.Email, "Enviar correo", Modifier.clickable {

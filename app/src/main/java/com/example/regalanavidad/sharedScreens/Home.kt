@@ -794,6 +794,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             }
         }
         if(redactaEmail){
+            centroEducativoElegido = CentroEducativo()
             navController.navigate("Mail")
             redactaEmail = false
         }
