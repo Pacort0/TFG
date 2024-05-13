@@ -1,6 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
+import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.sharedScreens.usuario
@@ -47,16 +50,16 @@ import okhttp3.Request
 var informacionCentrosRecogida = mutableStateOf(emptyList<CentroEducativo>())
 const val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
 var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativo>())
-
+var centroEducativoElegido = CentroEducativo()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExcelScreen(){
+fun ExcelScreen(navController: NavController){
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     when(usuario.nombreRango){
         "Coordinador" -> {
-            Text(text = "Hola coordinador")
+
         }
         "Secretaría" -> {
             Text(text = "Hola secretari@")
@@ -68,10 +71,9 @@ fun ExcelScreen(){
             var expanded by remember { mutableStateOf(false) }
             val opcionesDistritos = listOf("Sevilla Este", "Aljarafe", "Montequinto", "Casco Antiguo", "Nervión-Porvenir", "Triana", "Heliópolis", "Facultades US")
             var distritoSeleccionado by remember { mutableStateOf(opcionesDistritos[3]) }
-            var centrosLoading by remember {mutableStateOf(false)}
+            var centrosLoading by remember {mutableStateOf(true)}
 
-            LaunchedEffect(key1 = Unit) {
-                centrosLoading = true
+            LaunchedEffect(key1 = centrosLoading) {
                 informacionCentrosRecogida.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
                 centrosLoading = false
             }
@@ -92,11 +94,7 @@ fun ExcelScreen(){
                             modifier = Modifier.menuAnchor(),
                             readOnly = true,
                             value = distritoSeleccionado,
-                            onValueChange = {
-                                scope.launch(Dispatchers.IO) {
-                                    getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
-                                }
-                            },
+                            onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = ExposedDropdownMenuDefaults.textFieldColors(),
                         )
@@ -110,6 +108,7 @@ fun ExcelScreen(){
                                     onClick = {
                                         distritoSeleccionado = selectionOption
                                         expanded = false
+                                        centrosLoading = true
                                     },
                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                 )
@@ -124,12 +123,16 @@ fun ExcelScreen(){
                                         .padding(8.dp)
                                         .fillParentMaxWidth()
                                         .height(60.dp)
+                                        .clickable {
+                                            centroEducativoElegido = informacionCentrosRecogida.value[index]
+                                            navController.navigate("PagContactosCentrosEdu")
+                                        }
                                 ) {
                                     Row (horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
-                                        Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
+                                        Column (Modifier.weight(0.55f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                                             Text(text = informacionCentrosRecogida.value[index].nombreCentro)
                                         }
-                                        Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                        Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                             EstadosSubMenu(drawerState, scope, informacionCentrosRecogida.value[index])
                                         }
                                     }
@@ -194,21 +197,28 @@ suspend fun getCentrosFromDistrito(distritoSeleccionado:String):List<CentroEduca
     var centroResponse = CentroEducativoResponse(emptyList())
     when(distritoSeleccionado){
         "Sevilla Este" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "SevillaEste")
         }
         "Aljarafe" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Aljarafe")
         }
         "Montequinto" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Montequinto")
         }
         "Casco Antiguo" -> {
             centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "CascoAntiguo")
         }
         "Nervión-Porvenir" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "NervionPorvenir")
         }
         "Triana" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Triana")
         }
         "Heliópolis" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Heliopolis")
         }
         "Facultades US" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "FacultadesUS")
         }
     }
     Log.d("Centros", centroResponse.toString())

@@ -203,6 +203,9 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                     ScreenContent(screenTitle = sheetsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
                 }
             }
+            composable("PagContactosCentrosEdu"){
+                PaginaContactosCentrosEducativos(navController)
+            }
             composable("profileScreen"){
                 ProfileScreen()
             }

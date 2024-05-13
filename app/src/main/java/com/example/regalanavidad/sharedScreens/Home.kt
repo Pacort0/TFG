@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,6 +80,7 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.R
+import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
@@ -88,6 +88,7 @@ import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
+import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
@@ -255,7 +256,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Excel" -> {
-            ExcelScreen()
+            ExcelScreen(navController)
             onMapaCambiado(false)
         }
     }
@@ -808,7 +809,7 @@ fun AlertsScreen(modifier: Modifier){
 
 @Composable
 fun MailScreen(navController: NavController){
-    var correoContacto by remember { mutableStateOf("") }
+    var correoContacto by remember { mutableStateOf(centroEducativoElegido.correoCentro) }
     var asuntoCorreo by remember { mutableStateOf("") }
     var mensajeCorreo by remember { mutableStateOf("") }
     val contexto = LocalContext.current
@@ -868,6 +869,7 @@ fun MailScreen(navController: NavController){
     }
     BackHandler {
         navController.popBackStack()
+        centroEducativoElegido = CentroEducativo()
     }
 }
 
@@ -1130,7 +1132,7 @@ fun checkIfCanEditSitios(rol: String):Boolean{
 }
 
 fun checkIfCanManageEmails(rol: String):Boolean{
-    return rol == "Coordinador" || rol == "Secretaría"
+    return rol == "Coordinador" || rol == "Secretaría" || rol == "RR.II."
 }
 
 fun checkIfCanEditEventos(rol:String):Boolean{

@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
 import com.example.regalanavidad.sharedScreens.InformacionSubMenu
 import com.example.regalanavidad.sharedScreens.ProfileScreen
 import com.example.regalanavidad.sharedScreens.ScreenContent
