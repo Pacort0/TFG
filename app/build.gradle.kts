@@ -69,6 +69,7 @@ dependencies {
     implementation ("com.google.android.libraries.places:places:3.4.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

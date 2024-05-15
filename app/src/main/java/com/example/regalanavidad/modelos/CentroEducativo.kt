@@ -6,8 +6,22 @@ data class CentroEducativo(
     var correoCentro: String = "",
     var tareaCentro: String = "",
     var estadoCentro: String = ""
-)
+) {
+    fun toCentroEducativoRequest(): CentroEducativoRequest{
+        return CentroEducativoRequest(
+            nombreCentro = nombreCentro,
+            tareaCentro = tareaCentro,
+            estadoCentro = estadoCentro
+        )
+    }
+}
 
 data class CentroEducativoResponse(
     val centros: List<CentroEducativo>,
+)
+
+data class CentroEducativoRequest(
+    val nombreCentro: String,
+    val tareaCentro: String,
+    val estadoCentro: String
 )

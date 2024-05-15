@@ -115,8 +115,8 @@ fun RolesTabScreen(){
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(0.dp, 0.dp, 20.dp, 20.dp)
-                    .size(70.dp)) {
-                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Agregar sitio")
+                    .size(20.dp)) {
+                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Guardar roles")
             }
         }
     }

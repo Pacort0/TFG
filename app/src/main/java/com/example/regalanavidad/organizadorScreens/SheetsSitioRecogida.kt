@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.CentroEducativo
+import com.example.regalanavidad.modelos.CentroEducativoRequest
 import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.sharedScreens.usuario
 import com.google.gson.Gson
@@ -25,12 +26,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 
 var informacionCentrosRecogida = mutableStateOf(emptyList<CentroEducativo>())
-const val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
-var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativo>())
+val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
+var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
 var centroEducativoElegido = CentroEducativo()
 
 @Composable
@@ -80,9 +84,22 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                     onClick = {
                         if(selectionOption != centroEducativo.estadoCentro){
                             nuevoEstado = selectionOption
-                            //centroEducativo.estadoCentro = selectionOption
-                            //listaEstadosCentrosCambiados.value += centro
+                            centroEducativo.estadoCentro = selectionOption
+
+                            // Buscar si ya existe un registro para este centro
+                            val index = listaEstadosCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
+
+                            if (index != -1) {
+                                // Si existe, sobrescribirlo
+                                val newList = listaEstadosCentrosCambiados.value.toMutableList()
+                                newList[index] = centroEducativo.toCentroEducativoRequest()
+                                listaEstadosCentrosCambiados.value = newList
+                            } else {
+                                // Si no existe, añadirlo a la lista
+                                listaEstadosCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
+                            }
                         }
+
                         expanded = false
                         scope.launch { drawerState.close() }
                     },
@@ -126,7 +143,7 @@ suspend fun getCentrosFromDistrito(distritoSeleccionado:String):List<CentroEduca
 
 suspend fun getCentrosDataFromGoogleSheet(spreadsheetId: String, sheetName: String): CentroEducativoResponse {
     return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbysv005twqlh_O5NdBkZD_MW7jmM1pByco38U0hwpgzzOVz-1wmiFFaLCnr2Ri0I-0z0A/exec?spreadsheetId=$spreadsheetId&sheet=$sheetName"
+        val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec?spreadsheetId=$spreadsheetId&sheet=$sheetName"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
@@ -142,6 +159,30 @@ suspend fun getCentrosDataFromGoogleSheet(spreadsheetId: String, sheetName: Stri
             e.printStackTrace()
             e.message?.let { Log.e("JSON", it) }
             CentroEducativoResponse(emptyList())
+        }
+    }
+}
+
+suspend fun updateCentrosDataInGoogleSheet(spreadsheetId: String, sheetName: String, centros: List<CentroEducativoRequest>): Response {
+    return withContext(Dispatchers.IO) {
+        val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec"
+        val json = Gson().toJson(centros)
+        val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        val client = OkHttpClient()
+
+        try {
+            val response = client.newCall(request).execute()
+            response
+        } catch (e: Exception) {
+            e.printStackTrace()
+            e.message?.let { Log.e("JSON", it) }
+            Response.Builder().code(500).message("Error al actualizar los datos").build()
         }
     }
 }
