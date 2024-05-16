@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.CentroEducativoRequest
 import com.example.regalanavidad.modelos.CentroEducativoResponse
+import com.example.regalanavidad.modelos.RequestPostCentroEducativo
 import com.example.regalanavidad.sharedScreens.usuario
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -58,7 +59,7 @@ fun ExcelScreen(navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducativo: CentroEducativo){
-    val opcionesEstados = listOf("No iniciada", "En curso", "En revisión", "Completada", "Cancelada")
+    val opcionesEstados = listOf("No Iniciada", "En curso", "En revisión", "Completada", "Cancelada")
     var expanded by remember { mutableStateOf(false) }
     var nuevoEstado by remember { mutableStateOf(centroEducativo.estadoCentro) }
 
@@ -166,7 +167,9 @@ suspend fun getCentrosDataFromGoogleSheet(spreadsheetId: String, sheetName: Stri
 suspend fun updateCentrosDataInGoogleSheet(spreadsheetId: String, sheetName: String, centros: List<CentroEducativoRequest>): Response {
     return withContext(Dispatchers.IO) {
         val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec"
-        val json = Gson().toJson(centros)
+        val requestPost = RequestPostCentroEducativo(spreadsheetId, sheetName, centros)
+        val json = Gson().toJson(requestPost)
+        Log.d("postCentros", json)
         val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
 
         val request = Request.Builder()

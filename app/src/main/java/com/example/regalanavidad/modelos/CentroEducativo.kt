@@ -25,3 +25,9 @@ data class CentroEducativoRequest(
     val tareaCentro: String,
     val estadoCentro: String
 )
+
+data class RequestPostCentroEducativo(
+    val spreadsheet_id: String,
+    val sheet: String,
+    val valores: List<CentroEducativoRequest>
+)

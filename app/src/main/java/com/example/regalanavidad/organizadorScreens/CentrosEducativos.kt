@@ -134,9 +134,11 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         }
         FloatingActionButton(
             onClick = {
+                var distrito = ""
                 if (listaEstadosCentrosCambiados.value.isNotEmpty()){
+                    distrito = cambiaNombreSheet(distritoSeleccionado)
                     scope.launch(Dispatchers.IO) {
-                        updateCentrosDataInGoogleSheet(infoCentrosSheetId, distritoSeleccionado, listaEstadosCentrosCambiados.value)
+                        updateCentrosDataInGoogleSheet(infoCentrosSheetId, distrito, listaEstadosCentrosCambiados.value)
                     }
                 }
             },
@@ -154,4 +156,34 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
             }
         }
     }
+}
+fun cambiaNombreSheet(sheetName: String):String{
+    var nuevoSheetName = ""
+    when (sheetName){
+        "Sevilla Este" -> {
+            nuevoSheetName = "SevillaEste"
+        }
+        "Aljarafe" -> {
+            nuevoSheetName = "Aljarafe"
+        }
+        "Montequinto" -> {
+            nuevoSheetName =  "Montequinto"
+        }
+        "Casco Antiguo" -> {
+            nuevoSheetName =  "CascoAntiguo"
+        }
+        "Nervión-Porvenir" -> {
+            nuevoSheetName =  "NervionPorvenir"
+        }
+        "Triana" -> {
+            nuevoSheetName =  "Triana"
+        }
+        "Heliópolis" -> {
+            nuevoSheetName =  "Heliopolis"
+        }
+        "Facultades US" -> {
+            nuevoSheetName = "FacultadesUS"
+        }
+    }
+    return nuevoSheetName
 }
