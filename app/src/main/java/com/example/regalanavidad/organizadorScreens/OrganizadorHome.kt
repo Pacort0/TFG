@@ -206,6 +206,12 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
             composable("PagContactosCentrosEdu"){
                 PaginaContactosCentrosEducativos(navController)
             }
+            composable("SheetCentrosEducativos"){
+                PaginaSheetCentrosEducativos(navController)
+            }
+            composable("SheetGastos"){
+                PaginaSheetGastos()
+            }
             composable("profileScreen"){
                 ProfileScreen()
             }

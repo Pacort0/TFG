@@ -42,7 +42,7 @@ var centroEducativoElegido = CentroEducativo()
 fun ExcelScreen(navController: NavController){
     when(usuario.nombreRango){
         "Coordinador" -> {
-            PaginaSheetCentrosEducativos(navController)
+            ExcelCoordinador(navController)
         }
         "Secretaría" -> {
             Text(text = "Hola secretari@")
