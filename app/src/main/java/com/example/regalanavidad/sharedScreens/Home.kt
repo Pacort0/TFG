@@ -145,7 +145,7 @@ class Home : ComponentActivity() {
 
         runBlocking {
             val task = launch {
-                usuario = correo?.let { firestore.findUserByEmail(it) }!!
+                usuario = correo?.let { firestore.getUserByEmail(it) }!!
             }
             task.join()
         }

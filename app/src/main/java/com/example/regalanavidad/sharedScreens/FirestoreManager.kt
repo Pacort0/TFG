@@ -3,6 +3,7 @@ package com.example.regalanavidad.sharedScreens
 import android.util.Log
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
+import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.modelos.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -19,7 +20,7 @@ class FirestoreManager {
         firestore.collection("sitiosRecogida").add(sitioRecogida).await()
     }
 
-    suspend fun findUserByEmail(email: String): Usuario? {
+    suspend fun getUserByEmail(email: String): Usuario? {
         val querySnapshot = listaUsuarios.whereEqualTo("correo", email).get().await()
 
         return if (!querySnapshot.isEmpty) {
@@ -93,6 +94,25 @@ class FirestoreManager {
             Log.d("Evento", "Evento eliminado con éxito")
         } catch (e: Exception) {
             Log.w("Evento", "Error eliminando evento", e)
+        }
+    }
+    suspend fun insertaTarea(tarea: Tarea){
+        firestore.collection("tareas").add(tarea).await()
+        Log.d("Tarea", "Tarea insertada con éxito")
+    }
+    suspend fun getTareas(): List<Tarea> {
+        val querySnapshot = firestore.collection("tareas").get().await()
+        return querySnapshot.toObjects(Tarea::class.java)
+    }
+    suspend fun eliminaTarea(tarea: Tarea){
+        val querySnapshot = firestore.collection("tareas").whereEqualTo("id", tarea.id).get().await()
+        val idDocumentoTarea = querySnapshot.documents[0].id
+        val refTarea = firestore.collection("tareas").document(idDocumentoTarea)
+        try {
+            refTarea.delete().await()
+            Log.d("Tarea", "Tarea eliminada con éxito")
+        } catch (e: Exception) {
+            Log.w("Tarea", "Error eliminando tarea", e)
         }
     }
 }
