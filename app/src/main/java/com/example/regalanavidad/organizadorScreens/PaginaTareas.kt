@@ -82,7 +82,7 @@ fun TareasScreen(){
     val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
     val fechaDialogState = rememberMaterialDialogState()
     val scope = rememberCoroutineScope()
-    val options = listOf("Secretaría", "Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
+    val options = listOf("Secretaría", "Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario, Coordinador")
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -109,34 +109,47 @@ fun TareasScreen(){
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                    ) {
-                        TextField(
-                            modifier = Modifier.menuAnchor(),
-                            readOnly = true,
-                            value = rolSeleccionado,
-                            onValueChange = {},
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                        )
-                        ExposedDropdownMenu(
+                    if(usuario.nombreRango == "Coordinador"){
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            onExpandedChange = { expanded = !expanded },
                         ) {
-                            options.forEach { selectionOption ->
-                                DropdownMenuItem(
-                                    text = { Text(selectionOption, fontSize = 18.sp) },
-                                    onClick = {
-                                        rolSeleccionado = selectionOption
-                                        expanded = false
-                                        scope.launch { drawerState.close() }
-                                    },
-                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                )
+                            TextField(
+                                modifier = Modifier.menuAnchor(),
+                                readOnly = true,
+                                value = rolSeleccionado,
+                                onValueChange = {},
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                            ) {
+                                options.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        text = { Text(selectionOption, fontSize = 18.sp) },
+                                        onClick = {
+                                            rolSeleccionado = selectionOption
+                                            expanded = false
+                                            scope.launch { drawerState.close() }
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                    )
+                                }
                             }
                         }
+                    } else {
+                        OutlinedTextField(
+                            value = usuario.nombreRango,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = {
+                            Text(
+                                text = "Cargo de la tarea",
+                                fontSize = 14.sp
+                            )
+                        })
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(

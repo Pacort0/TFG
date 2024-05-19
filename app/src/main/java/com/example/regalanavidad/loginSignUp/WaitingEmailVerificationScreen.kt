@@ -55,7 +55,7 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
     }
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Spacer(modifier = Modifier.height(20.dp))
-        Text(text = "Enlace de verificación enviado. Valida tu correo")
+        Text(text = "Enlace de verificación enviado. Valida tu correo", color = Color.Black)
     }
     Spacer(modifier = Modifier.height(30.dp))
         Button(
