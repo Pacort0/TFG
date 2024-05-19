@@ -104,6 +104,17 @@ class FirestoreManager {
         val querySnapshot = firestore.collection("tareas").get().await()
         return querySnapshot.toObjects(Tarea::class.java)
     }
+    suspend fun editaTarea(tarea: Tarea) {
+        val querySnapshot = firestore.collection("tareas").whereEqualTo("id", tarea.id).get().await()
+        val idDocumentoTarea = querySnapshot.documents[0].id
+        val refTarea = firestore.collection("tareas").document(idDocumentoTarea)
+        try {
+            refTarea.update(tarea.toMap()).await()
+            Log.d("Tarea", "Tarea actualizada con éxito")
+        } catch (e: Exception) {
+            Log.w("Tarea", "Error actualizando tarea", e)
+        }
+    }
     suspend fun eliminaTarea(tarea: Tarea){
         val querySnapshot = firestore.collection("tareas").whereEqualTo("id", tarea.id).get().await()
         val idDocumentoTarea = querySnapshot.documents[0].id

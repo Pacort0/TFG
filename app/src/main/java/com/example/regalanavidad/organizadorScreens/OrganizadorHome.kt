@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,7 @@ import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.checkIfCanManageEmails
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.sharedScreens.drawerItems
+import com.example.regalanavidad.sharedScreens.tareasVM
 import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -82,11 +84,10 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     )
-    val alertsTab = TabBarItem(
-        title = "Alertas",
+    val tareasTab = TabBarItem(
+        title = "Tareas",
         selectedIcon = Icons.Filled.Notifications,
         unselectedIcon = Icons.Outlined.Notifications,
-        badgeAmount = 0
     )
     val mapsTab = TabBarItem(
         title = "Mapa",
@@ -103,12 +104,12 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
         selectedIcon = ImageVector.vectorResource(id = R.drawable.sheets_filled),
         unselectedIcon =  ImageVector.vectorResource(id = R.drawable.sheets_outlined)
     )
-    var tabBarItems = listOf(homeTab, alertsTab, mapsTab)
+    var tabBarItems = listOf(homeTab, tareasTab, mapsTab)
     if (usuario.nombreRango == "Coordinador"){
-        tabBarItems = listOf(homeTab, alertsTab, mapsTab, rolesTab, sheetsTab)
+        tabBarItems = listOf(homeTab, tareasTab, mapsTab, rolesTab, sheetsTab)
     }
     if (usuario.nombreRango == "Tesorería" || usuario.nombreRango == "Secretaría" || usuario.nombreRango == "RR.II."){
-        tabBarItems = listOf(homeTab, alertsTab, mapsTab, sheetsTab)
+        tabBarItems = listOf(homeTab, tareasTab, mapsTab, sheetsTab)
     }
     val navController = rememberNavController()
     RegalaNavidadTheme {
@@ -162,7 +163,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                             }
                         },
                         content = { innerPadding -> //NavHost
-                            OrganizadorNavHost(innerPadding, navController, homeTab, alertsTab, mapsTab, rolesTab, sheetsTab, onMapaCambiado, mapaOrganizadorVM)
+                            OrganizadorNavHost(innerPadding, navController, homeTab, tareasTab, mapsTab, rolesTab, sheetsTab, onMapaCambiado, mapaOrganizadorVM)
                         }
                     )
                 }

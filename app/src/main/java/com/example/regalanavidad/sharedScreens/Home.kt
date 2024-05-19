@@ -88,7 +88,9 @@ import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
+import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
+import com.example.regalanavidad.viewmodels.TareasViewModel
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
@@ -135,6 +137,7 @@ val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
+val tareasVM = TareasViewModel()
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -149,7 +152,6 @@ class Home : ComponentActivity() {
             }
             task.join()
         }
-
         val esVoluntario = usuario.nombreRango == "Voluntario"
         val mapaOrganizadorVM = mapaOrganizadorVM()
 
@@ -239,8 +241,8 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             HomeScreen(modifier, navController, mapaOrganizadorVM, onMapaCambiado)
             onMapaCambiado(false)
         }
-        "Alertas" -> {
-            AlertsScreen(modifier)
+        "Tareas" -> {
+            TareasScreen()
             onMapaCambiado(false)
         }
         "Mail" -> {
@@ -799,13 +801,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             redactaEmail = false
         }
     }
-}
-@Composable
-fun AlertsScreen(modifier: Modifier){
-    Text(
-        text = "Hello ${usuario.uid}!",
-        modifier = modifier
-    )
 }
 
 @Composable

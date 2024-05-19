@@ -247,7 +247,9 @@ fun GastoCard(gasto: Gasto){
             .fillMaxWidth()
             .height(60.dp)
     ) {
-        Row {
+        Row (
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column (
                 Modifier
                     .weight(0.4f)

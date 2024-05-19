@@ -6,7 +6,17 @@ data class Tarea(
     var descripcion:String = "",
     var fechaLimite:String = "",
     var completada:Boolean = false
-)
+){
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "id" to id,
+            "rol" to rol,
+            "descripcion" to descripcion,
+            "fechaLimite" to fechaLimite,
+            "completada" to completada,
+        )
+    }
+}
 fun generateRandomId(): String {
     val charPool: List<Char> = ('A'..'Z') + ('a'..'z') + ('0'..'9')
     val randomString = (1..11)

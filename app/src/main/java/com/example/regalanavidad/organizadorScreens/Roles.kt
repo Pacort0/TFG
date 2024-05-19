@@ -103,19 +103,17 @@ fun RolesTabScreen(){
                 }
             }
         }
-        if(usuariosCargados){
+        if(usuariosCargados && listaUsuariosCambiados.value.isNotEmpty()){
             val context = LocalContext.current
             FloatingActionButton(
                 onClick = {
-                    if(listaUsuariosCambiados.value.isNotEmpty()){
-                        guardarCambios = true
-                        Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
-                    }
+                    guardarCambios = true
+                    Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(0.dp, 0.dp, 20.dp, 20.dp)
-                    .size(20.dp)) {
+                    .size(70.dp)) {
                 Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Guardar roles")
             }
         }
