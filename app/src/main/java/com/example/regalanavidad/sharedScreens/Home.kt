@@ -12,11 +12,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,8 +28,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -68,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -75,6 +83,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
@@ -119,6 +128,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 data class TabBarItem(
@@ -264,6 +274,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit){
@@ -288,7 +299,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var eventosLoading by remember { mutableStateOf(true) }
     val canEditEventos = checkIfCanEditEventos(usuario.nombreRango)
     var redactaEmail by remember { mutableStateOf(false) }
-
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f,
+        pageCount = { 4 }
+    )
     Box(modifier = modifier
         .fillMaxSize()
         .padding(10.dp)){
@@ -619,7 +634,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 }
             }
         }
-
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -627,142 +641,205 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         ) {
             Text(
                 text = "Hola ${usuario.nombre}!",
-                modifier = modifier.padding(0.dp,10.dp)
+                modifier = modifier.padding(0.dp, 10.dp)
             )
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(0.dp, 5.dp)) {
-                    Card(modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(0.dp, 0.dp, 5.dp, 0.dp)
-                        .let {
-                            if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
-                                it.clickable {
-                                    Toast
-                                        .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                        .show()
+
+            HorizontalPager(
+                state = pagerState,
+                beyondBoundsPageCount = 1,
+                contentPadding = PaddingValues(6.dp, 0.dp, 6.dp, 0.dp),
+                pageSpacing = 5.dp,
+                verticalAlignment = Alignment.CenterVertically
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val pageOffset = (pagerState.currentPage + pagerState.currentPageOffsetFraction).absoluteValue
+                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                    alpha = lerp(start = 0.5f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                                    scaleX = scale
+                                    scaleY = scale
                                 }
-                            } else it
-                        }) {
-                        Column {
-                            LaunchedEffect(key1 = Unit) {
-                                recaudacionsLoading = true
-                                val donacionResponse = getDonationDataFromGoogleSheet(donacionesSheetId, "donaciones")
-                                dineroRecaudado.value = donacionResponse.donaciones
-                                recaudacionsLoading = false
-                            }
-                            if (recaudacionsLoading) {
-                                Text(text = "Cargando...")
-                            } else {
-                                Text(text = "Dinero recaudado:")
-                                dineroRecaudado.value.forEach { donacion ->
-                                    Text(text = "${donacion.tipo}: ${donacion.cantidad}")
+                                .padding(0.dp, 0.dp, 5.dp, 0.dp)
+                                .let {
+                                    if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
+                                        it.clickable {
+                                            Toast.makeText(context, "Clickado", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else it
+                                }
+                        ) {
+                            Column {
+                                LaunchedEffect(key1 = Unit) {
+                                    recaudacionsLoading = true
+                                    val donacionResponse = getDonationDataFromGoogleSheet(
+                                        donacionesSheetId,
+                                        "donaciones"
+                                    )
+                                    dineroRecaudado.value = donacionResponse.donaciones
+                                    recaudacionsLoading = false
+                                }
+                                if (recaudacionsLoading) {
+                                    Text(text = "Cargando...")
+                                } else {
+                                    Text(text = "Dinero recaudado:")
+                                    dineroRecaudado.value.forEach { donacion ->
+                                        Text(text = "${donacion.tipo}: ${donacion.cantidad}")
+                                    }
                                 }
                             }
                         }
                     }
-                    Card(modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                        .clickable { muestraListaSitios = true })
-                    {
-                        Column {
-                            Text(text = "Sitios en los que recogemos: ")
-                            LaunchedEffect(key1 = recargarSitios){
-                                sitiosLoading = true
-                                sitiosRecogidaConfirmados.clear()
-                                val sitiosRecogida = firestore.getSitiosRecogida()
-                                sitiosRecogida.forEach { sitioRecogida ->
-                                    sitiosRecogidaConfirmados.add(sitioRecogida)
+                    1 -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                    alpha = lerp(start = 0.5f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                                    scaleX = scale
+                                    scaleY = scale
                                 }
-                                haySitios = sitiosRecogidaConfirmados.size != 0
-                                recargarSitios = false
-                                sitiosLoading = false
-                            }
-                            if (sitiosLoading) {
-                                Text(text = "Cargando...")
-                            } else {
-                                if (haySitios){
-                                    ListaSitiosConfirmados(
-                                        sitiosRecogidaConfirmados,
-                                        true,
-                                        canEditSitios,
-                                        onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                        onSitioEscogido = { sitioRecogida ->
-                                            mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                        }
-                                    )
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .clickable { muestraListaSitios = true }
+                        ) {
+                            Column {
+                                Text(text = "Sitios en los que recogemos: ")
+                                LaunchedEffect(key1 = recargarSitios) {
+                                    sitiosLoading = true
+                                    sitiosRecogidaConfirmados.clear()
+                                    val sitiosRecogida = firestore.getSitiosRecogida()
+                                    sitiosRecogida.forEach { sitioRecogida ->
+                                        sitiosRecogidaConfirmados.add(sitioRecogida)
+                                    }
+                                    haySitios = sitiosRecogidaConfirmados.size != 0
+                                    recargarSitios = false
+                                    sitiosLoading = false
+                                }
+                                if (sitiosLoading) {
+                                    Text(text = "Cargando...")
                                 } else {
-                                    Text(text = "No hay sitios de recogida confirmados")
+                                    if (haySitios) {
+                                        ListaSitiosConfirmados(
+                                            sitiosRecogidaConfirmados,
+                                            true,
+                                            canEditSitios,
+                                            onElementoEliminado = { elementoEliminado ->
+                                                recargarSitios = elementoEliminado
+                                            },
+                                            onSitioEscogido = { sitioRecogida ->
+                                                mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                            }
+                                        )
+                                    } else {
+                                        Text(text = "No hay sitios de recogida confirmados")
+                                    }
                                 }
+                            }
+                        }
+                    }
+                    2 -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                    alpha = lerp(start = 0.5f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .clickable { muestraListaEventos = true }
+                        ) {
+                            Column {
+                                Text(text = "Eventos próximos: ")
+                                LaunchedEffect(key1 = recargarEventos) {
+                                    eventosLoading = true
+                                    eventosConfirmados.clear()
+                                    val eventos = firestore.getEventos()
+                                    eventos.forEach { evento ->
+                                        eventosConfirmados.add(evento)
+                                    }
+                                    hayEventos = eventosConfirmados.size != 0
+                                    recargarEventos = false
+                                    eventosLoading = false
+                                }
+                                if (eventosLoading) {
+                                    Text(text = "Cargando...")
+                                } else {
+                                    if (hayEventos) {
+                                        ListaEventosConfirmados(
+                                            eventosConfirmados,
+                                            true,
+                                            canEditSitios,
+                                            onElementoEliminado = { elementoEliminado ->
+                                                recargarEventos = elementoEliminado
+                                            },
+                                            onEventoEscogido = { evento ->
+                                                mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                            }
+                                        )
+                                    } else {
+                                        Text(text = "No hay eventos confirmados")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    3 -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                    alpha = lerp(start = 0.5f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .let {
+                                    if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
+                                        it.clickable {
+                                            Toast.makeText(context, "Clickado", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else it
+                                }
+                        ) {
+                            Column {
+                                Text(text = "Redes sociales: ")
                             }
                         }
                     }
                 }
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(5.dp, 0.dp)) {
-                    Card(modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                        .clickable { muestraListaEventos = true })
-                    {
-                        Column {
-                            Text(text = "Eventos próximos: ")
-                            LaunchedEffect(key1 = recargarEventos){
-                                eventosLoading = true
-                                eventosConfirmados.clear()
-                                val eventos = firestore.getEventos()
-                                eventos.forEach { evento ->
-                                    eventosConfirmados.add(evento)
-                                }
-                                hayEventos = eventosConfirmados.size != 0
-                                recargarEventos = false
-                                eventosLoading = false
-                            }
-                            if (eventosLoading) {
-                                Text(text = "Cargando...")
-                            } else {
-                                if (hayEventos){
-                                    ListaEventosConfirmados(
-                                        eventosConfirmados,
-                                        true,
-                                        canEditSitios,
-                                        onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                                        onEventoEscogido = { evento ->
-                                            mapaOrganizadorVM.sitioRecogida.value = evento.lugar
-                                        }
-                                    )
-                                } else {
-                                    Text(text = "No hay eventos confirmados")
-                                }
-                            }
-                        }
-                    }
-                    Card(modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                        .let {
-                            if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
-                                it.clickable {
-                                    Toast
-                                        .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                        .show()
-                                }
-                            } else it
-                        }) {
-                        Column {
-                            Text(text = "Redes sociales: ")
-                        }
-                    }
-                }
+            }
+        }
+        Row(
+            Modifier
+                .wrapContentHeight()
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(pagerState.pageCount) { iteration ->
+                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                Box(
+                    modifier = Modifier
+                        .padding(3.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .size(10.dp)
+                )
             }
         }
         if(navegaSitio){
