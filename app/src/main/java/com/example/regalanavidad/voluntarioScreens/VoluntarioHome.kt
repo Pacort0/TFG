@@ -178,7 +178,7 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
     val showDialog = remember { mutableStateOf(false) }
 
     if (showDialog.value) {
-        ShowDialog(showDialog = showDialog)
+        ShowDialog(showDialog, navController)
     }
     ModalDrawerSheet(modifier = Modifier.width(270.dp)) {
         Text("Regala Navidad", modifier = Modifier.padding(16.dp))

@@ -1,6 +1,8 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +40,7 @@ val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
 var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
 var centroEducativoElegido = CentroEducativo()
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun ExcelScreen(navController: NavController){
     when(usuario.nombreRango){

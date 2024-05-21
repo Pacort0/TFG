@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,8 +58,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         centrosLoading = false
     }
     Box(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentSize(Alignment.TopStart)) {
+        .fillMaxSize()
+        .padding(8.dp)) {
         Column {
             Text(
                 text = "Selecciona el distrito",
@@ -134,7 +135,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         }
         FloatingActionButton(
             onClick = {
-                var distrito = ""
+                val distrito: String
                 if (listaEstadosCentrosCambiados.value.isNotEmpty()){
                     distrito = cambiaNombreSheet(distritoSeleccionado)
                     scope.launch(Dispatchers.IO) {
@@ -152,6 +153,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar cambios", Modifier.size(30.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(text = "Guardar cambios")
             }
         }

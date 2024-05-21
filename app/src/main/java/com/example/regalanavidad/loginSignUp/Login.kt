@@ -1,8 +1,10 @@
 package com.example.regalanavidad.loginSignUp
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,12 +41,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.example.regalanavidad.sharedScreens.Home
 import com.example.regalanavidad.ui.theme.Purple40
 import com.example.regalanavidad.R
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 @Composable
 fun Login(navController: NavController, auth: FirebaseAuth) {
@@ -166,6 +170,18 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     color = Purple40
                 )
             )
+        }
+    }
+    BackHandler {
+        val paginaPreviaPila = navController.previousBackStackEntry
+        if(paginaPreviaPila != null){
+            if(paginaPreviaPila.destination.route != "Home" || paginaPreviaPila.destination.route != "profileScreen"){
+                navController.popBackStack()
+            }
+            navController.popBackStack()
+        } else {
+            ActivityCompat.finishAffinity(context as Activity)
+            exitProcess(0)
         }
     }
 }
