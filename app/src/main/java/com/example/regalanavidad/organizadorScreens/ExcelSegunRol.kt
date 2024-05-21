@@ -35,12 +35,16 @@ import com.example.regalanavidad.R
 fun ExcelCoordinador(navController: NavController){
     var navegaSitiosRecogida by remember{ mutableStateOf(false) }
     var navegaGastos by remember{ mutableStateOf(false)}
+    var navegaRecaudaciones by remember { mutableStateOf(false) }
 
     if (navegaSitiosRecogida){
         navController.navigate("SheetCentrosEducativos")
     }
     if (navegaGastos){
         navController.navigate("SheetGastos")
+    }
+    if(navegaRecaudaciones){
+        navController.navigate("SheetRecaudaciones")
     }
 
     Column (
@@ -141,6 +145,57 @@ fun ExcelCoordinador(navController: NavController){
                     ) {
                         Text(
                             text = "Gastos",
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            fontSize = 25.sp,
+                            modifier = Modifier.padding(0.dp,0.dp,8.dp,0.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Row (
+            Modifier
+                .weight(0.5f)
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Card (
+                Modifier
+                    .fillMaxSize()
+                    .clickable {
+                        navegaRecaudaciones = true
+                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(184, 243, 175)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    Column (
+                        Modifier.weight(0.5f).background(Color.Transparent),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.googlesheetslogo),
+                            contentDescription = "Logo Google Sheets",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(8.dp)
+                        )
+                    }
+                    Column (
+                        Modifier.weight(0.5f).background(Color.Transparent),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Productos Recaudados",
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             fontSize = 25.sp,

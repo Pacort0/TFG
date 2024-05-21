@@ -62,8 +62,7 @@ import okhttp3.Response
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-const val spreadsheetId = "1zffZhulQGscbwVZrEapV_DIt57aVyWDTauQqYJCVVuE"
-const val sheetName = "Gastos"
+const val gastosSpreadsheetId = "1zffZhulQGscbwVZrEapV_DIt57aVyWDTauQqYJCVVuE"
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun PaginaSheetGastos() {
@@ -286,7 +285,7 @@ fun GastoCard(gasto: Gasto){
 
 suspend fun getGastosFromSheet(): GastoResponse {
     return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbw7dh0NQDsWf9ptmeiTtFJc4hhatCI06bboCCfCYPuK2537l5LdUf3He2o7cQDNEV69/exec?spreadsheetId=$spreadsheetId&sheet=$sheetName"
+        val url = "https://script.google.com/macros/s/AKfycbw7dh0NQDsWf9ptmeiTtFJc4hhatCI06bboCCfCYPuK2537l5LdUf3He2o7cQDNEV69/exec?spreadsheetId=$gastosSpreadsheetId&sheet=Gastos"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
@@ -309,7 +308,7 @@ suspend fun getGastosFromSheet(): GastoResponse {
 suspend fun updateGastosDataInGoogleSheet(gasto: Gasto): Response {
     return withContext(Dispatchers.IO) {
         val url = "https://script.google.com/macros/s/AKfycbw7dh0NQDsWf9ptmeiTtFJc4hhatCI06bboCCfCYPuK2537l5LdUf3He2o7cQDNEV69/exec"
-        val requestPost = RequestPostGasto(spreadsheetId, sheetName, gasto)
+        val requestPost = RequestPostGasto(gastosSpreadsheetId, "Gastos", gasto)
         val json = Gson().toJson(requestPost)
         Log.d("postGastos", json)
         val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
