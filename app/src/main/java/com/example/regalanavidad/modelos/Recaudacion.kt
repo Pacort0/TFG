@@ -8,7 +8,7 @@ data class Producto(
 
 data class DetallesProducto(
     val tipo:String = "",
-    val cantidad:String = "",
+    var cantidad:String = "",
 )
 
 data class ProductoResponse(

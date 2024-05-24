@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -25,11 +27,13 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.regalanavidad.R
@@ -66,7 +71,7 @@ fun PaginaSheetRecaudaciones(){
     val opcionesDistritos = listOf("No Perecederos", "Conservas", "Desayuno", "IngrBasicos", "Higiene", "Triana", "ProdBebes", "ProdNav")
     var productoSeleccionado by remember { mutableStateOf(opcionesDistritos[1]) }
     var productosLoading by remember { mutableStateOf(false) }
-    val listaProductosCambiados by remember { mutableStateOf(emptyList<Producto>()) }
+    var listaProductosCambiados by remember { mutableStateOf(emptyList<Producto>()) }
 
     LaunchedEffect(key1 = productosLoading) {
         productoResponse = getRecaudacionesFromSheet(spreadsheetId, productoSeleccionado)
@@ -121,7 +126,6 @@ fun PaginaSheetRecaudaciones(){
                                 .padding(8.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 60.dp)
-                                .clickable { isExpanded = !isExpanded }  // Añadir acción al hacer clic
                         ) {
                             Row (
                                 horizontalArrangement = Arrangement.Center,
@@ -129,7 +133,11 @@ fun PaginaSheetRecaudaciones(){
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(8.dp)){
-                                Column(Modifier.weight(0.15f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center){
+                                Column(
+                                    Modifier.weight(0.15f).clickable { isExpanded = !isExpanded },
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)
+                                {
                                     Icon(imageVector = isExpanded.let { if (!isExpanded) {
                                         Icons.Default.KeyboardArrowDown
                                     } else {
@@ -146,17 +154,47 @@ fun PaginaSheetRecaudaciones(){
                             if (isExpanded) {
                                 Column {
                                     listaProductos[index].tipos.forEach { tipo ->
+                                        var cantidadProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
                                         Row (
                                             horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .padding(8.dp)){
-                                            Column (Modifier.weight(0.55f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
+                                            Column (Modifier.weight(0.55f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                                 Text(text = tipo.tipo)
                                             }
                                             Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                                Text(text = "Cantidad: ${tipo.cantidad}")
+                                                Row {
+                                                    IconButton(onClick = {
+                                                        cantidadProd--
+                                                        tipo.cantidad = cantidadProd.toString()
+                                                        if(cantidadProd != tipo.cantidad.toInt()){
+                                                            listaProductosCambiados += Producto(listaProductos[index].nombre, listaProductos[index].tipos, listaProductos[index].cantidadTotal)
+                                                        }
+                                                    }) {
+                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Añadir", Modifier.size(40.dp))
+                                                    }
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Column (
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        verticalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(text = "Cantidad")
+                                                        Spacer(modifier = Modifier.height(4.dp))
+                                                        Text(text = cantidadProd.toString())
+                                                    }
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    IconButton(onClick = {
+                                                        cantidadProd++
+                                                        tipo.cantidad = cantidadProd.toString()
+                                                        if(cantidadProd != tipo.cantidad.toInt()){
+                                                            listaProductosCambiados += Producto(listaProductos[index].nombre, listaProductos[index].tipos, listaProductos[index].cantidadTotal)
+                                                        }
+                                                    }) {
+                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(40.dp))
+                                                    }
+                                                }
                                             }
                                         }
                                     }
