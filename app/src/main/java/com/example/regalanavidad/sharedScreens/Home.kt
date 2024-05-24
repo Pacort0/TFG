@@ -268,7 +268,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(true)
         }
         "Roles" -> {
-            RolesTabScreen()
+            RolesTabScreen(navController)
             onMapaCambiado(false)
         }
         "Excel" -> {

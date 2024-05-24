@@ -1,5 +1,6 @@
 package com.example.regalanavidad.organizadorScreens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,13 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -52,6 +53,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
     val opcionesDistritos = listOf("Sevilla Este", "Aljarafe", "Montequinto", "Casco Antiguo", "Nervión-Porvenir", "Triana", "Heliópolis", "Facultades US")
     var distritoSeleccionado by remember { mutableStateOf(opcionesDistritos[3]) }
     var centrosLoading by remember { mutableStateOf(true) }
+    var showAlertDialog by remember { mutableStateOf(false)}
+    var opcionSeleccionada by remember {mutableStateOf("")}
+    var llamadaBackHandler by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = centrosLoading) {
         informacionCentrosRecogida.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
@@ -86,9 +90,14 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                         DropdownMenuItem(
                             text = { Text(selectionOption, fontSize = 18.sp) },
                             onClick = {
-                                distritoSeleccionado = selectionOption
-                                expanded = false
-                                centrosLoading = true
+                                if(listaEstadosCentrosCambiados.value.isNotEmpty()){
+                                    showAlertDialog = true
+                                    opcionSeleccionada = selectionOption
+                                } else {
+                                    distritoSeleccionado = selectionOption
+                                    expanded = false
+                                    centrosLoading = true
+                                }
                             },
                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                         )
@@ -141,6 +150,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                     scope.launch(Dispatchers.IO) {
                         updateCentrosDataInGoogleSheet(infoCentrosSheetId, distrito, listaEstadosCentrosCambiados.value)
                     }
+                    listaEstadosCentrosCambiados.value = emptyList()
                 }
             },
             modifier = Modifier
@@ -156,6 +166,68 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(text = "Guardar cambios")
             }
+        }
+    }
+    if(showAlertDialog){
+        AlertDialog(
+            onDismissRequest = {
+                showAlertDialog = false
+            },
+            title = {
+                Text(text = "Tiene cambios sin guardar")
+            },
+            text = {
+                Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
+            },
+            confirmButton = {
+                if(llamadaBackHandler){
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                            navController.popBackStack()
+                        }
+                    ){
+                        Text("Sí, estoy seguro")
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                            distritoSeleccionado = opcionSeleccionada
+                            expanded = false
+                            centrosLoading = true
+                        }
+                    ) {
+                        Text("Sí, estoy seguro")
+                    }
+                }
+            },
+            dismissButton = {
+                if (llamadaBackHandler){
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                            llamadaBackHandler = false
+                        }
+                    ){
+                        Text(text = "No")
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                        }
+                    ) {
+                        Text("No")
+                    }
+                }
+            }
+        )
+    }
+    BackHandler {
+        if(listaEstadosCentrosCambiados.value.isNotEmpty()){
+            llamadaBackHandler = true
+            showAlertDialog = true
         }
     }
 }

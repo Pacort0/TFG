@@ -1,6 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -39,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.sharedScreens.firestore
 import kotlinx.coroutines.CoroutineScope
@@ -49,11 +53,12 @@ var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 var listaUsuarios = mutableStateOf(emptyList<Usuario>())
 
 @Composable
-fun RolesTabScreen(){
+fun RolesTabScreen(navController: NavController){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var usuariosCargados by remember { mutableStateOf(false) }
     var guardarCambios by remember { mutableStateOf(false) }
+    var showAlertDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = guardarCambios) {
             listaUsuariosCambiados.value.forEach { usuario ->
@@ -116,6 +121,43 @@ fun RolesTabScreen(){
                     .size(70.dp)) {
                 Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Guardar roles")
             }
+        }
+    }
+    if(showAlertDialog){
+        AlertDialog(
+            onDismissRequest = {
+                showAlertDialog = false
+            },
+            title = {
+                Text(text = "Tiene cambios sin guardar")
+            },
+            text = {
+                Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog = false
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Sí, estoy seguro")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog = false
+                    }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+    BackHandler {
+        if(listaUsuariosCambiados.value.isNotEmpty()){
+            showAlertDialog = true
         }
     }
 }
