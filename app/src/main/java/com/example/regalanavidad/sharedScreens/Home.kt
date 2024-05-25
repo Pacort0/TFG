@@ -84,6 +84,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -138,6 +139,7 @@ import java.util.Calendar
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.system.exitProcess
+
 
 data class TabBarItem(
     val title: String,
@@ -790,8 +792,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         }
                     }
                     3 -> {
-                        var navegaIg by remember{mutableStateOf(false)}
-                        var navegaTkTk by remember{mutableStateOf(false)}
                         Card(
                             modifier = Modifier
                                 .fillMaxHeight()
@@ -824,18 +824,25 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 ) {
                                     OutlinedCard(
                                         onClick = {
-                                            val uri = Uri.parse("https://www.instagram.com/proyectoregalanavidad")
+                                            val uri = Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
                                             val intent = Intent(Intent.ACTION_VIEW, uri)
-                                            startActivity(context, intent, null)
+                                            intent.setPackage("com.instagram.android")
+                                            try {
+                                                startActivity(context, intent, null)
+                                            } catch (e: ActivityNotFoundException) {
+                                                Log.e("Error", "Instagram no está instalado")
+                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/proyectoregalanavidad")), null)
+                                            }
                                         },
                                         modifier = Modifier.fillMaxSize()
                                     ) {
                                         Row(
                                             Modifier.fillMaxSize()
                                         ){
-                                            Column (Modifier
-                                                .weight(0.5f)
-                                                .background(Color.Transparent),
+                                            Column (
+                                                Modifier
+                                                    .weight(0.5f)
+                                                    .background(Color.Transparent),
                                                 verticalArrangement = Arrangement.Center,
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
@@ -848,6 +855,21 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         .padding(8.dp)
                                                 )
                                             }
+                                            Column(
+                                                Modifier
+                                                    .weight(0.5f)
+                                                    .background(Color.Transparent),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = "Instagram",
+                                                    fontWeight = FontWeight.Bold,
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 25.sp,
+                                                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -858,8 +880,52 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    OutlinedCard(onClick = { /*TODO*/ },
+                                    OutlinedCard(onClick = {
+                                        val uri = Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                                        intent.setPackage("com.tiktok.android")
+                                        try {
+                                            startActivity(context, intent, null)
+                                        } catch (e: ActivityNotFoundException) {
+                                            Log.e("Error", "Tiktok no está instalado")
+                                            startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
+                                        } },
                                         modifier = Modifier.fillMaxSize()) {
+                                        Row(
+                                            Modifier.fillMaxSize()
+                                        ){
+                                            Column (
+                                                Modifier
+                                                    .weight(0.5f)
+                                                    .background(Color.Transparent),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.logo_tiktok),
+                                                    contentDescription = "Logo",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .fillMaxHeight()
+                                                        .padding(8.dp)
+                                                )
+                                            }
+                                            Column(
+                                                Modifier
+                                                    .weight(0.5f)
+                                                    .background(Color.Transparent),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = "TikTok",
+                                                    fontWeight = FontWeight.Bold,
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 25.sp,
+                                                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
