@@ -80,7 +80,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
     val cameraPositionState = rememberCameraPositionState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var primeraVez by remember { mutableStateOf(false) }
+    var primeraVez by remember { mutableStateOf(true) } // cambiar a true
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
     var rutaLoading by remember { mutableStateOf(false) }
@@ -200,12 +200,12 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                     scrollGesturesEnabled = true,
                     scrollGesturesEnabledDuringRotateOrZoom = true,
                 ),
-                onMapClick = {latLng:LatLng ->
+                onMapClick = { latLng: LatLng ->
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
                 },
                 onMapLoaded = {
-                    if(searchSitioRecogida.value == true){
-                        if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation?.latitude != 37.4219983 && currentLocation?.longitude != -122.084){
+                    if (searchSitioRecogida.value == true) {
+                        if (sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && currentLocation?.latitude != 37.4219983 && currentLocation?.longitude != -122.084) {
                             start = "${currentLocation!!.longitude},${currentLocation!!.latitude}"
                             end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
                             createRoute(start, end)
@@ -217,8 +217,8 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                         rutaLoading = true
                     }
                 }
-            ){
-                if(cargaRuta.value && muestraRuta.value){
+            ) {
+                if (cargaRuta.value && muestraRuta.value) {
                     rutaLoading = false
                     Polyline(points = route)
                 }
@@ -229,47 +229,45 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             title = "Posición actual",
                             snippet = "Usted se encuentra aquí"
                         )
-                        if (primeraVez){
+                        if (primeraVez) {
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
                             primeraVez = false
                         }
                     }
-                } else{
-                    currentLocation?.let {
+                } else {
+                    sitioRecogida.value?.let { sitio ->
+                        val sitioLatLng = LatLng(sitio.latitudSitio, sitio.longitudSitio)
                         Marker(
-                            state = MarkerState(position = it),
-                            title = "Posición actual",
-                            snippet = "Usted se encuentra aquí"
+                            state = MarkerState(position = sitioLatLng),
+                            title = "Sitio de recogida ${sitio.nombreSitio}",
+                            snippet = sitio.direccionSitio
                         )
-                        if (primeraVez){
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+                        if (primeraVez) {
+                            cameraPositionState.position = CameraPosition.fromLatLngZoom(sitioLatLng, 15f)
                             primeraVez = false
                         }
-                    }
-                    if(sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null){
-                        Marker(
-                            state = MarkerState(position = LatLng(sitioRecogida.value!!.latitudSitio, sitioRecogida.value!!.longitudSitio)),
-                            title = "Sitio de recogida ${sitioRecogida.value!!.nombreSitio}",
-                            snippet = sitioRecogida.value!!.direccionSitio
-                        )
                     }
                 }
             }
-            if(searchSitioRecogida.value == true && muestraRuta.value && cargaRuta.value){
-                Row (modifier = Modifier.fillMaxWidth()) {
-                    Column (modifier = Modifier.weight(0.33f),
+            if (searchSitioRecogida.value == true && muestraRuta.value && cargaRuta.value) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.weight(0.33f),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.Start) {
+                        horizontalAlignment = Alignment.Start
+                    ) {
                         Column {
                             Text(text = "Salida:")
                             Text(text = "Posición actual")
                         }
                     }
-                    Column (modifier = Modifier.weight(0.33f),
+                    Column(
+                        modifier = Modifier.weight(0.33f),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally){
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Column {
-                            if(calcularAPie.value){
+                            if (calcularAPie.value) {
                                 Text(text = "A pie")
                             } else {
                                 Text(text = "En coche")
@@ -278,9 +276,11 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             Text(text = "$duracionTrayecto minutos")
                         }
                     }
-                    Column (modifier = Modifier.weight(0.33f),
+                    Column(
+                        modifier = Modifier.weight(0.33f),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End){
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Column {
                             Text(text = "Destino:")
                             Text(text = "${sitioRecogida.value?.nombreSitio}")
@@ -296,6 +296,8 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
         mapaOrganizadorVM.searchSitioRecogida.value = false
     }
 }
+
+
 
 fun getRetrofit():Retrofit{
     return Retrofit.Builder()
