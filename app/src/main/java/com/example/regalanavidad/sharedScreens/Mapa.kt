@@ -80,7 +80,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
     val cameraPositionState = rememberCameraPositionState()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var primeraVez by remember { mutableStateOf(true) } // cambiar a true
+    var entraMapa by remember { mutableStateOf(true) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
     var rutaLoading by remember { mutableStateOf(false) }
@@ -229,12 +229,19 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             title = "Posición actual",
                             snippet = "Usted se encuentra aquí"
                         )
-                        if (primeraVez) {
+                        if (entraMapa) {
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
-                            primeraVez = false
+                            entraMapa = false
                         }
                     }
                 } else {
+                    currentLocation?.let {
+                        Marker(
+                            state = MarkerState(position = it),
+                            title = "Posición actual",
+                            snippet = "Usted se encuentra aquí"
+                        )
+                    }
                     sitioRecogida.value?.let { sitio ->
                         val sitioLatLng = LatLng(sitio.latitudSitio, sitio.longitudSitio)
                         Marker(
@@ -242,9 +249,9 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
                             title = "Sitio de recogida ${sitio.nombreSitio}",
                             snippet = sitio.direccionSitio
                         )
-                        if (primeraVez) {
+                        if (entraMapa) {
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(sitioLatLng, 15f)
-                            primeraVez = false
+                            entraMapa = false
                         }
                     }
                 }

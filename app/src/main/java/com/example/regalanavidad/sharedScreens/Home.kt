@@ -855,15 +855,15 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 onClick = { redactaEmail = true },
                 Modifier
                     .align(Alignment.BottomStart)
-                    .padding(0.dp, 0.dp, 14.dp, 8.dp)
+                    .padding(0.dp, 0.dp, 14.dp, 35.dp)
                     .height(40.dp)
-                    .width(165.dp)
+                    .width(160.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(30.dp))
+                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp))
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(text = "Redactar correo")
                 }
