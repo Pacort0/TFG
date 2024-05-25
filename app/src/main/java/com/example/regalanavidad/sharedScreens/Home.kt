@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.CalendarContract
@@ -14,6 +15,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,6 +60,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -78,6 +81,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -786,6 +790,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         }
                     }
                     3 -> {
+                        var navegaIg by remember{mutableStateOf(false)}
+                        var navegaTkTk by remember{mutableStateOf(false)}
                         Card(
                             modifier = Modifier
                                 .fillMaxHeight()
@@ -803,18 +809,59 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleY = scale
                                 }
                                 .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                                .let {
-                                    if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Imagen") {
-                                        it.clickable {
-                                            Toast
-                                                .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                                .show()
-                                        }
-                                    } else it
-                                }
                         ) {
-                            Column {
-                                Text(text = "Redes sociales: ")
+                            Column (
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(10.dp))
+                            {
+                                Row (
+                                    Modifier
+                                        .weight(0.5f)
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedCard(
+                                        onClick = {
+                                            val uri = Uri.parse("https://www.instagram.com/proyectoregalanavidad")
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            startActivity(context, intent, null)
+                                        },
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Row(
+                                            Modifier.fillMaxSize()
+                                        ){
+                                            Column (Modifier
+                                                .weight(0.5f)
+                                                .background(Color.Transparent),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.logo_ig),
+                                                    contentDescription = "Logo",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .fillMaxHeight()
+                                                        .padding(8.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                Row (
+                                    Modifier
+                                        .weight(0.5f)
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedCard(onClick = { /*TODO*/ },
+                                        modifier = Modifier.fillMaxSize()) {
+                                    }
+                                }
                             }
                         }
                     }

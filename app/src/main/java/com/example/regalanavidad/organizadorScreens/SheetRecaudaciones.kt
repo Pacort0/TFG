@@ -193,11 +193,11 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxSize()
+                                    .clickable { isExpanded = !isExpanded }
                                     .padding(8.dp)){
                                 Column(
                                     Modifier
-                                        .weight(0.15f)
-                                        .clickable { isExpanded = !isExpanded },
+                                        .weight(0.10f),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center)
                                 {
@@ -210,7 +210,7 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                 Column (Modifier.weight(0.48f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                                     Text(text = listaProductos[index].nombre)
                                 }
-                                Column (Modifier.weight(0.37f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                Column (Modifier.weight(0.42f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                     Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}")
                                 }
                             }

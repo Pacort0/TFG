@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,19 +29,12 @@ import com.example.regalanavidad.R
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun ExcelCoordinador(navController: NavController){
-    var navegaSitiosRecogida by remember{ mutableStateOf(false) }
-    var navegaGastos by remember{ mutableStateOf(false)}
-    var navegaRecaudaciones by remember { mutableStateOf(false) }
-
-    if (navegaSitiosRecogida){
-        navController.navigate("SheetCentrosEducativos")
-    }
-    if (navegaGastos){
-        navController.navigate("SheetGastos")
-    }
-    if(navegaRecaudaciones){
-        navController.navigate("SheetRecaudaciones")
-    }
+    val textoCentros = "Centros Educativos"
+    val textoGastos = "Gastos"
+    val textoRecaudaciones = "Productos Recaudados"
+    val nombreRutaCentros = "SheetCentrosEducativos"
+    val nombreRutaGastos = "SheetGastos"
+    val nombreRutaRecaudaciones = "SheetRecaudaciones"
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -54,155 +43,84 @@ fun ExcelCoordinador(navController: NavController){
     ) {
         Row (
             Modifier
-                .weight(0.5f)
+                .weight(0.33f)
                 .padding(10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
             ) {
-            Card (
-                Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        navegaSitiosRecogida = true
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(184, 243, 175)),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.googlesheetslogo),
-                            contentDescription = "Logo Google Sheets",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(8.dp)
-                        )
-                    }
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Centros Educativos",
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            fontSize = 25.sp,
-                            modifier = Modifier.padding(0.dp,0.dp,8.dp,0.dp)
-                        )
-                    }
-                }
-            }
+            CartaExcel(navController, textoCentros, nombreRutaCentros)
         }
         Row (
             Modifier
-                .weight(0.5f)
+                .weight(0.33f)
                 .padding(10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Card (
-                Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        navegaGastos = true
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(184, 243, 175)),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.googlesheetslogo),
-                            contentDescription = "Logo Google Sheets",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(8.dp)
-                        )
-                    }
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Gastos",
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            fontSize = 25.sp,
-                            modifier = Modifier.padding(0.dp,0.dp,8.dp,0.dp)
-                        )
-                    }
-                }
-            }
+            CartaExcel(navController, textoGastos, nombreRutaGastos)
         }
         Row (
             Modifier
-                .weight(0.5f)
+                .weight(0.33f)
                 .padding(10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Card (
+            CartaExcel(navController, textoRecaudaciones, nombreRutaRecaudaciones)
+        }
+    }
+}
+
+@Composable
+private fun CartaExcel(
+    navController: NavController,
+    textoCarta: String,
+    nombreRuta: String
+) {
+    Card(
+        Modifier
+            .fillMaxSize()
+            .clickable {
+                navController.navigate(nombreRuta)
+            }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(184, 243, 175)),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Column(
                 Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        navegaRecaudaciones = true
-                    }
+                    .weight(0.5f)
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
+                Image(
+                    painter = painterResource(id = R.drawable.googlesheetslogo),
+                    contentDescription = "Logo",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(184, 243, 175)),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.googlesheetslogo),
-                            contentDescription = "Logo Google Sheets",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(8.dp)
-                        )
-                    }
-                    Column (
-                        Modifier.weight(0.5f).background(Color.Transparent),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Productos Recaudados",
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            fontSize = 25.sp,
-                            modifier = Modifier.padding(0.dp,0.dp,8.dp,0.dp)
-                        )
-                    }
-                }
+                        .fillMaxHeight()
+                        .padding(8.dp)
+                )
+            }
+            Column(
+                Modifier
+                    .weight(0.5f)
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = textoCarta,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                )
             }
         }
     }
