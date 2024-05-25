@@ -2,8 +2,8 @@ package com.example.regalanavidad.modelos
 
 data class Producto(
     val nombre:String = "",
-    val tipos:List<DetallesProducto> = emptyList(),
-    val cantidadTotal:String = ""
+    var tipos:List<DetallesProducto> = emptyList(),
+    var cantidadTotal:String = ""
 )
 
 data class DetallesProducto(

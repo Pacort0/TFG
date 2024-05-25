@@ -146,7 +146,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
             onClick = {
                 val distrito: String
                 if (listaEstadosCentrosCambiados.value.isNotEmpty()){
-                    distrito = cambiaNombreSheet(distritoSeleccionado)
+                    distrito = cambiaNombreDistrito(distritoSeleccionado)
                     scope.launch(Dispatchers.IO) {
                         updateCentrosDataInGoogleSheet(infoCentrosSheetId, distrito, listaEstadosCentrosCambiados.value)
                     }
@@ -196,6 +196,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                             distritoSeleccionado = opcionSeleccionada
                             expanded = false
                             centrosLoading = true
+                            listaEstadosCentrosCambiados.value = emptyList()
                         }
                     ) {
                         Text("Sí, estoy seguro")
@@ -231,7 +232,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         }
     }
 }
-fun cambiaNombreSheet(sheetName: String):String{
+fun cambiaNombreDistrito(sheetName: String):String{
     var nuevoSheetName = ""
     when (sheetName){
         "Sevilla Este" -> {

@@ -213,7 +213,7 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                 PaginaSheetGastos()
             }
             composable("SheetRecaudaciones"){
-                PaginaSheetRecaudaciones()
+                PaginaSheetRecaudaciones(navController)
             }
             composable("profileScreen"){
                 ProfileScreen()
