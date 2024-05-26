@@ -1,12 +1,17 @@
 package com.example.regalanavidad.sharedScreens
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.modelos.Usuario
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class FirestoreManager {
     private val firestore = FirebaseFirestore.getInstance()
@@ -124,6 +129,26 @@ class FirestoreManager {
             Log.d("Tarea", "Tarea eliminada con éxito")
         } catch (e: Exception) {
             Log.w("Tarea", "Error eliminando tarea", e)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getProximoEvento(): Evento? {
+        val firestore = FirebaseFirestore.getInstance()
+        val querySnapshot = firestore.collection("eventos").get().await()
+        val eventos = querySnapshot.toObjects(Evento::class.java)
+
+        return eventos.filter { it.startDate.toLocalDate() != null }
+            .minByOrNull { it.startDate.toLocalDate()!! }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun String.toLocalDate(): LocalDate? {
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            LocalDate.parse(this, formatter)
+        } catch (e: DateTimeParseException) {
+            null
         }
     }
 }

@@ -39,7 +39,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -69,6 +68,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -93,8 +93,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,10 +110,12 @@ import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
+import com.example.regalanavidad.organizadorScreens.MailScreen
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
+import com.example.regalanavidad.viewmodels.EventosVM
 import com.example.regalanavidad.viewmodels.TareasViewModel
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
@@ -153,12 +153,17 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
-val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
-val eventosConfirmados = mutableListOf<Evento>()
-var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
+private val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
+private val eventosConfirmados = mutableListOf<Evento>()
+private var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
 val tareasVM = TareasViewModel()
+
+@RequiresApi(Build.VERSION_CODES.O)
+val eventosVM = EventosVM()
+
+//Para las redes sociales
 val customFontFamily = FontFamily(
     Font(R.font.snackercomic, FontWeight.Normal)
 )
@@ -317,6 +322,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         pageCount = { 4 }
     )
     var showCloseAppDialog by remember {mutableStateOf(false)}
+    val eventoVM = eventosVM.proximoEvento.collectAsState()
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -765,7 +771,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                                 .padding(5.dp, 0.dp, 0.dp, 0.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = Color.Transparent
                             )
                         ) {
                             Column (
@@ -831,7 +837,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             Row (
                                                                 modifier
                                                                     .fillMaxSize()
-                                                                    .weight(0.20f)
+                                                                    .weight(
+                                                                        if (donacion.tipo == "TOTAL") 0.3f else 0.2f
+                                                                    )
                                                             ) {
                                                                 Card(
                                                                     modifier = Modifier
@@ -845,16 +853,30 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                     Box(
                                                                         modifier = modifier
                                                                             .graphicsLayer {
-                                                                                alpha = 0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
+                                                                                alpha =
+                                                                                    0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
                                                                             }
                                                                             .drawBehind {
                                                                                 drawIntoCanvas { canvas ->
-                                                                                    val paint = Paint()
-                                                                                    val frameworkPaint = paint.asFrameworkPaint()
-                                                                                    frameworkPaint.color = 0x99FFFFFF.toInt()
-                                                                                    frameworkPaint.maskFilter = android.graphics.BlurMaskFilter(30f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                                                                                    val paint =
+                                                                                        Paint()
+                                                                                    val frameworkPaint =
+                                                                                        paint.asFrameworkPaint()
+                                                                                    frameworkPaint.color =
+                                                                                        0x99FFFFFF.toInt()
+                                                                                    frameworkPaint.maskFilter =
+                                                                                        android.graphics.BlurMaskFilter(
+                                                                                            30f,
+                                                                                            android.graphics.BlurMaskFilter.Blur.NORMAL
+                                                                                        )
                                                                                     canvas.nativeCanvas.apply {
-                                                                                        drawRect(0f, 0f, size.width, size.height, frameworkPaint)
+                                                                                        drawRect(
+                                                                                            0f,
+                                                                                            0f,
+                                                                                            size.width,
+                                                                                            size.height,
+                                                                                            frameworkPaint
+                                                                                        )
                                                                                     }
                                                                                 }
                                                                             }
@@ -864,7 +886,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                                 "BIZUM" -> DonacionRow(donacion, R.drawable.bizum)
                                                                                 "EFECTIVO" -> DonacionRow(donacion, R.drawable.dinero_efectivo)
                                                                                 "TRANSFERENCIA" -> DonacionRow(donacion, R.drawable.transferencia)
-                                                                                "TOTAL" -> DonacionRow(donacion, R.drawable.bizum)
+                                                                                "TOTAL" -> DonacionRow(donacion, R.drawable.total)
                                                                             }
                                                                         }
                                                                     }
@@ -879,14 +901,112 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                                 Row (
                                     Modifier
-                                        .weight(0.5f)
-                                        .padding(10.dp),
+                                        .weight(0.5f),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    OutlinedCard(onClick = {},
-                                        modifier = Modifier.fillMaxSize()) {
-                                        CartaRSS(R.drawable.logo_tiktok, "TikTok")
+                                    Card(
+                                        modifier = Modifier.fillMaxSize(),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color.Transparent
+                                        )
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.dia_calendario),
+                                                contentDescription = "Background Ig Image",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                            Column (
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .padding(
+                                                        top = 68.dp,
+                                                        start = 5.dp,
+                                                        end = 5.dp,
+                                                        bottom = 0.dp
+                                                    )
+                                            ) {
+                                                Row (
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .wrapContentHeight()
+                                                        .weight(0.3f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Column (
+                                                        Modifier.fillMaxSize(),
+                                                        verticalArrangement = Arrangement.Center,
+                                                        horizontalAlignment = Alignment.CenterHorizontally
+                                                    ){
+                                                        Text(
+                                                            text = "Próximo evento:",
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 28.sp,
+                                                            color = Color.Black
+                                                        )
+                                                        eventoVM.value.titulo.let {
+                                                            Text(
+                                                                text = it,
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 18.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .weight(0.45f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    eventoVM.value.startDate.let {
+                                                        val valoresFecha = eventoVM.value.startDate.split("/")
+                                                        Column (
+                                                            Modifier.fillMaxSize(),
+                                                            verticalArrangement = Arrangement.Center,
+                                                            horizontalAlignment = Alignment.CenterHorizontally
+                                                        ) {
+                                                            Text(
+                                                                text = valoresFecha[0],
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 70.sp,
+                                                                color = Color.Black
+                                                            )
+                                                            Spacer(modifier = Modifier.height(5.dp))
+                                                            Text(
+                                                                text = cambiaNumeroPorMes(valoresFecha[1]),
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 24.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .weight(0.25f),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    eventoVM.value.lugar.let {
+                                                        Text(
+                                                            text = it.nombreSitio,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 20.sp,
+                                                            color = Color.Black
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1028,15 +1148,17 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     .align(Alignment.BottomStart)
                     .padding(0.dp, 0.dp, 14.dp, 35.dp)
                     .height(40.dp)
-                    .width(160.dp)
+                    .width(if(pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(text = "Redactar correo")
+                    if (pagerState.currentPage == 0 || pagerState.currentPage == 1){
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(text = "Redactar correo")
+                    }
                 }
             }
         }
@@ -1094,25 +1216,26 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
     Row(
         Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize()
+            .padding(if (donacion.tipo == "TOTAL") 5.dp else 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = imageResId),
-            contentDescription = "Donation Type Image",
+            contentDescription = "Imagen Donativo",
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .weight(0.5f) // Ajusta el peso según lo necesites
-                .padding(end = 8.dp)
+                .weight(0.4f)
+                .padding(end = 5.dp)
         )
         Text(
-            text = donacion.cantidad, // Ajusta según los datos disponibles
-            color = Color.White,
+            text = donacion.cantidad,
+            color = Color(44, 173, 18),
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Start,
-            modifier = Modifier.weight(0.5f) // Ajusta el peso según lo necesites
+            modifier = Modifier.weight(0.6f)
         )
     }
 }
@@ -1133,7 +1256,7 @@ private fun CartaRSS(idLogo: Int, nombreRRSS: String) {
             R.drawable.logo_tiktok -> {
                 Image(
                     painter = painterResource(id = R.drawable.tiktok_bg),
-                    contentDescription = "Background Ig Image",
+                    contentDescription = "Background TikTok Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -1191,69 +1314,21 @@ private fun CartaRSS(idLogo: Int, nombreRRSS: String) {
     }
 }
 
-@Composable
-fun MailScreen(navController: NavController){
-    var correoContacto by remember { mutableStateOf(centroEducativoElegido.correoCentro) }
-    var asuntoCorreo by remember { mutableStateOf("") }
-    var mensajeCorreo by remember { mutableStateOf("") }
-    val contexto = LocalContext.current
-
-    Column (
-        modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TextField(
-            label = { Text(text = "Correo") },
-            value = correoContacto,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            onValueChange = { correoContacto = it }
-        )
-        TextField(
-            label = { Text(text = "Asunto") },
-            value = asuntoCorreo,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            onValueChange = { asuntoCorreo = it }
-        )
-        TextField(
-            label = { Text(text = "Mensaje") },
-            value = mensajeCorreo,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            onValueChange = { mensajeCorreo = it }
-        )
-        Button(onClick = {
-            val intent = Intent(Intent.ACTION_SEND)
-            intent.type = "message/rfc822"
-            intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(correoContacto))
-            intent.putExtra(Intent.EXTRA_SUBJECT, asuntoCorreo)
-            intent.putExtra(Intent.EXTRA_TEXT, mensajeCorreo)
-
-            try {
-                contexto.startActivity(Intent.createChooser(intent, "Enviar correo"))
-                correoContacto = ""
-                asuntoCorreo = ""
-                mensajeCorreo = ""
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(contexto, "No hay aplicaciones de correo instaladas", Toast.LENGTH_SHORT).show()
-            }
-        }) {
-            Text(text = "Enviar")
-        }
-    }
-    BackHandler {
-        navController.popBackStack()
-        centroEducativoElegido = CentroEducativo()
+private fun cambiaNumeroPorMes(numero: String): String {
+    return when(numero){
+        "01" -> "Enero"
+        "02" -> "Febrero"
+        "03" -> "Marzo"
+        "04" -> "Abril"
+        "05" -> "Mayo"
+        "06" -> "Junio"
+        "07" -> "Julio"
+        "08" -> "Agosto"
+        "09" -> "Septiembre"
+        "10" -> "Octubre"
+        "11" -> "Noviembre"
+        "12" -> "Diciembre"
+        else -> "Error"
     }
 }
 
@@ -1466,7 +1541,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        eventosConfirmados[index].titulo?.let { Text(text = it, modifier = Modifier.weight(1f)) }
+                        Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(1f))
                         if(!isHomePage){
                             IconButton(onClick = {
                                 val arrayFecha = eventosConfirmados[index].startDate.split("/")
