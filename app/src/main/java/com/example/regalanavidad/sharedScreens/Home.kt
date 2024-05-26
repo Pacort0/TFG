@@ -43,6 +43,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -51,6 +53,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -1148,7 +1151,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     .align(Alignment.BottomStart)
                     .padding(0.dp, 0.dp, 14.dp, 35.dp)
                     .height(40.dp)
-                    .width(if(pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
+                    .width(if (pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -1524,7 +1527,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
 fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
     val contexto = LocalContext.current
     if(eventosConfirmados.size > 0) {
-        LazyColumn (
+        LazyColumn(
             verticalArrangement = Arrangement.Center
         ) {
             items(eventosConfirmados.size) { index ->
@@ -1534,61 +1537,76 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         .padding(5.dp)
                         .border(1.dp, Color.Black, CircleShape)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(1f))
-                        if(!isHomePage){
-                            IconButton(onClick = {
-                                val arrayFecha = eventosConfirmados[index].startDate.split("/")
-                                val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
-                                val startMillis: Long = Calendar.getInstance().run {
-                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
-                                    timeInMillis
-                                }
-                                val endMillis: Long = Calendar.getInstance().run {
-                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt()+2, arrayHora[1].toInt())
-                                    timeInMillis
-                                }
+                    var expanded by remember { mutableStateOf(false) }
 
-                                val descripcion = eventosConfirmados[index].descripcion.ifEmpty {
-                                    "Evento organizado por Regala Navidad"
-                                }
-
-                                Intent(Intent.ACTION_INSERT).apply {
-                                    data = CalendarContract.Events.CONTENT_URI
-                                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
-                                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
-                                    putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
-                                    putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
-                                    putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
-                                    putExtra(CalendarContract.Events.DESCRIPTION, descripcion)
-                                    putExtra(CalendarContract.Events.HAS_ALARM, 1)
-                                }.also { intent ->
-                                    startActivity(contexto, intent, null)
-                                }
-                            }, modifier = Modifier.weight(0.3f)) {
-                                Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario", Modifier.size(25.dp))
-                            }
-                            IconButton(onClick = {
-                                onEventoEscogido(eventosConfirmados[index])
-                            },
-                                modifier = Modifier.weight(0.3f)) {
-                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Navegar a mapa", Modifier.size(25.dp))
-                            }
-                            if(canEdit){
-                                IconButton(onClick = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        firestore.eliminaEvento(eventosConfirmados[index])
-                                        onElementoEliminado(true)
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(1f))
+                            if (!isHomePage) {
+                                Box {
+                                    IconButton(onClick = { expanded = true }) {
+                                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
                                     }
-                                },
-                                    modifier = Modifier.weight(0.3f)) {
-                                    Icon(Icons.Filled.Delete, contentDescription = "Eliminar evento")
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        DropdownMenuItem(onClick = {
+                                            expanded = false
+                                            val arrayFecha = eventosConfirmados[index].startDate.split("/")
+                                            val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
+                                            val startMillis: Long = Calendar.getInstance().run {
+                                                set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
+                                                timeInMillis
+                                            }
+                                            val endMillis: Long = Calendar.getInstance().run {
+                                                set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt() + 2, arrayHora[1].toInt())
+                                                timeInMillis
+                                            }
+
+                                            val descripcion = eventosConfirmados[index].descripcion.ifEmpty {
+                                                "Evento organizado por Regala Navidad"
+                                            }
+
+                                            Intent(Intent.ACTION_INSERT).apply {
+                                                data = CalendarContract.Events.CONTENT_URI
+                                                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
+                                                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                                                putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
+                                                putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
+                                                putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                                putExtra(CalendarContract.Events.DESCRIPTION, descripcion)
+                                                putExtra(CalendarContract.Events.HAS_ALARM, 1)
+                                            }.also { intent ->
+                                                startActivity(contexto, intent, null)
+                                            }
+                                        },
+                                            text = {Text("Añadir al calendario")},
+                                            leadingIcon = {Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario")})
+                                        DropdownMenuItem(onClick = {
+                                            expanded = false
+                                            onEventoEscogido(eventosConfirmados[index])
+                                        },
+                                            text = {Text("Ver en el mapa")},
+                                            leadingIcon = {Icon(Icons.Filled.LocationOn, contentDescription = "Ver en el mapa")})
+                                        if (canEdit) {
+                                            DropdownMenuItem(onClick = {
+                                                expanded = false
+                                                CoroutineScope(Dispatchers.IO).launch {
+                                                    firestore.eliminaEvento(eventosConfirmados[index])
+                                                    onElementoEliminado(true)
+                                                }
+                                            },
+                                                text = {Text(text = "Eliminar evento", color = Color.Red)},
+                                                leadingIcon = {Icon(Icons.Filled.Delete, contentDescription = "Eliminar")})
+                                        }
+                                    }
                                 }
                             }
                         }
