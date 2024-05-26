@@ -1,5 +1,6 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,9 +43,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
+import com.example.regalanavidad.modelos.CentroEducativo
+import com.example.regalanavidad.modelos.CentroEducativoRequest
+import com.example.regalanavidad.modelos.CentroEducativoResponse
+import com.example.regalanavidad.modelos.RequestPostCentroEducativo
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 
+private var listaCentrosEducativos = mutableStateOf(emptyList<CentroEducativo>())
+const val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
+private var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
+var centroEducativoElegido = CentroEducativo()
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaginaSheetCentrosEducativos(navController: NavController) {
@@ -58,7 +77,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
     var llamadaBackHandler by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = centrosLoading) {
-        informacionCentrosRecogida.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
+        listaCentrosEducativos.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
         centrosLoading = false
     }
     Box(modifier = Modifier
@@ -104,25 +123,25 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                     }
                 }
             }
-            if(informacionCentrosRecogida.value.isNotEmpty() && !centrosLoading){
+            if(listaCentrosEducativos.value.isNotEmpty() && !centrosLoading){
                 LazyColumn {
-                    items(informacionCentrosRecogida.value.size) { index ->
+                    items(listaCentrosEducativos.value.size) { index ->
                         Card (
                             modifier = Modifier
                                 .padding(8.dp)
                                 .fillParentMaxWidth()
                                 .height(60.dp)
                                 .clickable {
-                                    centroEducativoElegido = informacionCentrosRecogida.value[index]
+                                    centroEducativoElegido = listaCentrosEducativos.value[index]
                                     navController.navigate("PagContactosCentrosEdu")
                                 }
                         ) {
                             Row (horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
                                 Column (Modifier.weight(0.55f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                                    Text(text = informacionCentrosRecogida.value[index].nombreCentro)
+                                    Text(text = listaCentrosEducativos.value[index].nombreCentro)
                                 }
                                 Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    EstadosSubMenu(drawerState, scope, informacionCentrosRecogida.value[index])
+                                    EstadosSubMenu(drawerState, scope, listaCentrosEducativos.value[index])
                                 }
                             }
                         }
@@ -261,4 +280,139 @@ fun cambiaNombreDistrito(sheetName: String):String{
         }
     }
     return nuevoSheetName
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducativo: CentroEducativo){
+    val opcionesEstados = listOf("No Iniciada", "En curso", "En revisión", "Completada", "Cancelada")
+    var expanded by remember { mutableStateOf(false) }
+    var nuevoEstado by remember { mutableStateOf(centroEducativo.estadoCentro) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        TextField(
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
+            value = nuevoEstado,
+            onValueChange = {},
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            opcionesEstados.forEach { selectionOption ->
+                DropdownMenuItem(
+                    text = { Text(selectionOption, fontSize = 18.sp) },
+                    onClick = {
+                        if(selectionOption != centroEducativo.estadoCentro){
+                            nuevoEstado = selectionOption
+                            centroEducativo.estadoCentro = selectionOption
+
+                            // Buscar si ya existe un registro para este centro
+                            val index = listaEstadosCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
+
+                            if (index != -1) {
+                                // Si existe, sobrescribirlo
+                                val newList = listaEstadosCentrosCambiados.value.toMutableList()
+                                newList[index] = centroEducativo.toCentroEducativoRequest()
+                                listaEstadosCentrosCambiados.value = newList
+                            } else {
+                                // Si no existe, añadirlo a la lista
+                                listaEstadosCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
+                            }
+                        }
+
+                        expanded = false
+                        scope.launch { drawerState.close() }
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
+suspend fun getCentrosFromDistrito(distritoSeleccionado:String):List<CentroEducativo>{
+    var centroResponse = CentroEducativoResponse(emptyList())
+    when(distritoSeleccionado){
+        "Sevilla Este" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "SevillaEste")
+        }
+        "Aljarafe" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Aljarafe")
+        }
+        "Montequinto" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Montequinto")
+        }
+        "Casco Antiguo" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "CascoAntiguo")
+        }
+        "Nervión-Porvenir" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "NervionPorvenir")
+        }
+        "Triana" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Triana")
+        }
+        "Heliópolis" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Heliopolis")
+        }
+        "Facultades US" -> {
+            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "FacultadesUS")
+        }
+    }
+    Log.d("Centros", centroResponse.toString())
+    return centroResponse.centros
+}
+
+suspend fun getCentrosDataFromGoogleSheet(spreadsheetId: String, sheetName: String): CentroEducativoResponse {
+    return withContext(Dispatchers.IO) {
+        val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec?spreadsheetId=$spreadsheetId&sheet=$sheetName"
+        val request = Request.Builder().url(url).build()
+        val client = OkHttpClient()
+
+        try {
+            val response = client.newCall(request).execute()
+            val responseData = response.body?.string()
+            if (responseData != null) {
+                Log.d("JSON", responseData)
+            }
+            val centros: CentroEducativoResponse = Gson().fromJson(responseData, CentroEducativoResponse::class.java)
+            centros
+        } catch (e: JsonSyntaxException) {
+            e.printStackTrace()
+            e.message?.let { Log.e("JSON", it) }
+            CentroEducativoResponse(emptyList())
+        }
+    }
+}
+
+suspend fun updateCentrosDataInGoogleSheet(spreadsheetId: String, sheetName: String, centros: List<CentroEducativoRequest>): Response {
+    return withContext(Dispatchers.IO) {
+        val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec"
+        val requestPost = RequestPostCentroEducativo(spreadsheetId, sheetName, centros)
+        val json = Gson().toJson(requestPost)
+        Log.d("postCentros", json)
+        val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        val client = OkHttpClient()
+
+        try {
+            val response = client.newCall(request).execute()
+            response
+        } catch (e: Exception) {
+            e.printStackTrace()
+            e.message?.let { Log.e("JSON", it) }
+            Response.Builder().code(500).message("Error al actualizar los datos").build()
+        }
+    }
 }

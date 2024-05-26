@@ -64,12 +64,12 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-var cargaRuta = mutableStateOf(false)
-var route = mutableListOf<LatLng>()
-var muestraRuta = mutableStateOf(false)
-var calcularAPie = mutableStateOf(true)
-var calcularCoche = mutableStateOf(false)
-var duracionTrayecto = 0
+private var cargaRuta = mutableStateOf(false)
+private var route = mutableListOf<LatLng>()
+private var muestraRuta = mutableStateOf(false)
+private var calcularAPie = mutableStateOf(true)
+private var calcularCoche = mutableStateOf(false)
+private var duracionTrayecto = 0
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

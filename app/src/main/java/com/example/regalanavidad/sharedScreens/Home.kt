@@ -49,6 +49,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -58,6 +59,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedCard
@@ -77,13 +79,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -101,6 +109,7 @@ import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
+import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
@@ -140,14 +149,6 @@ import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-
-data class TabBarItem(
-    val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val badgeAmount: Int? = null
-)
-
 val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años")
 val auth = Firebase.auth
 var usuario = Usuario()
@@ -158,6 +159,9 @@ var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
 val tareasVM = TareasViewModel()
+val customFontFamily = FontFamily(
+    Font(R.font.snackercomic, FontWeight.Normal)
+)
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -570,10 +574,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(10.dp)
         ) {
-            Text(
-                text = "Hola ${usuario.nombre}!",
-                modifier = modifier.padding(0.dp, 10.dp)
-            )
+//            Text(
+//                text = "Hola ${usuario.nombre}!",
+//                modifier = modifier.padding(0.dp, 10.dp)
+//            )
 
             HorizontalPager(
                 state = pagerState,
@@ -600,33 +604,66 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .padding(0.dp, 0.dp, 5.dp, 0.dp)
-                                .let {
-                                    if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
-                                        it.clickable {
-                                            Toast
-                                                .makeText(context, "Clickado", Toast.LENGTH_SHORT)
-                                                .show()
-                                        }
-                                    } else it
-                                }
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
                         ) {
-                            Column {
-                                LaunchedEffect(key1 = Unit) {
-                                    recaudacionsLoading = true
-                                    val donacionResponse = getDonationDataFromGoogleSheet(
-                                        donacionesSheetId,
-                                        "donaciones"
-                                    )
-                                    dineroRecaudado.value = donacionResponse.donaciones
-                                    recaudacionsLoading = false
+                            Box (
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color = Color.Transparent)
+                            ) {
+                                LaunchedEffect(key1 = recargarEventos) {
+                                    eventosLoading = true
+                                    eventosConfirmados.clear()
+                                    val eventos = firestore.getEventos()
+                                    eventos.forEach { evento ->
+                                        eventosConfirmados.add(evento)
+                                    }
+                                    hayEventos = eventosConfirmados.size != 0
+                                    recargarEventos = false
+                                    eventosLoading = false
                                 }
-                                if (recaudacionsLoading) {
+                                if (eventosLoading) {
                                     Text(text = "Cargando...")
                                 } else {
-                                    Text(text = "Dinero recaudado:")
-                                    dineroRecaudado.value.forEach { donacion ->
-                                        Text(text = "${donacion.tipo}: ${donacion.cantidad}")
+                                    if (hayEventos) {
+                                        Column (
+                                            Modifier.fillMaxSize(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ){
+                                            Row (
+                                                Modifier.padding(0.dp, 5.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "Eventos próximos",
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 18.sp,
+                                                    modifier = Modifier.weight(0.7f))
+                                                if(canEditEventos){
+                                                    IconButton(
+                                                        onClick = { agregaEvento = true },
+                                                        modifier = Modifier
+                                                            .weight(0.3f)
+                                                            .size(35.dp))
+                                                    {
+                                                        Icon(Icons.Filled.AddCircle, "Agregar evento", Modifier.fillMaxSize())
+                                                    }
+                                                }
+                                            }
+                                            ListaEventosConfirmados(
+                                                eventosConfirmados,
+                                                false,
+                                                canEditSitios,
+                                                onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                                                onEventoEscogido = {
+                                                        evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                                    navegaSitio = true
+                                                }
+                                            )
+                                        }
+                                    }
+                                    else {
+                                        Text(text = "No hay eventos confirmados")
                                     }
                                 }
                             }
@@ -712,8 +749,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     2 -> {
                         Card(
                             modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth()
+                                .fillMaxSize()
+                                .background(Color.Transparent)
                                 .graphicsLayer {
                                     val pageOffset =
                                         ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
@@ -726,66 +763,130 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            )
                         ) {
-                            Box (
+                            Column (
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color = Color.Transparent)
-                            ) {
-                                LaunchedEffect(key1 = recargarEventos) {
-                                    eventosLoading = true
-                                    eventosConfirmados.clear()
-                                    val eventos = firestore.getEventos()
-                                    eventos.forEach { evento ->
-                                        eventosConfirmados.add(evento)
-                                    }
-                                    hayEventos = eventosConfirmados.size != 0
-                                    recargarEventos = false
-                                    eventosLoading = false
-                                }
-                                if (eventosLoading) {
-                                    Text(text = "Cargando...")
-                                } else {
-                                    if (hayEventos) {
-                                        Column (
-                                            Modifier.fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ){
-                                            Row (
-                                                Modifier.padding(0.dp, 5.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                    .background(Color.Transparent))
+                            {
+                                Row (
+                                    Modifier
+                                        .weight(0.5f)
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedCard(
+                                        onClick = {},
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Box (
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.dinero_recaudado_wp),
+                                                contentDescription = "Background Ig Image",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                            Row(
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .padding(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Text(
-                                                    text = "Eventos próximos",
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 18.sp,
-                                                    modifier = Modifier.weight(0.7f))
-                                                if(canEditEventos){
-                                                    IconButton(
-                                                        onClick = { agregaEvento = true },
-                                                        modifier = Modifier
-                                                            .weight(0.3f)
-                                                            .size(35.dp))
-                                                    {
-                                                        Icon(Icons.Filled.AddCircle, "Agregar evento", Modifier.fillMaxSize())
+                                                Column (
+                                                    Modifier.fillMaxSize()
+                                                ) {
+                                                    LaunchedEffect(key1 = Unit) {
+                                                        recaudacionsLoading = true
+                                                        val donacionResponse = getDonationDataFromGoogleSheet(
+                                                            donacionesSheetId,
+                                                            "donaciones"
+                                                        )
+                                                        dineroRecaudado.value = donacionResponse.donaciones
+                                                        recaudacionsLoading = false
+                                                    }
+                                                    if (recaudacionsLoading) {
+                                                        Text(text = "Cargando...")
+                                                    } else {
+                                                        Row (
+                                                            Modifier
+                                                                .fillMaxWidth()
+                                                                .weight(0.1f),
+                                                            horizontalArrangement = Arrangement.Center
+                                                        ) {
+                                                            Text(text = "Dinero recaudado:",
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 28.sp,
+                                                                color = Color.White)
+                                                        }
+                                                        dineroRecaudado.value.forEach { donacion ->
+                                                            Row (
+                                                                modifier
+                                                                    .fillMaxSize()
+                                                                    .weight(0.20f)
+                                                            ) {
+                                                                Card(
+                                                                    modifier = Modifier
+                                                                        .fillMaxSize()
+                                                                        .padding(8.dp),
+                                                                    shape = MaterialTheme.shapes.medium,
+                                                                    colors = CardDefaults.cardColors(
+                                                                        containerColor = Color.Transparent
+                                                                    )
+                                                                ) {
+                                                                    Box(
+                                                                        modifier = modifier
+                                                                            .graphicsLayer {
+                                                                                alpha = 0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
+                                                                            }
+                                                                            .drawBehind {
+                                                                                drawIntoCanvas { canvas ->
+                                                                                    val paint = Paint()
+                                                                                    val frameworkPaint = paint.asFrameworkPaint()
+                                                                                    frameworkPaint.color = 0x99FFFFFF.toInt()
+                                                                                    frameworkPaint.maskFilter = android.graphics.BlurMaskFilter(30f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                                                                                    canvas.nativeCanvas.apply {
+                                                                                        drawRect(0f, 0f, size.width, size.height, frameworkPaint)
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                    ){
+                                                                        Box (modifier = Modifier.fillMaxSize()){
+                                                                            when(donacion.tipo) {
+                                                                                "BIZUM" -> DonacionRow(donacion, R.drawable.bizum)
+                                                                                "EFECTIVO" -> DonacionRow(donacion, R.drawable.dinero_efectivo)
+                                                                                "TRANSFERENCIA" -> DonacionRow(donacion, R.drawable.transferencia)
+                                                                                "TOTAL" -> DonacionRow(donacion, R.drawable.bizum)
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
-                                            ListaEventosConfirmados(
-                                                eventosConfirmados,
-                                                false,
-                                                canEditSitios,
-                                                onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                                                onEventoEscogido = {
-                                                    evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
-                                                    navegaSitio = true
-                                                }
-                                            )
                                         }
                                     }
-                                    else {
-                                        Text(text = "No hay eventos confirmados")
+                                }
+                                Row (
+                                    Modifier
+                                        .weight(0.5f)
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedCard(onClick = {},
+                                        modifier = Modifier.fillMaxSize()) {
+                                        CartaRSS(R.drawable.logo_tiktok, "TikTok")
                                     }
                                 }
                             }
@@ -794,8 +895,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     3 -> {
                         Card(
                             modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth()
+                                .fillMaxSize()
+                                .background(Color.Transparent)
                                 .graphicsLayer {
                                     val pageOffset =
                                         ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
@@ -808,12 +909,16 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            )
                         ) {
                             Column (
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
-                                modifier = Modifier.padding(10.dp))
+                                modifier = Modifier
+                                    .background(Color.Transparent))
                             {
                                 Row (
                                     Modifier
@@ -836,41 +941,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         },
                                         modifier = Modifier.fillMaxSize()
                                     ) {
-                                        Row(
-                                            Modifier.fillMaxSize()
-                                        ){
-                                            Column (
-                                                Modifier
-                                                    .weight(0.5f)
-                                                    .background(Color.Transparent),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(id = R.drawable.logo_ig),
-                                                    contentDescription = "Logo",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier
-                                                        .fillMaxHeight()
-                                                        .padding(8.dp)
-                                                )
-                                            }
-                                            Column(
-                                                Modifier
-                                                    .weight(0.5f)
-                                                    .background(Color.Transparent),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = "Instagram",
-                                                    fontWeight = FontWeight.Bold,
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 25.sp,
-                                                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
-                                                )
-                                            }
-                                        }
+                                        CartaRSS(R.drawable.logo_ig, "Instagram")
                                     }
                                 }
                                 Row (
@@ -891,41 +962,28 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
                                         } },
                                         modifier = Modifier.fillMaxSize()) {
-                                        Row(
-                                            Modifier.fillMaxSize()
-                                        ){
-                                            Column (
-                                                Modifier
-                                                    .weight(0.5f)
-                                                    .background(Color.Transparent),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(id = R.drawable.logo_tiktok),
-                                                    contentDescription = "Logo",
-                                                    contentScale = ContentScale.Crop,
-                                                    modifier = Modifier
-                                                        .fillMaxHeight()
-                                                        .padding(8.dp)
-                                                )
-                                            }
-                                            Column(
-                                                Modifier
-                                                    .weight(0.5f)
-                                                    .background(Color.Transparent),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = "TikTok",
-                                                    fontWeight = FontWeight.Bold,
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 25.sp,
-                                                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
-                                                )
-                                            }
-                                        }
+                                        CartaRSS(R.drawable.logo_tiktok, "TikTok")
+                                    }
+                                }
+                                Row (
+                                    Modifier
+                                        .weight(0.5f)
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedCard(onClick = {
+                                        val uri = Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                                        intent.setPackage("com.whatsapp.android")
+                                        try {
+                                            startActivity(context, intent, null)
+                                        } catch (e: ActivityNotFoundException) {
+                                            Log.e("Error", "Whatsapp no está instalado")
+                                            startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")), null)
+                                        } },
+                                        modifier = Modifier.fillMaxSize()) {
+                                        CartaRSS(R.drawable.logo_whatsapp, "WhatsApp")
                                     }
                                 }
                             }
@@ -1029,6 +1087,106 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             navController.popBackStack()
         } else {
             showCloseAppDialog = true
+        }
+    }
+}
+@Composable
+fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = imageResId),
+            contentDescription = "Donation Type Image",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .weight(0.5f) // Ajusta el peso según lo necesites
+                .padding(end = 8.dp)
+        )
+        Text(
+            text = donacion.cantidad, // Ajusta según los datos disponibles
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.weight(0.5f) // Ajusta el peso según lo necesites
+        )
+    }
+}
+@Composable
+private fun CartaRSS(idLogo: Int, nombreRRSS: String) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (idLogo){
+            R.drawable.logo_ig -> {
+                Image(
+                    painter = painterResource(id = R.drawable.ig_bg),
+                    contentDescription = "Background Ig Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            R.drawable.logo_tiktok -> {
+                Image(
+                    painter = painterResource(id = R.drawable.tiktok_bg),
+                    contentDescription = "Background Ig Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            R.drawable.logo_whatsapp -> {
+                Image(
+                    painter = painterResource(id = R.drawable.whatsapp_bg),
+                    contentDescription = "Background Ig Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        Row(
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Column(
+                Modifier
+                    .weight(0.5f)
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = idLogo),
+                    contentDescription = "Logo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(8.dp)
+                )
+            }
+            Column(
+                Modifier
+                    .weight(0.5f)
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = nombreRRSS,
+                    color = Color.White,
+                    fontFamily = customFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    fontSize = 32.sp,
+                    modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                )
+            }
         }
     }
 }
