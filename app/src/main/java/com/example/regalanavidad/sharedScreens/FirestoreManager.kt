@@ -85,9 +85,23 @@ class FirestoreManager {
         Log.d("Evento", "Evento insertado con éxito")
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getEventos(): List<Evento> {
         val querySnapshot = firestore.collection("eventos").get().await()
-        return querySnapshot.toObjects(Evento::class.java)
+        val eventos = querySnapshot.toObjects(Evento::class.java)
+
+        val today = LocalDate.now()
+
+        return eventos.mapNotNull { evento ->
+            val fechaLocal = evento.startDate.toLocalDate()
+            if (fechaLocal != null) {
+                evento to fechaLocal
+            } else {
+                null
+            }
+        }.filter { it.second.isAfter(today) || it.second.isEqual(today) } // Filtra eventos futuros y el día actual
+            .sortedBy { it.second } // Ordena por la fecha
+            .map { it.first } // Devuelve solo los eventos
     }
 
     suspend fun eliminaEvento(evento: Evento){
@@ -138,8 +152,16 @@ class FirestoreManager {
         val querySnapshot = firestore.collection("eventos").get().await()
         val eventos = querySnapshot.toObjects(Evento::class.java)
 
-        return eventos.filter { it.startDate.toLocalDate() != null }
-            .minByOrNull { it.startDate.toLocalDate()!! }
+        val today = LocalDate.now()
+
+        return eventos.mapNotNull { evento ->
+            val fechaLocal = evento.startDate.toLocalDate()
+            if (fechaLocal != null && (fechaLocal.isAfter(today) || fechaLocal.isEqual(today))) {
+                evento to fechaLocal
+            } else {
+                null
+            }
+        }.minByOrNull { it.second }?.first
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

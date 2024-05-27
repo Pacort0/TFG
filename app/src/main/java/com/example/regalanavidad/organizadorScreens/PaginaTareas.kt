@@ -82,7 +82,7 @@ fun TareasScreen(){
     val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
     val fechaDialogState = rememberMaterialDialogState()
     val scope = rememberCoroutineScope()
-    val options = listOf("Secretaría", "Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario, Coordinador")
+    val options = listOf("Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario", "Coordinador")
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

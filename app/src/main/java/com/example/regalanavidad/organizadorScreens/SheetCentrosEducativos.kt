@@ -1,6 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,8 +27,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDrawerState
@@ -38,7 +41,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -75,6 +80,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
     var showAlertDialog by remember { mutableStateOf(false)}
     var opcionSeleccionada by remember {mutableStateOf("")}
     var llamadaBackHandler by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = centrosLoading) {
         listaCentrosEducativos.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
@@ -84,11 +90,56 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         .fillMaxSize()
         .padding(8.dp)) {
         Column {
-            Text(
-                text = "Selecciona el distrito",
-                modifier = Modifier.padding(8.dp),
-                fontSize = 18.sp
-            )
+            Row (
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Column(
+                    Modifier.weight(0.5f)
+                ) {
+                    Text(
+                        text = "Selecciona el distrito",
+                        fontSize = 18.sp
+                    )
+                }
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.5f)
+                ) {
+                    if (listaEstadosCentrosCambiados.value.isNotEmpty()) {
+                        IconButton(onClick = {
+                            Toast.makeText(context, "Actualizando centros...", Toast.LENGTH_SHORT)
+                                .show()
+                            scope.launch(Dispatchers.IO) {
+                                updateCentrosDataInGoogleSheet(
+                                    infoCentrosSheetId,
+                                    cambiaNombreDistrito(distritoSeleccionado),
+                                    listaEstadosCentrosCambiados.value
+                                )
+                                listaEstadosCentrosCambiados.value = emptyList()
+                                centrosLoading = true
+                            }
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painterResource(id = R.drawable.save),
+                                    contentDescription = "Guardar cambios",
+                                    Modifier.size(30.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "Guardar cambios")
+                            }
+                        }
+                    }
+                }
+            }
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded },
@@ -130,17 +181,19 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                             modifier = Modifier
                                 .padding(8.dp)
                                 .fillParentMaxWidth()
-                                .height(60.dp)
+                                .height(80.dp)
                                 .clickable {
                                     centroEducativoElegido = listaCentrosEducativos.value[index]
                                     navController.navigate("PagContactosCentrosEdu")
                                 }
                         ) {
                             Row (horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
-                                Column (Modifier.weight(0.55f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                                    Text(text = listaCentrosEducativos.value[index].nombreCentro)
+                                Column (Modifier.weight(0.55f).fillParentMaxHeight(), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
+                                    Text(text = listaCentrosEducativos.value[index].nombreCentro, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(text = listaCentrosEducativos.value[index].tareaCentro, fontSize = 18.sp)
                                 }
-                                Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                Column (Modifier.weight(0.45f).fillParentMaxHeight(), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                     EstadosSubMenu(drawerState, scope, listaCentrosEducativos.value[index])
                                 }
                             }
@@ -159,31 +212,6 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
-            }
-        }
-        FloatingActionButton(
-            onClick = {
-                val distrito: String
-                if (listaEstadosCentrosCambiados.value.isNotEmpty()){
-                    distrito = cambiaNombreDistrito(distritoSeleccionado)
-                    scope.launch(Dispatchers.IO) {
-                        updateCentrosDataInGoogleSheet(infoCentrosSheetId, distrito, listaEstadosCentrosCambiados.value)
-                    }
-                    listaEstadosCentrosCambiados.value = emptyList()
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(0.dp, 0.dp, 14.dp, 14.dp)
-                .height(45.dp)
-                .width(180.dp)){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar cambios", Modifier.size(30.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "Guardar cambios")
             }
         }
     }

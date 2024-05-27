@@ -177,8 +177,10 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
         if(paginaPreviaPila != null){
             if(paginaPreviaPila.destination.route != "Home" || paginaPreviaPila.destination.route != "profileScreen"){
                 navController.popBackStack()
+            } else {
+                ActivityCompat.finishAffinity(context as Activity)
+                exitProcess(0)
             }
-            navController.popBackStack()
         } else {
             ActivityCompat.finishAffinity(context as Activity)
             exitProcess(0)

@@ -51,6 +51,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -77,6 +78,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -326,6 +328,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     )
     var showCloseAppDialog by remember {mutableStateOf(false)}
     val eventoVM = eventosVM.proximoEvento.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -603,6 +606,93 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 .fillMaxWidth()
                                 .graphicsLayer {
                                     val pageOffset =
+                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                    alpha = lerp(
+                                        start = 0.5f,
+                                        stop = 1f,
+                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                    )
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                        ) {
+                            LaunchedEffect(key1 = recargarSitios) {
+                                sitiosLoading = true
+                                sitiosRecogidaConfirmados.clear()
+                                val sitiosRecogida = firestore.getSitiosRecogida()
+                                sitiosRecogida.forEach { sitioRecogida ->
+                                    sitiosRecogidaConfirmados.add(sitioRecogida)
+                                }
+                                haySitios = sitiosRecogidaConfirmados.size != 0
+                                recargarSitios = false
+                                sitiosLoading = false
+                            }
+                            Box(modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Color.Transparent)) {
+                                if(sitiosLoading){
+                                    Column (
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                        Text(
+                                            text = "Cargando sitios...",
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
+                                } else {
+                                    Column(
+                                        Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ){
+                                        Row (
+                                            Modifier.padding(0.dp, 5.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Sitios de recogida",
+                                                textAlign = TextAlign.Center,
+                                                fontSize = 18.sp,
+                                                modifier = Modifier.weight(0.7f))
+                                            if(canEditSitios){
+                                                IconButton(
+                                                    onClick = { agregaSitio = true },
+                                                    modifier = Modifier
+                                                        .weight(0.3f)
+                                                        .size(35.dp))
+                                                {
+                                                    Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
+                                                }
+                                            }
+                                        }
+                                        if(haySitios){
+                                            ListaSitiosConfirmados(sitiosRecogidaConfirmados,
+                                                false,
+                                                canEditSitios,
+                                                onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                                                onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                                    navegaSitio = true
+                                                }
+                                            )
+                                        } else {
+                                            Text(text = "No hay sitios de recogida confirmados")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    1 -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val pageOffset =
                                         (pagerState.currentPage + pagerState.currentPageOffsetFraction).absoluteValue
                                     val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
                                     alpha = lerp(
@@ -632,7 +722,17 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     eventosLoading = false
                                 }
                                 if (eventosLoading) {
-                                    Text(text = "Cargando...")
+                                    Column (
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                        Text(
+                                            text = "Cargando eventos...",
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
                                 } else {
                                     if (hayEventos) {
                                         Column (
@@ -673,83 +773,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     }
                                     else {
                                         Text(text = "No hay eventos confirmados")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    1 -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    val pageOffset =
-                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
-                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
-                        ) {
-                            LaunchedEffect(key1 = recargarSitios) {
-                                sitiosLoading = true
-                                sitiosRecogidaConfirmados.clear()
-                                val sitiosRecogida = firestore.getSitiosRecogida()
-                                sitiosRecogida.forEach { sitioRecogida ->
-                                    sitiosRecogidaConfirmados.add(sitioRecogida)
-                                }
-                                haySitios = sitiosRecogidaConfirmados.size != 0
-                                recargarSitios = false
-                                sitiosLoading = false
-                            }
-                            Box(modifier = Modifier
-                                .fillMaxSize()
-                                .background(color = Color.Transparent)) {
-                                if(sitiosLoading){
-                                    Text(text = "Cargando...")
-                                } else {
-                                    Column(
-                                        Modifier.fillMaxSize(),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ){
-                                        Row (
-                                            Modifier.padding(0.dp, 5.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = "Sitios de recogida",
-                                                textAlign = TextAlign.Center,
-                                                fontSize = 18.sp,
-                                                modifier = Modifier.weight(0.7f))
-                                            if(canEditSitios){
-                                                IconButton(
-                                                    onClick = { agregaSitio = true },
-                                                    modifier = Modifier
-                                                        .weight(0.3f)
-                                                        .size(35.dp))
-                                                {
-                                                    Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
-                                                }
-                                            }
-                                        }
-                                        if(haySitios){
-                                            ListaSitiosConfirmados(sitiosRecogidaConfirmados,
-                                                false,
-                                                canEditSitios,
-                                                onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                                onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                                    navegaSitio = true
-                                                }
-                                            )
-                                        } else {
-                                            Text(text = "No hay sitios de recogida confirmados")
-                                        }
                                     }
                                 }
                             }
@@ -909,7 +932,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Card(
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier.fillMaxSize().clickable {
+                                            coroutineScope.launch(Dispatchers.IO) {
+                                                pagerState.animateScrollToPage(0)
+                                            }
+                                        },
                                         colors = CardDefaults.cardColors(
                                             containerColor = Color.Transparent
                                         )
@@ -953,12 +980,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             color = Color.Black
                                                         )
                                                         eventoVM.value.titulo.let {
-                                                            Text(
-                                                                text = it,
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 18.sp,
-                                                                color = Color.Black
-                                                            )
+                                                                Text(
+                                                                    text = it,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    fontSize = 18.sp,
+                                                                    color = Color.Black
+                                                                )
                                                         }
                                                     }
                                                 }
@@ -984,7 +1011,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             )
                                                             Spacer(modifier = Modifier.height(5.dp))
                                                             Text(
-                                                                text = cambiaNumeroPorMes(valoresFecha[1]),
+                                                                text = cambiaNumeroPorMes(
+                                                                    valoresFecha[1]
+                                                                ),
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 24.sp,
                                                                 color = Color.Black
@@ -1000,12 +1029,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     horizontalArrangement = Arrangement.Center
                                                 ) {
                                                     eventoVM.value.lugar.let {
-                                                        Text(
-                                                            text = it.nombreSitio,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 20.sp,
-                                                            color = Color.Black
-                                                        )
+                                                            Text(
+                                                                text = it.nombreSitio,
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 20.sp,
+                                                                color = Color.Black
+                                                            )
                                                     }
                                                 }
                                             }
@@ -1144,7 +1173,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             navController.navigate("Mapa")
             navegaSitio = false
         }
-        if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Secretaría"){
+        if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
             FloatingActionButton(
                 onClick = { redactaEmail = true },
                 Modifier
@@ -1208,8 +1237,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         if(paginaPreviaPila != null){
             if(paginaPreviaPila.destination.route != "inicio" || paginaPreviaPila.destination.route != "waitingScreen"){
                 navController.popBackStack()
+            } else {
+                showCloseAppDialog = true
             }
-            navController.popBackStack()
         } else {
             showCloseAppDialog = true
         }
@@ -1544,10 +1574,11 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(1f))
+                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(0.65f).align(Alignment.CenterVertically))
+                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier.weight(0.35f).align(Alignment.CenterVertically), fontSize = 16.sp)
                             if (!isHomePage) {
                                 Box {
                                     IconButton(onClick = { expanded = true }) {
@@ -1621,7 +1652,7 @@ fun checkIfCanEditSitios(rol: String):Boolean{
 }
 
 fun checkIfCanManageEmails(rol: String):Boolean{
-    return rol == "Coordinador" || rol == "Secretaría" || rol == "RR.II."
+    return rol == "Coordinador" || rol == "RR.II."
 }
 
 fun checkIfCanEditEventos(rol:String):Boolean{

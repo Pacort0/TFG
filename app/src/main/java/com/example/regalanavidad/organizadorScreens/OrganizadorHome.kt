@@ -107,7 +107,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
     if (usuario.nombreRango == "Coordinador"){
         tabBarItems = listOf(homeTab, tareasTab, mapsTab, rolesTab, sheetsTab)
     }
-    if (usuario.nombreRango == "Tesorería" || usuario.nombreRango == "Secretaría" || usuario.nombreRango == "RR.II."){
+    if (usuario.nombreRango == "Tesorería" || usuario.nombreRango == "RR.II."){
         tabBarItems = listOf(homeTab, tareasTab, mapsTab, sheetsTab)
     }
     val navController = rememberNavController()
@@ -198,7 +198,7 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                     ScreenContent(screenTitle = "Mail", navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
                 }
             }
-            if(usuario.nombreRango == "Tesorería" || usuario.nombreRango == "Secretaría" || usuario.nombreRango == "RR.II." || usuario.nombreRango == "Coordinador"){
+            if(usuario.nombreRango == "Tesorería" || usuario.nombreRango == "RR.II." || usuario.nombreRango == "Coordinador"){
                 composable(sheetsTab.title) {
                     ScreenContent(screenTitle = sheetsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
                 }

@@ -165,7 +165,7 @@ fun RolesTabScreen(navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistrado: Usuario){
-    val options = listOf("Secretaría", "Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
+    val options = listOf("Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuarioRegistrado.nombreRango) }
 

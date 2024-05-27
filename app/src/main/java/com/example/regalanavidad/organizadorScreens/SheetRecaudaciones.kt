@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -94,7 +96,9 @@ fun PaginaSheetRecaudaciones(navController: NavController){
         .padding(8.dp)) {
         Column {
             Row (
-                Modifier.fillMaxWidth().padding(8.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -107,7 +111,9 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                     )
                 }
                 Column(
-                    Modifier.fillMaxWidth().weight(0.5f)
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.5f)
                 ) {
                     if (listaProductosCambiados.isNotEmpty()) {
                         IconButton(onClick = {
@@ -181,7 +187,7 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                 .padding(8.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 60.dp)
-                                .animateContentSize (
+                                .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
                                         easing = LinearOutSlowInEasing
@@ -225,10 +231,10 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .padding(8.dp)){
-                                            Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                            Column (Modifier.weight(0.35f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                                 Text(text = tipo.tipo)
                                             }
-                                            Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                            Column (Modifier.weight(0.65f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                                 Row {
                                                     IconButton(onClick = {
                                                         cantidadProd--
@@ -237,20 +243,53 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                                         val producto = listaProductos[index]
                                                         val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
 
-                                                        listaProductosCambiados = gestionaLista(cantidadProd, cantidadOriginalProd, productoExistente, listaProductosCambiados, listaProductos, index, tipo.tipo)
-                                                        Log.d("ListaProdCambiados", "Lista productos cambiados: $listaProductosCambiados")
-                                                    })
-                                                    {
+                                                        listaProductosCambiados = gestionaLista(
+                                                            cantidadProd,
+                                                            cantidadOriginalProd,
+                                                            productoExistente,
+                                                            listaProductosCambiados,
+                                                            listaProductos,
+                                                            index,
+                                                            tipo.tipo
+                                                        )
+                                                    }) {
                                                         Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(40.dp))
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
-                                                    Column (
+                                                    Column(
                                                         horizontalAlignment = Alignment.CenterHorizontally,
                                                         verticalArrangement = Arrangement.Center
                                                     ) {
                                                         Text(text = "Cantidad")
                                                         Spacer(modifier = Modifier.height(4.dp))
-                                                        Text(text = cantidadProd.toString())
+                                                        TextField(
+                                                            value = "$cantidadProd",
+                                                            onValueChange = { cantidad ->
+                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
+                                                                if (trimmedCantidad.isEmpty()) {
+                                                                    cantidadProd = 0 // O cualquier valor predeterminado
+                                                                } else {
+                                                                    val nuevaCantidad = trimmedCantidad.toInt()
+                                                                    cantidadProd = nuevaCantidad
+                                                                }
+                                                                tipo.cantidad = cantidadProd.toString()
+
+                                                                val producto = listaProductos[index]
+                                                                val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
+
+                                                                listaProductosCambiados = gestionaLista(
+                                                                    cantidadProd,
+                                                                    cantidadOriginalProd,
+                                                                    productoExistente,
+                                                                    listaProductosCambiados,
+                                                                    listaProductos,
+                                                                    index,
+                                                                    tipo.tipo
+                                                                )
+                                                            },
+                                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                            modifier = Modifier.width(70.dp).align(Alignment.CenterHorizontally),
+                                                        )
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
                                                     IconButton(onClick = {
@@ -260,8 +299,15 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                                                         val producto = listaProductos[index]
                                                         val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
 
-                                                        listaProductosCambiados = gestionaLista(cantidadProd, cantidadOriginalProd, productoExistente, listaProductosCambiados, listaProductos, index, tipo.tipo)
-                                                        Log.d("ListaProdCambiados", "Lista productos cambiados: $listaProductosCambiados")
+                                                        listaProductosCambiados = gestionaLista(
+                                                            cantidadProd,
+                                                            cantidadOriginalProd,
+                                                            productoExistente,
+                                                            listaProductosCambiados,
+                                                            listaProductos,
+                                                            index,
+                                                            tipo.tipo
+                                                        )
                                                     }) {
                                                         Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(40.dp))
                                                     }
