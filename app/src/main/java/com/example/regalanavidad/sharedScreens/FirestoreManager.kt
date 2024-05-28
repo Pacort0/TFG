@@ -3,7 +3,6 @@ package com.example.regalanavidad.sharedScreens
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.regalanavidad.modelos.CorreoEnviado
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Tarea
@@ -163,16 +162,6 @@ class FirestoreManager {
                 null
             }
         }.minByOrNull { it.second }?.first
-    }
-
-    suspend fun getCorreosEnviados(): List<CorreoEnviado> {
-        val querySnapshot = firestore.collection("correosEnviados").get().await()
-        return querySnapshot.toObjects(CorreoEnviado::class.java)
-    }
-
-    suspend fun insertaCorreoEnviado(correoEnviado: CorreoEnviado){
-        firestore.collection("correosEnviados").add(correoEnviado).await()
-        Log.d("CorreoEnviado", "Correo enviado insertado con éxito")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -80,6 +79,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
     var showAlertDialog by remember { mutableStateOf(false)}
     var opcionSeleccionada by remember {mutableStateOf("")}
     var llamadaBackHandler by remember { mutableStateOf(false) }
+    var navegaContactoCentro by remember { mutableStateOf(false) }
+    var indexActual = 0
     val context = LocalContext.current
 
     LaunchedEffect(key1 = centrosLoading) {
@@ -183,8 +184,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                                 .fillParentMaxWidth()
                                 .height(80.dp)
                                 .clickable {
-                                    centroEducativoElegido = listaCentrosEducativos.value[index]
-                                    navController.navigate("PagContactosCentrosEdu")
+                                    indexActual = index
+                                    showAlertDialog = true
+                                    navegaContactoCentro = true
                                 }
                         ) {
                             Row (horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically){
@@ -236,7 +238,12 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                     ){
                         Text("Sí, estoy seguro")
                     }
-                } else {
+                } else if (navegaContactoCentro){
+                    showAlertDialog = false
+                    centroEducativoElegido = listaCentrosEducativos.value[indexActual]
+                    navController.navigate("PagContactosCentrosEdu")
+                }
+                else {
                     Button(
                         onClick = {
                             showAlertDialog = false
@@ -276,6 +283,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
         if(listaEstadosCentrosCambiados.value.isNotEmpty()){
             llamadaBackHandler = true
             showAlertDialog = true
+        } else {
+            navController.popBackStack()
         }
     }
 }
@@ -354,9 +363,9 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                                 listaEstadosCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
                             }
                         }
-
                         expanded = false
                         scope.launch { drawerState.close() }
+                        Log.d("Centros", listaEstadosCentrosCambiados.value.toString())
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                 )

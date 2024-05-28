@@ -3,6 +3,7 @@ package com.example.regalanavidad.loginSignUp
 import android.content.Context
 import android.util.Patterns
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,18 +30,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.regalanavidad.R
 import com.example.regalanavidad.sharedScreens.FirestoreManager
 import com.example.regalanavidad.ui.theme.Purple40
 import com.example.regalanavidad.modelos.Usuario
@@ -55,50 +63,110 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val scope = rememberCoroutineScope() //Se define un 'alcance de corrutina', que estará asociada al ciclo de vida del componente de Compose en el que se encuentra,
-                                         //siendo cancelada automáticamente cuando el componente asociado es eliminado o recompuesto
-    Column (
+    val scope = rememberCoroutineScope()
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3EBEB)),
+            .background(Color(246, 246, 244))
+            .padding(start = 25.dp, top = 25.dp, end = 25.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = "Crear cuenta",
-            style = TextStyle(fontSize = 40.sp, color = Purple40)
+        Column(
+            modifier = Modifier.weight(0.4f),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_regala_navidad_logo),
+                contentDescription = "RegalaNavidadLogo",
+                modifier = Modifier
+                    .padding(bottom = 10.dp)
+                    .size(270.dp),
+            )
+        }
+        Column(
+            modifier = Modifier.weight(0.6f),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TextField(
+                label = {
+                    Text(
+                        text = "Nombre de usuario",
+                        color = Color(227, 162, 58),
+                        fontSize = 14.sp
+                    )
+                },
+                value = usuario,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                onValueChange = { usuario = it },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(247, 228, 198),
+                    unfocusedContainerColor = Color(247, 228, 198),
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier.clip(RoundedCornerShape(50.dp))
             )
 
-        Spacer(modifier = Modifier.height(50.dp))
-        TextField(
-            label = { Text(text = "Usuario")},
-            value = usuario,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),            onValueChange = {usuario = it})
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
-        TextField(
-            label = { Text(text = "Correo electrónico")},
-            value = email,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),            onValueChange = {email = it})
+            TextField(
+                label = {
+                    Text(
+                        text = "Correo",
+                        color = Color(227, 162, 58),
+                        fontSize = 14.sp
+                    )
+                },
+                value = email,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                onValueChange = { email = it },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(247, 228, 198),
+                    unfocusedContainerColor = Color(247, 228, 198),
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier.clip(RoundedCornerShape(50.dp))
+            )
 
-        Spacer(modifier = Modifier.height(20.dp))
-        TextField(
-            label = { Text(text = "Contraseña")},
-            value = password,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Next
-            ),            onValueChange = {password = it})
-        
-        Spacer(modifier = Modifier.height(30.dp))
-        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)){
+            Spacer(modifier = Modifier.height(20.dp))
+
+            TextField(
+                label = {
+                    Text(
+                        text = "Contraseña",
+                        color = Color(227, 162, 58),
+                        fontSize = 14.sp
+                    )
+                },
+                value = password,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                ),
+                onValueChange = { password = it },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(247, 228, 198),
+                    unfocusedContainerColor = Color(247, 228, 198),
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier.clip(RoundedCornerShape(50.dp))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Spacer(modifier = Modifier.height(35.dp))
             Button(
                 onClick = {
                     if(email.isNotEmpty() and password.isNotEmpty() and usuario.isNotEmpty()) {
@@ -121,23 +189,29 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                ) {
-                Text(text = "Registrarse")
+                    .padding(horizontal = 40.dp)
+                    .clip(RoundedCornerShape(50.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(227, 162, 58)
+                )
+            ) {
+                Text(text = "Crear cuenta", fontSize = 16.sp)
             }
-        }
-        Spacer(modifier = Modifier.height(40.dp))
-        ClickableText(
-            text = AnnotatedString("¿Ya tienes una cuenta? Iniciar sesión"),
-            onClick = {
-                navController.navigate("inicio")
-            },
-            style = TextStyle(
-                fontSize = 16.sp,
-                fontFamily = FontFamily.Default,
-                textDecoration = TextDecoration.Underline,
-                color = Purple40
+
+            Spacer(modifier = Modifier.height(10.dp))
+            ClickableText(
+                text = AnnotatedString("¿Ya tienes cuenta? Inicia sesión"),
+                onClick = {
+                    navController.navigate("inicio")
+                },
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Default,
+                    textDecoration = TextDecoration.Underline,
+                    color = Color(209, 154, 90)
+                )
             )
-        )
+        }
     }
 }
 fun isValidEmail(inputEmail: CharSequence?): Boolean {

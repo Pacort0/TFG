@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.google.firebase.auth.FirebaseAuth
@@ -22,7 +23,9 @@ import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
@@ -44,35 +47,46 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
     val context = LocalContext.current
 
     Column (
-    modifier = Modifier
-        .fillMaxSize()
-        .background(Color(0xFFF3EBEB)),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally,
-){
-    Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
-        GifImage()
-    }
-    Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(text = "Enlace de verificación enviado. Valida tu correo", color = Color.Black)
-    }
-    Spacer(modifier = Modifier.height(30.dp))
-        Button(
-            onClick = {
-                if (user != null) {
-                    user?.sendEmailVerification()
-                } else {
-                    Toast.makeText(context, "No user is signed in", Toast.LENGTH_SHORT).show()
-                }
-            },
-            shape = RoundedCornerShape(50.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text(text = "Reenviar enlace")
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(246, 246, 244))
+            .padding(start = 25.dp, top = 25.dp, end = 25.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ){
+        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+            GifImage()
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(text = "Enlace de verificación enviado. Valida tu correo", color = Color.Black)
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+            Button(
+                onClick = {
+                    if (user != null) {
+                        user?.sendEmailVerification()
+                    } else {
+                        Toast.makeText(context, "No user is signed in", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(horizontal = 40.dp)
+                    .clip(RoundedCornerShape(50.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(227, 162, 58)
+                )
+            ) {
+                Text(text = "Reenviar enlace")
+            }
         //Poner botón de 'ya verificado'
 
 }
@@ -115,5 +129,6 @@ fun GifImage(
         ),
         contentDescription = null,
         modifier = modifier.fillMaxWidth(),
+        contentScale = ContentScale.Fit
     )
 }
