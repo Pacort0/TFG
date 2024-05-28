@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -32,6 +33,7 @@ fun MailScreen(navController: NavController){
     var asuntoCorreo by remember { mutableStateOf("") }
     var mensajeCorreo by remember { mutableStateOf("") }
     val contexto = LocalContext.current
+    var showAlertDialog by remember { mutableStateOf(false) }
 
     Column (
         modifier = Modifier
@@ -86,8 +88,40 @@ fun MailScreen(navController: NavController){
             Text(text = "Enviar")
         }
     }
+    if (showAlertDialog) {
+        AlertDialog(
+            onDismissRequest = { showAlertDialog = false },
+            title = { Text(text = "Tiene cambios sin guardar") },
+            text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog = false
+                        navController.popBackStack()
+                        centroEducativoElegido = CentroEducativo()
+                    }
+                ) {
+                    Text("Sí, estoy seguro")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showAlertDialog = false
+                    }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
     BackHandler {
-        navController.popBackStack()
-        centroEducativoElegido = CentroEducativo()
+        if (correoContacto != "" || asuntoCorreo != "" || mensajeCorreo != "") {
+            showAlertDialog = true
+        }
+        else {
+            navController.popBackStack()
+            centroEducativoElegido = CentroEducativo()
+        }
     }
 }

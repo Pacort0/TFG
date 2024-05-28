@@ -606,7 +606,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 .fillMaxWidth()
                                 .graphicsLayer {
                                     val pageOffset =
-                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                        ((pagerState.currentPage) + pagerState.currentPageOffsetFraction).absoluteValue
                                     val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
                                     alpha = lerp(
                                         start = 0.5f,
@@ -630,7 +630,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 sitiosLoading = false
                             }
                             Box(modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxSize().fillMaxSize()
                                 .background(color = Color.Transparent)) {
                                 if(sitiosLoading){
                                     Column (
@@ -693,7 +693,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 .fillMaxWidth()
                                 .graphicsLayer {
                                     val pageOffset =
-                                        (pagerState.currentPage + pagerState.currentPageOffsetFraction).absoluteValue
+                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
                                     val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
                                     alpha = lerp(
                                         start = 0.5f,
@@ -934,7 +934,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     Card(
                                         modifier = Modifier.fillMaxSize().clickable {
                                             coroutineScope.launch(Dispatchers.IO) {
-                                                pagerState.animateScrollToPage(0)
+                                                pagerState.animateScrollToPage(1)
                                             }
                                         },
                                         colors = CardDefaults.cardColors(

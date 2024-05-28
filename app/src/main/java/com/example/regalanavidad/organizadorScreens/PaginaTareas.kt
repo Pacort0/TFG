@@ -73,7 +73,7 @@ var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
 @Composable
 fun TareasScreen(){
     val tareas = tareasVM.tareas.collectAsState()
-    val listaTareas = tareas.value.filter { !it.completada && it.rol == usuario.nombreRango }
+    val listaTareas by remember{ mutableStateOf(tareas.value.filter { !it.completada && it.rol == usuario.nombreRango }) }
     var showTareaDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var guardarCambios by remember { mutableStateOf(false) }
