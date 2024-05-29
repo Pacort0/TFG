@@ -45,6 +45,7 @@ import com.example.regalanavidad.sharedScreens.FirestoreManager
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
@@ -107,12 +108,16 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
             Button(onClick = {
                 if(email.isNotEmpty()){
                     if(isValidEmail(email)){
-                        scope.launch(Dispatchers.IO) { emailExistente = firestore.comprobarCorreo(email) }
-                        if (!emailExistente) {
-                            Toast.makeText(context, "Correo electrónico no registrado", Toast.LENGTH_SHORT).show()
-                        } else {
-                            auth.sendPasswordResetEmail(email)
-                            Toast.makeText(context, "correo electrónico enviado", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            emailExistente = withContext(Dispatchers.IO) {
+                                firestore.comprobarCorreo(email)
+                            }
+                            if (emailExistente) {
+                                Toast.makeText(context, "Correo electrónico no registrado", Toast.LENGTH_SHORT).show()
+                            } else {
+                                auth.sendPasswordResetEmail(email)
+                                Toast.makeText(context, "Correo electrónico enviado", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     } else {
                         Toast.makeText(context, "Introduzca un correo electrónico válido", Toast.LENGTH_SHORT).show()

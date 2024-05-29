@@ -16,10 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -67,9 +70,9 @@ private var listaCentrosEducativos = mutableStateOf(emptyList<CentroEducativo>()
 const val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
 private var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
 var centroEducativoElegido = CentroEducativo()
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun PaginaSheetCentrosEducativos(navController: NavController) {
+fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (Boolean) -> Unit) {
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var expanded by remember { mutableStateOf(false) }
@@ -82,14 +85,18 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
     var navegaContactoCentro by remember { mutableStateOf(false) }
     var indexActual = 0
     val context = LocalContext.current
+    val pullRefreshState = rememberPullRefreshState(refreshing = centrosLoading, onRefresh = {centrosLoading = !centrosLoading})
 
     LaunchedEffect(key1 = centrosLoading) {
+        onMapaCambiado(true)
         listaCentrosEducativos.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
         centrosLoading = false
     }
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(8.dp)) {
+        .padding(8.dp)
+        .pullRefresh(pullRefreshState)
+    ) {
         Column {
             Row (
                 Modifier
@@ -208,7 +215,6 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
                     Text(
                         text = "Cargando centros...",
                         modifier = Modifier.padding(top = 8.dp)
@@ -216,76 +222,81 @@ fun PaginaSheetCentrosEducativos(navController: NavController) {
                 }
             }
         }
-    }
-    if(showAlertDialog){
-        AlertDialog(
-            onDismissRequest = {
-                showAlertDialog = false
-            },
-            title = {
-                Text(text = "Tiene cambios sin guardar")
-            },
-            text = {
-                Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
-            },
-            confirmButton = {
-                if(llamadaBackHandler){
-                    Button(
-                        onClick = {
-                            showAlertDialog = false
-                            navController.popBackStack()
-                        }
-                    ){
-                        Text("Sí, estoy seguro")
-                    }
-                } else if (navegaContactoCentro){
+        if(showAlertDialog){
+            AlertDialog(
+                onDismissRequest = {
                     showAlertDialog = false
-                    centroEducativoElegido = listaCentrosEducativos.value[indexActual]
-                    navController.navigate("PagContactosCentrosEdu")
-                }
-                else {
-                    Button(
-                        onClick = {
-                            showAlertDialog = false
-                            distritoSeleccionado = opcionSeleccionada
-                            expanded = false
-                            centrosLoading = true
-                            listaEstadosCentrosCambiados.value = emptyList()
+                },
+                title = {
+                    Text(text = "Tiene cambios sin guardar")
+                },
+                text = {
+                    Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
+                },
+                confirmButton = {
+                    if(llamadaBackHandler){
+                        Button(
+                            onClick = {
+                                showAlertDialog = false
+                                navController.popBackStack()
+                            }
+                        ){
+                            Text("Sí, estoy seguro")
                         }
-                    ) {
-                        Text("Sí, estoy seguro")
+                    } else if (navegaContactoCentro){
+                        showAlertDialog = false
+                        centroEducativoElegido = listaCentrosEducativos.value[indexActual]
+                        navController.navigate("PagContactosCentrosEdu")
+                    }
+                    else {
+                        Button(
+                            onClick = {
+                                showAlertDialog = false
+                                distritoSeleccionado = opcionSeleccionada
+                                expanded = false
+                                centrosLoading = true
+                                listaEstadosCentrosCambiados.value = emptyList()
+                            }
+                        ) {
+                            Text("Sí, estoy seguro")
+                        }
+                    }
+                },
+                dismissButton = {
+                    if (llamadaBackHandler){
+                        Button(
+                            onClick = {
+                                showAlertDialog = false
+                                llamadaBackHandler = false
+                            }
+                        ){
+                            Text(text = "No")
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                showAlertDialog = false
+                            }
+                        ) {
+                            Text("No")
+                        }
                     }
                 }
-            },
-            dismissButton = {
-                if (llamadaBackHandler){
-                    Button(
-                        onClick = {
-                            showAlertDialog = false
-                            llamadaBackHandler = false
-                        }
-                    ){
-                        Text(text = "No")
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            showAlertDialog = false
-                        }
-                    ) {
-                        Text("No")
-                    }
-                }
-            }
-        )
-    }
-    BackHandler {
-        if(listaEstadosCentrosCambiados.value.isNotEmpty()){
-            llamadaBackHandler = true
-            showAlertDialog = true
-        } else {
-            navController.popBackStack()
+            )
         }
+        BackHandler {
+            if(listaEstadosCentrosCambiados.value.isNotEmpty()){
+                llamadaBackHandler = true
+                showAlertDialog = true
+            } else {
+                navController.popBackStack()
+            }
+        }
+        PullRefreshIndicator(
+            refreshing = centrosLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 fun cambiaNombreDistrito(sheetName: String):String{

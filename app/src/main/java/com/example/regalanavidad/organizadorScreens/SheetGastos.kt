@@ -18,10 +18,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -63,9 +66,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 const val gastosSpreadsheetId = "1zffZhulQGscbwVZrEapV_DIt57aVyWDTauQqYJCVVuE"
+@OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun PaginaSheetGastos() {
+fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     var listaGastos by remember { mutableStateOf(emptyList<Gasto>()) }
     var recargarGastos by remember { mutableStateOf(true) }
     var showGastoDialog by remember { mutableStateOf(false) }
@@ -78,11 +82,78 @@ fun PaginaSheetGastos() {
     var gastoResponse: GastoResponse
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val pullRefreshState = rememberPullRefreshState(refreshing = recargarGastos, onRefresh = {recargarGastos = !recargarGastos})
 
     LaunchedEffect(key1 = recargarGastos) {
+        onMapaCambiado(true)
         gastoResponse = getGastosFromSheet()
         listaGastos = gastoResponse.gastos
         recargarGastos = false
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
+        if (listaGastos.isNotEmpty() && !recargarGastos) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ){
+                LazyColumn {
+                    items(listaGastos.size) { index ->
+                        GastoCard(gasto = listaGastos[index])
+                    }
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Cargando gastos...",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+        FloatingActionButton(
+            onClick = {
+                showGastoDialog = true
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(0.dp, 0.dp, 14.dp, 14.dp)){
+            Icon(Icons.Filled.Add, contentDescription = "Agregar gasto")
+        }
+        MaterialDialog(
+            dialogState = fechaDialogState,
+            buttons = {
+                positiveButton("Guardar") {
+                    fechaDialogState.hide()
+                }
+                negativeButton("Cancelar") {
+                    fechaDialogState.hide()
+                }
+            }
+        ) {
+            datepicker(
+                initialDate = LocalDate.now(),
+                title = "Selecciona la fecha del evento",
+                onDateChange = { fechaEscogida = it },
+                allowedDateValidator = { fecha ->
+                    // Permitir solo fechas iguales o posteriores a la fecha actual
+                    !fecha.isBefore(LocalDate.now())
+                }
+            )
+        }
+        PullRefreshIndicator(
+            refreshing = recargarGastos,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
     if (showGastoDialog){
         Dialog(onDismissRequest = {showGastoDialog = false}) {
@@ -170,10 +241,10 @@ fun PaginaSheetGastos() {
                                         }
                                     } else {
                                         Toast.makeText(
-                                                context,
-                                                "Por favor, llena todos los campos",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            context,
+                                            "Por favor, llena todos los campos",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }) {
                             Text(text = "GUARDAR", fontSize = 13.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
@@ -181,60 +252,6 @@ fun PaginaSheetGastos() {
                     }
                 }
             }
-        }
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        if (listaGastos.isNotEmpty() && !recargarGastos) {
-            LazyColumn {
-                items(listaGastos.size) { index ->
-                    GastoCard(gasto = listaGastos[index])
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator()
-                Text(
-                    text = "Cargando gastos...",
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
-        FloatingActionButton(
-            onClick = {
-                showGastoDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(0.dp, 0.dp, 14.dp, 14.dp)){
-            Icon(Icons.Filled.Add, contentDescription = "Agregar gasto")
-        }
-        MaterialDialog(
-            dialogState = fechaDialogState,
-            buttons = {
-                positiveButton("Guardar") {
-                    fechaDialogState.hide()
-                }
-                negativeButton("Cancelar") {
-                    fechaDialogState.hide()
-                }
-            }
-        ) {
-            datepicker(
-                initialDate = LocalDate.now(),
-                title = "Selecciona la fecha del evento",
-                onDateChange = { fechaEscogida = it },
-                allowedDateValidator = { fecha ->
-                    // Permitir solo fechas iguales o posteriores a la fecha actual
-                    !fecha.isBefore(LocalDate.now())
-                }
-            )
         }
     }
 }

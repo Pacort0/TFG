@@ -21,14 +21,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -69,9 +72,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun PaginaSheetRecaudaciones(navController: NavController){
+fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Boolean) -> Unit){
     val spreadsheetId = "1KqoL4QJ6ER6f7gLy6k3fT0B4efCB2xNcHHxQzEe0mZ8"
     var listaProductos by remember { mutableStateOf(emptyList<Producto>()) }
     var productoResponse: ProductoResponse
@@ -85,15 +88,18 @@ fun PaginaSheetRecaudaciones(navController: NavController){
     var llamadaBackHandler by remember { mutableStateOf(false) }
     var opcionSeleccionada by remember {mutableStateOf("")}
     val context = LocalContext.current
+    val pullRefreshState = rememberPullRefreshState(refreshing = productosLoading, onRefresh = {productosLoading = !productosLoading})
 
     LaunchedEffect(key1 = productosLoading) {
+        onMapaCambiado(true)
         productoResponse = getRecaudacionesFromSheet(spreadsheetId, cambiaNombreProducto(productoSeleccionado))
         listaProductos = productoResponse.productos
         productosLoading = false
     }
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(8.dp)) {
+        .padding(8.dp)
+        .pullRefresh(pullRefreshState)) {
         Column {
             Row (
                 Modifier
@@ -326,7 +332,6 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
                     Text(
                         text = "Cargando productos...",
                         modifier = Modifier.padding(top = 8.dp)
@@ -334,6 +339,11 @@ fun PaginaSheetRecaudaciones(navController: NavController){
                 }
             }
         }
+        PullRefreshIndicator(
+            refreshing = productosLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
     if(showAlertDialog){
         AlertDialog(
@@ -396,6 +406,8 @@ fun PaginaSheetRecaudaciones(navController: NavController){
         if(listaProductosCambiados.isNotEmpty()){
             llamadaBackHandler = true
             showAlertDialog = true
+        } else {
+            navController.popBackStack()
         }
     }
 }

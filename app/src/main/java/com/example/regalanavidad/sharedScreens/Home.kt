@@ -277,7 +277,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
         }
         "Tareas" -> {
             TareasScreen()
-            onMapaCambiado(false)
+            onMapaCambiado(true)
         }
         "Mail" -> {
             MailScreen(navController)
@@ -292,7 +292,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Excel" -> {
-            ExcelScreen(navController)
+            ExcelScreen(navController, onMapaCambiado)
             onMapaCambiado(false)
         }
     }
@@ -630,7 +630,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 sitiosLoading = false
                             }
                             Box(modifier = Modifier
-                                .fillMaxSize().fillMaxSize()
+                                .fillMaxSize()
+                                .fillMaxSize()
                                 .background(color = Color.Transparent)) {
                                 if(sitiosLoading){
                                     Column (
@@ -932,11 +933,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Card(
-                                        modifier = Modifier.fillMaxSize().clickable {
-                                            coroutineScope.launch(Dispatchers.IO) {
-                                                pagerState.animateScrollToPage(1)
-                                            }
-                                        },
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable {
+                                                coroutineScope.launch(Dispatchers.IO) {
+                                                    pagerState.animateScrollToPage(1)
+                                                }
+                                            },
                                         colors = CardDefaults.cardColors(
                                             containerColor = Color.Transparent
                                         )
@@ -1457,7 +1460,7 @@ fun ShowDialog(showDialog: MutableState<Boolean>, navController: NavController) 
 }
 
 fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
-    return drawerValue == DrawerValue.Open || !mapaAbierto
+    return drawerValue == DrawerValue.Open || (!mapaAbierto)
 }
 
 suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogida> {
@@ -1577,8 +1580,12 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(0.6f).align(Alignment.CenterVertically))
-                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier.weight(0.4f).align(Alignment.CenterVertically), fontSize = 15.sp)
+                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier
+                                .weight(0.6f)
+                                .align(Alignment.CenterVertically))
+                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier
+                                .weight(0.4f)
+                                .align(Alignment.CenterVertically), fontSize = 15.sp)
                             if (!isHomePage) {
                                 Box {
                                     IconButton(onClick = { expanded = true }) {

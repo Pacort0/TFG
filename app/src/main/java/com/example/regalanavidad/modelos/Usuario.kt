@@ -5,7 +5,7 @@ import com.example.regalanavidad.R
 data class Usuario (
     var nombre: String = "",
     val correo: String = "",
-    val password: String = "",
+    var password: String = "",
     val uid: String = "",
     val rango: Int = 0,
     var nombreRango:String = "Voluntario",

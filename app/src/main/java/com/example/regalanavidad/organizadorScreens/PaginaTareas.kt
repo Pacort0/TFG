@@ -18,8 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -68,7 +72,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TareasScreen(){
@@ -86,6 +90,7 @@ fun TareasScreen(){
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val pullRefreshState = rememberPullRefreshState(refreshing = guardarCambios, onRefresh = {guardarCambios = !guardarCambios})
 
     LaunchedEffect(key1 = guardarCambios) {
         listaTareasCambiadas.value.forEach { tarea ->
@@ -95,7 +100,59 @@ fun TareasScreen(){
         listaTareasCambiadas.value = emptyList()
         guardarCambios = false
     }
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
+        if (listaTareas.isNotEmpty()) {
+            LazyColumn {
+                items(listaTareas.size) { index ->
+                    TareaCard(listaTareas[index])
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "No hay tareas pendientes",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+        if(listaTareasCambiadas.value.isNotEmpty()){
+            FloatingActionButton(
+                onClick = {
+                    guardarCambios = true
+                    Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(0.dp, 0.dp, 14.dp, 80.dp)
+                    .size(55.dp)
+            ) {
+                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Actualizar tareas")
+            }
+        }
+        FloatingActionButton(
+            onClick = {
+                showTareaDialog = true
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(0.dp, 0.dp, 14.dp, 14.dp)
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = "Agregar tarea")
+        }
+        PullRefreshIndicator(
+            refreshing = guardarCambios,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
     if (showTareaDialog){
         Dialog(onDismissRequest = {showTareaDialog = false}) {
             Box(modifier = Modifier
@@ -145,11 +202,11 @@ fun TareasScreen(){
                             onValueChange = {},
                             readOnly = true,
                             label = {
-                            Text(
-                                text = "Cargo de la tarea",
-                                fontSize = 14.sp
-                            )
-                        })
+                                Text(
+                                    text = "Cargo de la tarea",
+                                    fontSize = 14.sp
+                                )
+                            })
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -246,54 +303,6 @@ fun TareasScreen(){
                 !fecha.isBefore(LocalDate.now())
             }
         )
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        if (listaTareas.isNotEmpty()) {
-            LazyColumn {
-                items(listaTareas.size) { index ->
-                    TareaCard(listaTareas[index])
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "No hay tareas pendientes",
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
-        if(listaTareasCambiadas.value.isNotEmpty()){
-            FloatingActionButton(
-                onClick = {
-                    guardarCambios = true
-                    Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(0.dp, 0.dp, 14.dp, 80.dp)
-                    .size(55.dp)
-            ) {
-                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Actualizar tareas")
-            }
-        }
-        FloatingActionButton(
-            onClick = {
-                showTareaDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(0.dp, 0.dp, 14.dp, 14.dp)
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Agregar tarea")
-        }
     }
 }
 @Composable

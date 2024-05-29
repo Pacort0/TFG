@@ -35,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -207,13 +206,13 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                 PaginaContactosCentrosEducativos(navController)
             }
             composable("SheetCentrosEducativos"){
-                PaginaSheetCentrosEducativos(navController)
+                PaginaSheetCentrosEducativos(navController, onMapaCambiado)
             }
             composable("SheetGastos"){
-                PaginaSheetGastos()
+                PaginaSheetGastos(onMapaCambiado)
             }
             composable("SheetRecaudaciones"){
-                PaginaSheetRecaudaciones(navController)
+                PaginaSheetRecaudaciones(navController, onMapaCambiado)
             }
             composable("profileScreen"){
                 ProfileScreen()

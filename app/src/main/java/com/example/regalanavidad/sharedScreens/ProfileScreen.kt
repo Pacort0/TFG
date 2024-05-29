@@ -35,7 +35,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

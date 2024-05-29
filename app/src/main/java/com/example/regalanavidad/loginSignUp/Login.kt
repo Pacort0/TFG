@@ -48,8 +48,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
+import com.example.regalanavidad.sharedScreens.FirestoreManager
 import com.example.regalanavidad.sharedScreens.Home
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
@@ -238,14 +242,28 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
 }
 
 private fun iniciarSesion(navController: NavController, auth: FirebaseAuth, email: String, password: String, context: Context) {
+    val scope = CoroutineScope(Job() + Dispatchers.IO)
+    val firestore = FirestoreManager()
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 if (auth.currentUser?.isEmailVerified == true) {
-                    Toast.makeText(context, "Iniciando sesión", Toast.LENGTH_SHORT).show()
                     val intent = Intent(context, Home::class.java)
                     intent.putExtra("correo", email)
                     context.startActivity(intent)
+                    Toast.makeText(context, "Iniciando sesión", Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        val usuario = firestore.getUserByEmail(auth.currentUser?.email.toString())
+                        val usuarioNewPassword = usuario?.copy()
+                        if (usuario != null) {
+                            if (usuario.password != password) {
+                                if (usuarioNewPassword != null) {
+                                    usuarioNewPassword.password = password
+                                    firestore.editaUsuario(usuarioNewPassword)
+                                }
+                            }
+                        }
+                    }
                 } else {
                     Toast.makeText(context, "Valida tu correo electrónico", Toast.LENGTH_SHORT).show()
                     navController.navigate("waitingScreen")
