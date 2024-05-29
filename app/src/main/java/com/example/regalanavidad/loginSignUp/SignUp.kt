@@ -62,6 +62,8 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
     var usuario by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailExistente by remember { mutableStateOf(false) }
+    val firestore = FirestoreManager()
 
     val scope = rememberCoroutineScope()
     Column(

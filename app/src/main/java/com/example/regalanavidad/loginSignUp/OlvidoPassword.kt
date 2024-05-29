@@ -1,5 +1,6 @@
 package com.example.regalanavidad.loginSignUp
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,11 +23,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -38,11 +41,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
+import com.example.regalanavidad.sharedScreens.FirestoreManager
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
     var email by remember{ mutableStateOf("") }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var emailExistente by remember{ mutableStateOf(false) }
+    val firestore = FirestoreManager()
 
     Column (
         modifier = Modifier
@@ -97,8 +107,18 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
             Button(onClick = {
                 if(email.isNotEmpty()){
                     if(isValidEmail(email)){
-                        auth.sendPasswordResetEmail(email)
+                        scope.launch(Dispatchers.IO) { emailExistente = firestore.comprobarCorreo(email) }
+                        if (!emailExistente) {
+                            Toast.makeText(context, "Correo electrónico no registrado", Toast.LENGTH_SHORT).show()
+                        } else {
+                            auth.sendPasswordResetEmail(email)
+                            Toast.makeText(context, "correo electrónico enviado", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Introduzca un correo electrónico válido", Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    Toast.makeText(context, "Introduzca un correo electrónico", Toast.LENGTH_SHORT).show()
                 }
             },
                 shape = RoundedCornerShape(50.dp),

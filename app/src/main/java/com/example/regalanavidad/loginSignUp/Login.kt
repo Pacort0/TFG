@@ -241,7 +241,6 @@ private fun iniciarSesion(navController: NavController, auth: FirebaseAuth, emai
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                // Sign in success, update UI with the signed-in user's information
                 if (auth.currentUser?.isEmailVerified == true) {
                     Toast.makeText(context, "Iniciando sesión", Toast.LENGTH_SHORT).show()
                     val intent = Intent(context, Home::class.java)
@@ -252,7 +251,6 @@ private fun iniciarSesion(navController: NavController, auth: FirebaseAuth, emai
                     navController.navigate("waitingScreen")
                 }
             } else {
-                // If sign in fails, display a message to the user.
                 Toast.makeText(
                     context,
                     "Error iniciando sesión",

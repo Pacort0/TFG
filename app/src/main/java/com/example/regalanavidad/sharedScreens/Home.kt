@@ -856,7 +856,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         ) {
                                                             Text(text = "Dinero recaudado:",
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 28.sp,
+                                                                fontSize = 24.sp,
                                                                 color = Color.White)
                                                         }
                                                         dineroRecaudado.value.forEach { donacion ->
@@ -1006,7 +1006,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             Text(
                                                                 text = valoresFecha[0],
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 70.sp,
+                                                                fontSize = 60.sp,
                                                                 color = Color.Black
                                                             )
                                                             Spacer(modifier = Modifier.height(5.dp))
@@ -1015,7 +1015,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                     valoresFecha[1]
                                                                 ),
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 24.sp,
+                                                                fontSize = 20.sp,
                                                                 color = Color.Black
                                                             )
                                                         }
@@ -1088,7 +1088,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 startActivity(context, intent, null)
                                             } catch (e: ActivityNotFoundException) {
                                                 Log.e("Error", "Instagram no está instalado")
-                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/proyectoregalanavidad")), null)
+                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")), null)
                                             }
                                         },
                                         modifier = Modifier.fillMaxSize()
@@ -1265,7 +1265,7 @@ fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
         Text(
             text = donacion.cantidad,
             color = Color(44, 173, 18),
-            fontSize = 30.sp,
+            fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Start,
             modifier = Modifier.weight(0.6f)
@@ -1577,8 +1577,8 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(0.65f).align(Alignment.CenterVertically))
-                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier.weight(0.35f).align(Alignment.CenterVertically), fontSize = 16.sp)
+                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier.weight(0.6f).align(Alignment.CenterVertically))
+                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier.weight(0.4f).align(Alignment.CenterVertically), fontSize = 15.sp)
                             if (!isHomePage) {
                                 Box {
                                     IconButton(onClick = { expanded = true }) {

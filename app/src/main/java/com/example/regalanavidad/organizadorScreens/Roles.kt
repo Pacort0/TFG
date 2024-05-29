@@ -219,6 +219,7 @@ fun TabRoles(voluntarios: Boolean){
                             }
                         }
                     }
+
                 }
             }
         }
@@ -241,7 +242,7 @@ fun TabRoles(voluntarios: Boolean){
                 ) {
                     Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar", Modifier.size(30.dp))
                     Spacer(modifier = Modifier.width(5.dp))
-                    Text(text = "Guardar cambios")
+                    Text(text = "Guardar")
                 }
             }
         }

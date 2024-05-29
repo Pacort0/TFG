@@ -35,6 +35,11 @@ class FirestoreManager {
         }
     }
 
+    suspend fun comprobarCorreo(email: String): Boolean {
+        val querySnapshot = listaUsuarios.whereEqualTo("correo", email).get().await()
+        return querySnapshot.isEmpty
+    }
+
     suspend fun getUsuarios(): MutableList<Usuario> {
         val usuarios = mutableListOf<Usuario>()
         val querySnapshot = firestore.collection("usuarios").get().await()
