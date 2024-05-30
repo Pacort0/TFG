@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
@@ -40,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,9 +53,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -101,6 +108,19 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
         .padding(8.dp)
         .pullRefresh(pullRefreshState)) {
         Column {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Productos Recaudados",
+                    fontSize = 24.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Row (
                 Modifier
                     .fillMaxWidth()
@@ -109,12 +129,47 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                 horizontalArrangement = Arrangement.Center
             ) {
                 Column(
-                    Modifier.weight(0.5f)
-                ){
-                    Text(
-                        text = "Selecciona el tipo de producto",
-                        fontSize = 18.sp
-                    )
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.5f)
+                ) {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                    ) {
+                        TextField(
+                            modifier = Modifier.menuAnchor(),
+                            readOnly = true,
+                            value = productoSeleccionado,
+                            onValueChange = {},
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ) {
+                            opcionesDistritos.forEach { selectionOption ->
+                                DropdownMenuItem(
+                                    text = { Text(selectionOption, fontSize = 18.sp) },
+                                    onClick = {
+                                        if (listaProductosCambiados.isNotEmpty()) {
+                                            showAlertDialog = true
+                                            opcionSeleccionada = selectionOption
+                                        } else {
+                                            productoSeleccionado = selectionOption
+                                            expanded = false
+                                            productosLoading = true
+                                        }
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                )
+                            }
+                        }
+                    }
                 }
                 Column(
                     Modifier
@@ -150,40 +205,6 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                     }
                 }
             }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-            ) {
-                TextField(
-                    modifier = Modifier.menuAnchor(),
-                    readOnly = true,
-                    value = productoSeleccionado,
-                    onValueChange = {},
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                ) {
-                    opcionesDistritos.forEach { selectionOption ->
-                        DropdownMenuItem(
-                            text = { Text(selectionOption, fontSize = 18.sp) },
-                            onClick = {
-                                if(listaProductosCambiados.isNotEmpty()){
-                                    showAlertDialog = true
-                                    opcionSeleccionada = selectionOption
-                                } else {
-                                    productoSeleccionado = selectionOption
-                                    expanded = false
-                                    productosLoading = true
-                                }
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                        )
-                    }
-                }
-            }
             if (listaProductos.isNotEmpty() && !productosLoading){
                 LazyColumn {
                     items(listaProductos.size) { index ->
@@ -209,7 +230,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                     .padding(8.dp)){
                                 Column(
                                     Modifier
-                                        .weight(0.10f),
+                                        .weight(0.1f),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center)
                                 {
@@ -220,10 +241,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                     } }, contentDescription = "Contraer", Modifier.size(30.dp))
                                 }
                                 Column (Modifier.weight(0.48f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                                    Text(text = listaProductos[index].nombre)
+                                    Text(text = listaProductos[index].nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                                 }
                                 Column (Modifier.weight(0.42f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}")
+                                    Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                             if (isExpanded) {
@@ -270,6 +291,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                         Spacer(modifier = Modifier.height(4.dp))
                                                         TextField(
                                                             value = "$cantidadProd",
+                                                            textStyle = TextStyle(textAlign = TextAlign.Center),
                                                             onValueChange = { cantidad ->
                                                                 val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
                                                                 if (trimmedCantidad.isEmpty()) {
@@ -294,7 +316,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                 )
                                                             },
                                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                            modifier = Modifier.width(70.dp).align(Alignment.CenterHorizontally),
+                                                            modifier = Modifier
+                                                                .width(70.dp)
+                                                                .wrapContentHeight()
+                                                                .align(Alignment.CenterHorizontally),
                                                         )
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
@@ -332,6 +357,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.googlesheetslogo),
+                        contentDescription = "GoogleSheetsLogo",
+                        modifier = Modifier.size(60.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Cargando productos...",
                         modifier = Modifier.padding(top = 8.dp)
