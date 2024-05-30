@@ -6,19 +6,23 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -27,6 +31,7 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -53,6 +60,10 @@ import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Gasto
 import com.example.regalanavidad.modelos.GastoResponse
 import com.example.regalanavidad.modelos.RequestPostGasto
+import com.example.regalanavidad.sharedScreens.dineroRecaudado
+import com.example.regalanavidad.sharedScreens.donacionesSheetId
+import com.example.regalanavidad.sharedScreens.getDonationDataFromGoogleSheet
+import com.example.regalanavidad.sharedScreens.usuario
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -66,6 +77,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -87,52 +99,124 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val pullRefreshState = rememberPullRefreshState(refreshing = recargarGastos, onRefresh = {recargarGastos = !recargarGastos})
+    var totalGastado by remember { mutableDoubleStateOf(0.0) }
 
+    LaunchedEffect(key1 = dineroRecaudado.value.isEmpty()) {
+        Log.d("Donaciones", "Cargando donaciones")
+        val donacionResponse = getDonationDataFromGoogleSheet(
+            donacionesSheetId,
+            "donaciones"
+        )
+        dineroRecaudado.value = donacionResponse.donaciones
+    }
     LaunchedEffect(key1 = recargarGastos) {
         onMapaCambiado(true)
         gastoResponse = getGastosFromSheet()
         listaGastos = gastoResponse.gastos
+        totalGastado = calculaTotalGastado(listaGastos)
         recargarGastos = false
     }
-    Box(
+    Column (
         modifier = Modifier
             .fillMaxSize()
-            .pullRefresh(pullRefreshState)
+            .background(Color(246, 246, 244))
+            .pullRefresh(pullRefreshState),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Row (
-            Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Box(modifier = Modifier.fillMaxWidth()){
-                Text(
-                    text = "Gastos",
-                    fontSize = 24.sp,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-                IconButton(
-                    onClick = { showGastoDialog = true },
-                    modifier = Modifier
-                        .size(65.dp)
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 30.dp)
-                )
-                {
-                    Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
+        PullRefreshIndicator(
+            refreshing = recargarGastos,
+            state = pullRefreshState,
+        )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .weight(0.1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Gastos",
+                        fontSize = 24.sp,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    if (usuario.nombreRango != "Voluntario") {
+                        IconButton(
+                            onClick = { showGastoDialog = true },
+                            modifier = Modifier
+                                .size(65.dp)
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 30.dp)
+                        )
+                        {
+                            Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
+                        }
+                    }
                 }
             }
-        }
-        if (listaGastos.isNotEmpty() && !recargarGastos) {
+        if (listaGastos.isNotEmpty() && !recargarGastos && dineroRecaudado.value.isNotEmpty()) {
+            val donacionesTotales = dineroRecaudado.value[3].cantidad.split(" ")[0]
+            val donacionesTotalesLimpio = donacionesTotales.replace(".", "")
+            val dineroRecaudado = donacionesTotalesLimpio.replace(",", ".").toDoubleOrNull() ?: 0.0
+            val dineroRestante = dineroRecaudado - totalGastado
+
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.weight(0.9f)
+                    .background(Color.Transparent),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ){
-                LazyColumn {
+                LazyColumn (
+                    modifier = Modifier.weight(0.8f).padding(12.dp),
+                    ) {
                     items(listaGastos.size) { index ->
                         GastoCard(gasto = listaGastos[index])
+                    }
+                }
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .weight(0.15f)
+                        .clip(CircleShape)
+                        .background(Color(semaforoDineroRestante(dineroRestante, dineroRecaudado)))
+                        .border(0.dp, Color(216, 216, 207), CircleShape)
+                        .wrapContentHeight(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row (
+                        modifier = Modifier
+                            .weight(0.45f)
+                            .fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "Recaudado: $dineroRecaudado€",
+                            fontSize = 18.sp,
+                            modifier = Modifier.weight(0.53f).padding(start = 8.dp),
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = "Gastado: $totalGastado€",
+                            fontSize = 18.sp,
+                            modifier = Modifier.weight(0.47f).padding(end = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row (
+                        modifier = Modifier
+                            .weight(0.55f)
+                            .fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val decimalFormat = DecimalFormat("#.##")
+                        val resultadoRedondeado = decimalFormat.format(dineroRestante).toDouble()
+                        Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp)
                     }
                 }
             }
@@ -174,20 +258,17 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                 }
             )
         }
-        PullRefreshIndicator(
-            refreshing = recargarGastos,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
-    if (showGastoDialog){
-        Dialog(onDismissRequest = {showGastoDialog = false}) {
-            Box(modifier = Modifier
-                .width(350.dp)
-                .height(425.dp)
-                .padding(35.dp)
-                .background(Color.LightGray)
-                .clip(RoundedCornerShape(20.dp))) {
+    if (showGastoDialog) {
+        Dialog(onDismissRequest = { showGastoDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .width(350.dp)
+                    .height(425.dp)
+                    .padding(35.dp)
+                    .background(Color.LightGray)
+                    .clip(RoundedCornerShape(20.dp))
+            ) {
                 Column(
                     Modifier.padding(10.dp),
                     verticalArrangement = Arrangement.Center,
@@ -244,7 +325,12 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                 .clickable {
                                     showGastoDialog = false
                                 }) {
-                            Text(text = "CANCELAR", fontSize = 13.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "CANCELAR",
+                                fontSize = 13.sp,
+                                color = Color.Magenta,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(
@@ -274,7 +360,12 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                             .show()
                                     }
                                 }) {
-                            Text(text = "GUARDAR", fontSize = 13.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "GUARDAR",
+                                fontSize = 13.sp,
+                                color = Color.Magenta,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -282,46 +373,66 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
         }
     }
 }
+
+fun semaforoDineroRestante(dineroRestante: Double, dineroRecaudado: Double): Long {
+    return when {
+        dineroRestante < 0.0 -> 0xFFffabab
+        dineroRestante > 0.0 && dineroRestante < dineroRecaudado * 0.15 -> 0xFFffabab
+        dineroRestante >= dineroRecaudado * 0.15 && dineroRestante < dineroRecaudado * 0.5 -> 0xFFfeffab
+        else -> 0xFFb6ffab
+    }
+}
+
+fun calculaTotalGastado(gastos: List<Gasto>): Double {
+    var total = 0.0
+    for (gasto in gastos) {
+        val cantidad = gasto.cantidadGasto.split(" ")[0]
+                .replace(".", "")
+                .trim().toDoubleOrNull() ?: 0.0
+        total += cantidad
+    }
+    return total
+}
+
 @Composable
 fun GastoCard(gasto: Gasto){
     Card (
         modifier = Modifier
-            .padding(8.dp)
             .fillMaxWidth()
+            .padding(5.dp)
+            .clip(CircleShape)
             .height(60.dp)
+            .border(1.dp, Color(216, 216, 207), CircleShape),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(238,238,234)
+        )
     ) {
         Row (
+            modifier = Modifier.fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column (
                 Modifier
-                    .weight(0.4f)
+                    .weight(0.5f)
                     .padding(0.4.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.motivoGasto, fontSize = 14.sp)
+                Text(text = gasto.motivoGasto, fontSize = 18.sp)
+            }
+            Column (
+                Modifier.weight(0.3f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = gasto.fechaGasto, fontSize = 16.sp)
             }
             Column (
                 Modifier.weight(0.2f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.fechaGasto, fontSize = 14.sp)
-            }
-            Column (
-                Modifier.weight(0.2f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = gasto.cantidadGasto, fontSize = 14.sp)
-            }
-            Column (
-                Modifier.weight(0.2f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = gasto.pagadoPor, fontSize = 14.sp)
+                Text(text = gasto.cantidadGasto, fontSize = 18.sp)
             }
         }
     }
@@ -329,7 +440,7 @@ fun GastoCard(gasto: Gasto){
 
 suspend fun getGastosFromSheet(): GastoResponse {
     return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbw7dh0NQDsWf9ptmeiTtFJc4hhatCI06bboCCfCYPuK2537l5LdUf3He2o7cQDNEV69/exec?spreadsheetId=$gastosSpreadsheetId&sheet=Gastos"
+        val url = "https://script.google.com/macros/s/AKfycbz1Iog-YaDAVO9BigW6OxVqZ5bsG9EmCSX4mqfJmT719IRh0MMtUOz7xNQeVjbhyXr4/exec?spreadsheetId=$gastosSpreadsheetId&sheet=Gastos"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
@@ -344,7 +455,7 @@ suspend fun getGastosFromSheet(): GastoResponse {
         } catch (e: JsonSyntaxException) {
             e.printStackTrace()
             e.message?.let { Log.e("JSON", it) }
-            GastoResponse(emptyList())
+            GastoResponse("", emptyList())
         }
     }
 }

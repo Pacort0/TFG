@@ -8,7 +8,8 @@ data class Gasto(
 )
 
 data class GastoResponse(
-    val gastos: List<Gasto>,
+    val total: String = "",
+    val gastos: List<Gasto> = emptyList()
 )
 
 data class RequestPostGasto(

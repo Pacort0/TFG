@@ -2,6 +2,8 @@ package com.example.regalanavidad.organizadorScreens
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -32,6 +36,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -60,7 +66,7 @@ private var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 private var listaUsuarios = mutableStateOf(emptyList<Usuario>())
 
 @Composable
-fun RolesTabScreen(navController: NavController) {
+fun RolesTabScreen(navController: NavController){
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Voluntarios", "Roles")
     var showAlertDialog by remember { mutableStateOf(false) }
@@ -161,6 +167,8 @@ fun TabRoles(voluntarios: Boolean){
 
     Box (
         modifier = Modifier.fillMaxSize()
+            .background(Color(246, 246, 244))
+            .padding(start = 20.dp, end = 20.dp)
     ) {
         Column (
             Modifier.fillMaxSize()
@@ -203,10 +211,15 @@ fun TabRoles(voluntarios: Boolean){
                         items(usuariosFiltrados) { usuarioRegistrado ->
                             if (usuarioRegistrado.nombreRango != "Coordinador"){
                                 Card (
-                                    Modifier
+                                    modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(4.dp)
-                                        .height(70.dp)) {
+                                        .clip(CircleShape)
+                                        .border(1.dp, Color(216, 216, 207), CircleShape)
+                                        .wrapContentHeight(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(238,238,234)
+                                    )) {
                                     Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
                                         Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                             Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
@@ -266,7 +279,10 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
             value = rolSeleccionado,
             onValueChange = {},
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            )
         )
         ExposedDropdownMenu(
             expanded = expanded,

@@ -21,6 +21,7 @@ suspend fun getDonationDataFromGoogleSheet(spreadsheetId: String, sheetName: Str
                 Log.d("JSON", responseData)
             }
             val donaciones: DonacionResponse = Gson().fromJson(responseData, DonacionResponse::class.java)
+            Log.d("DonacionesJSON", donaciones.toString())
             donaciones
         } catch (e: JsonSyntaxException) {
             e.printStackTrace()

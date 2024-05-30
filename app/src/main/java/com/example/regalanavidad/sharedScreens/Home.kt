@@ -160,7 +160,7 @@ var usuario = Usuario()
 val firestore = FirestoreManager()
 private val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
 private val eventosConfirmados = mutableListOf<Evento>()
-private var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
+var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
 val tareasVM = TareasViewModel()
@@ -332,6 +332,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 
     Box(modifier = modifier
         .fillMaxSize()
+        .background(Color(246, 246, 244))
         .padding(10.dp)){
         if (agregaSitio) {
             var alturaDialogo by remember { mutableStateOf(150.dp) }
@@ -616,7 +617,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Transparent
+                            )
                         ) {
                             LaunchedEffect(key1 = recargarSitios) {
                                 sitiosLoading = true
@@ -635,9 +639,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 .background(color = Color.Transparent)) {
                                 if(sitiosLoading){
                                     Column (
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color.Transparent),
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
+                                        verticalArrangement = Arrangement.Center,
                                     ) {
                                         CircularProgressIndicator()
                                         Text(
@@ -651,24 +657,35 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ){
                                         Row (
-                                            Modifier.padding(0.dp, 5.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(5.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
                                         ) {
-                                            Text(
-                                                text = "Sitios de recogida",
-                                                textAlign = TextAlign.Center,
-                                                fontSize = 18.sp,
-                                                modifier = Modifier.weight(0.7f))
-                                            if(canEditSitios){
-                                                IconButton(
-                                                    onClick = { agregaSitio = true },
-                                                    modifier = Modifier
-                                                        .weight(0.3f)
-                                                        .size(35.dp))
-                                                {
-                                                    Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                Text(
+                                                    text = "Sitios de recogida",
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 22.sp,
+                                                    modifier = Modifier.align(Alignment.Center),
+                                                )
+                                                if (canEditSitios) {
+                                                    IconButton(
+                                                        onClick = { agregaSitio = true },
+                                                        modifier = Modifier
+                                                            .size(58.dp)
+                                                            .align(Alignment.CenterEnd)
+                                                            .padding(end = 20.dp))
+                                                            {
+                                                                Icon(
+                                                                    Icons.Filled.AddCircle,
+                                                                    "Agregar sitio",
+                                                                    Modifier.fillMaxSize()
+                                                                )
+                                                            }
+                                                    }
                                                 }
-                                            }
                                         }
                                         if(haySitios){
                                             ListaSitiosConfirmados(sitiosRecogidaConfirmados,
@@ -704,7 +721,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scaleX = scale
                                     scaleY = scale
                                 }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp)
+                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Transparent
+                            )
                         ) {
                             Box (
                                 modifier = Modifier
@@ -741,22 +761,33 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ){
                                             Row (
-                                                Modifier.padding(0.dp, 5.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(5.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Text(
-                                                    text = "Eventos próximos",
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 18.sp,
-                                                    modifier = Modifier.weight(0.7f))
-                                                if(canEditEventos){
-                                                    IconButton(
-                                                        onClick = { agregaEvento = true },
-                                                        modifier = Modifier
-                                                            .weight(0.3f)
-                                                            .size(35.dp))
-                                                    {
-                                                        Icon(Icons.Filled.AddCircle, "Agregar evento", Modifier.fillMaxSize())
+                                                Box(modifier = Modifier.fillMaxWidth()) {
+                                                    Text(
+                                                        text = "Eventos próximos",
+                                                        textAlign = TextAlign.Center,
+                                                        fontSize = 22.sp,
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                        )
+                                                    if (canEditEventos) {
+                                                        IconButton(
+                                                            onClick = { agregaEvento = true },
+                                                            modifier = Modifier
+                                                                .size(58.dp)
+                                                                .align(Alignment.CenterEnd)
+                                                                .padding(end = 20.dp)                                                            )
+                                                        {
+                                                            Icon(
+                                                                Icons.Filled.AddCircle,
+                                                                "Agregar evento",
+                                                                Modifier.fillMaxSize()
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
@@ -838,13 +869,15 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Modifier.fillMaxSize()
                                                 ) {
                                                     LaunchedEffect(key1 = Unit) {
-                                                        recaudacionsLoading = true
-                                                        val donacionResponse = getDonationDataFromGoogleSheet(
-                                                            donacionesSheetId,
-                                                            "donaciones"
-                                                        )
-                                                        dineroRecaudado.value = donacionResponse.donaciones
-                                                        recaudacionsLoading = false
+                                                        if (dineroRecaudado.value.isEmpty()){
+                                                            recaudacionsLoading = true
+                                                            val donacionResponse = getDonationDataFromGoogleSheet(
+                                                                donacionesSheetId,
+                                                                "donaciones"
+                                                            )
+                                                            dineroRecaudado.value = donacionResponse.donaciones
+                                                            recaudacionsLoading = false
+                                                        }
                                                     }
                                                     if (recaudacionsLoading) {
                                                         Text(text = "Cargando...")
@@ -1522,14 +1555,18 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
-                        .border(1.dp, Color.Black, CircleShape)
+                        .clip(CircleShape)
+                        .border(1.dp, Color(216, 216, 207), CircleShape)
                         .let {
                             if (!isHomePage) {
                                 it.clickable {
                                     onSitioEscogido(sitiosRecogidaConfirmados[index])
                                 }
                             } else it
-                        }
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(238,238,234)
+                    )
                 ) {
                     Row(
                         modifier = Modifier
@@ -1538,7 +1575,9 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = sitiosRecogidaConfirmados[index].nombreSitio, modifier = Modifier.weight(1f))
+                        Text(
+                            text = sitiosRecogidaConfirmados[index].nombreSitio,
+                            modifier = Modifier.weight(1f))
                         if(canEdit && !isHomePage){
                             IconButton(onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
@@ -1568,7 +1607,11 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
-                        .border(1.dp, Color.Black, CircleShape)
+                        .clip(CircleShape)
+                        .border(1.dp, Color(216, 216, 207), CircleShape),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(238,238,234)
+                    )
                 ) {
                     var expanded by remember { mutableStateOf(false) }
 

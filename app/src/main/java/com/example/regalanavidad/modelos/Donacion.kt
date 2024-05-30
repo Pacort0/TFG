@@ -5,6 +5,6 @@ data class DonacionItem(
     var cantidad:String = ""
 )
 data class DonacionResponse(
-    val donaciones: List<DonacionItem>,
+    val donaciones: List<DonacionItem> = emptyList()
 )
 
