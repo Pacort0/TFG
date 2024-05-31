@@ -4,6 +4,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,18 +14,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -33,13 +38,14 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,13 +60,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.sharedScreens.firestore
-import com.example.regalanavidad.sharedScreens.tareasVM
 import com.example.regalanavidad.sharedScreens.usuario
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -76,11 +82,11 @@ var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TareasScreen(){
-    val tareas = tareasVM.tareas.collectAsState()
-    val listaTareas by remember{ mutableStateOf(tareas.value.filter { !it.completada && it.rol == usuario.nombreRango }) }
+    var listaTareas by remember{ mutableStateOf(emptyList<Tarea>()) }
+    var listaTareasFiltradas by remember{ mutableStateOf(emptyList<Tarea>()) }
     var showTareaDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    var guardarCambios by remember { mutableStateOf(false) }
+    var guardarCambios by remember { mutableStateOf(true) }
     var descripcion by remember { mutableStateOf("") }
     var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
     val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
@@ -90,37 +96,101 @@ fun TareasScreen(){
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val pullRefreshState = rememberPullRefreshState(refreshing = guardarCambios, onRefresh = {guardarCambios = !guardarCambios})
+    var refresca by remember { mutableStateOf(false)}
+    val pullRefreshState = rememberPullRefreshState(refreshing = guardarCambios, onRefresh = {
+        guardarCambios = !guardarCambios
+        refresca = !refresca
+    })
 
     LaunchedEffect(key1 = guardarCambios) {
-        listaTareasCambiadas.value.forEach { tarea ->
-            firestore.editaTarea(tarea)
+        if (listaTareasCambiadas.value.isNotEmpty() && !refresca){
+            listaTareasCambiadas.value.forEach { tarea ->
+                firestore.editaTarea(tarea)
+            }
         }
-        tareasVM.cargarTareas()
+        listaTareas = firestore.getTareas()
+        listaTareasFiltradas =
+            if (usuario.nombreRango != "Coordinador") {
+                listaTareas.filter { !it.completada && it.rol == usuario.nombreRango }
+            } else {
+                listaTareas.filter { !it.completada }
+            }
         listaTareasCambiadas.value = emptyList()
         guardarCambios = false
+        refresca = false
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(246, 246, 244))
             .pullRefresh(pullRefreshState)
     ) {
-        if (listaTareas.isNotEmpty()) {
-            LazyColumn {
-                items(listaTareas.size) { index ->
-                    TareaCard(listaTareas[index])
+        Column (
+            Modifier.fillMaxSize().padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Tareas",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    IconButton(
+                        onClick = { showTareaDialog = true },
+                        modifier = Modifier
+                            .size(58.dp)
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 20.dp))
+                    {
+                        Icon(
+                            Icons.Filled.AddCircle,
+                            "Agregar tarea",
+                            Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "No hay tareas pendientes",
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+            if (guardarCambios){
+                Column (
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Cargando tareas...", fontSize = 18.sp)
+                }
+            } else {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                ) {
+                    if (listaTareasFiltradas.isNotEmpty() && !guardarCambios) {
+                        LazyColumn {
+                            items(listaTareasFiltradas.size) { index ->
+                                TareaCard(listaTareasFiltradas[index])
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "No hay tareas pendientes",
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
         if(listaTareasCambiadas.value.isNotEmpty()){
@@ -130,22 +200,27 @@ fun TareasScreen(){
                     Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(0.dp, 0.dp, 14.dp, 80.dp)
-                    .size(55.dp)
+                    .align(Alignment.BottomStart)
+                    .padding(20.dp, 0.dp, 0.dp, 20.dp)
+                    .height(35.dp)
+                    .width(130.dp)
             ) {
-                Icon(painter = painterResource(id = R.drawable.save), contentDescription = "Actualizar tareas")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        modifier = Modifier.size(22.dp),
+                        painter = painterResource(id = R.drawable.save),
+                        contentDescription = "Actualizar tareas"
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = "Guardar",
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
-        }
-        FloatingActionButton(
-            onClick = {
-                showTareaDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(0.dp, 0.dp, 14.dp, 14.dp)
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Agregar tarea")
         }
         PullRefreshIndicator(
             refreshing = guardarCambios,
@@ -263,7 +338,7 @@ fun TareasScreen(){
                                         showTareaDialog = false
                                         scope.launch(Dispatchers.IO) {
                                             firestore.insertaTarea(tarea)
-                                            tareasVM.cargarTareas()
+                                            guardarCambios = true
                                         }
                                     } else {
                                         Toast
@@ -313,7 +388,12 @@ fun TareaCard(tarea: Tarea){
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .height(60.dp)
+            .clip(CircleShape)
+            .border(1.dp, Color(216, 216, 207), CircleShape)
+            .heightIn(min = 60.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(238,238,234)
+        )
     ) {
         Row (
             verticalAlignment = Alignment.CenterVertically
@@ -328,14 +408,14 @@ fun TareaCard(tarea: Tarea){
                 Text(text = tarea.descripcion, fontSize = 14.sp)
             }
             Column (
-                Modifier.weight(0.25f),
+                Modifier.weight(0.22f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = tarea.fechaLimite, fontSize = 14.sp)
             }
             Column (
-                Modifier.weight(0.35f),
+                Modifier.weight(0.382f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -354,6 +434,10 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
+        modifier = Modifier
+            .clip(CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
+            .background(Color(238,238,234))
     ) {
         TextField(
             modifier = Modifier.menuAnchor(),
@@ -362,11 +446,16 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
             onValueChange = {},
             textStyle = TextStyle(fontSize = 13.sp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color(238,238,234),
+                unfocusedContainerColor = Color(238,238,234)
+            )
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
+            onDismissRequest = { expanded = false }
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -381,6 +470,8 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                         scope.launch { drawerState.close() }
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    modifier = Modifier
+                        .background(Color(246, 246, 244))
                 )
             }
         }

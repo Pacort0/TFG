@@ -9,6 +9,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +27,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
@@ -37,6 +41,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -58,6 +63,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -111,6 +117,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
     }
     Box(modifier = Modifier
         .fillMaxSize()
+        .background(Color(246, 246, 244))
         .padding(8.dp)
         .pullRefresh(pullRefreshState)
     ) {
@@ -142,10 +149,17 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 ) {
                     ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .border(0.dp, Color(216, 216, 207), CircleShape)
+                            .background(Color(238, 238, 234))
                     ) {
                         TextField(
-                            modifier = Modifier.menuAnchor(),
+                            modifier = Modifier
+                                .menuAnchor()
+                                .clip(CircleShape)
+                                .border(0.dp, Color(216, 216, 207), CircleShape),
                             readOnly = true,
                             value = distritoSeleccionado,
                             onValueChange = {},
@@ -219,16 +233,21 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
                         Card (
                             modifier = Modifier
-                                .padding(8.dp)
+                                .padding(5.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 80.dp)
                                 .wrapContentHeight()
+                                .clip(CircleShape)
+                                .border(1.dp, Color(216, 216, 207), CircleShape)
                                 .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
                                         easing = LinearOutSlowInEasing
                                     )
-                                )
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(238,238,234)
+                            )
                         ) {
                             Row (
                                 horizontalArrangement = Arrangement.Center,
@@ -236,7 +255,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clickable { isExpanded = !isExpanded }
-                                    .padding(8.dp)){
+                                    .padding(15.dp)){
                                 Column(
                                     Modifier
                                         .weight(0.1f),
@@ -285,17 +304,24 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         Modifier.wrapContentSize()
                                     ) {
                                         Box (
-                                            modifier = Modifier.weight(0.45f).fillMaxSize()
+                                            modifier = Modifier
+                                                .weight(0.45f)
+                                                .fillMaxSize()
+                                                .padding(start = 10.dp)
                                         ){
                                             Row (
-                                                Modifier.fillMaxSize().clickable { startActivity(
-                                                    context,
-                                                    Intent(
-                                                        Intent.ACTION_DIAL,
-                                                        Uri.parse("tel:${listaCentrosEducativos.value[index].numeroCentro}")
-                                                    ),
-                                                    null
-                                                ) },
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .clickable {
+                                                        startActivity(
+                                                            context,
+                                                            Intent(
+                                                                Intent.ACTION_DIAL,
+                                                                Uri.parse("tel:${listaCentrosEducativos.value[index].numeroCentro}")
+                                                            ),
+                                                            null
+                                                        )
+                                                    },
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
@@ -308,7 +334,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             }
                                         }
                                         Box (
-                                            modifier = Modifier.weight(0.1f).fillMaxSize()
+                                            modifier = Modifier
+                                                .weight(0.1f)
+                                                .fillMaxSize()
                                         ){
                                             Row (
                                                 Modifier.fillMaxSize(),
@@ -319,10 +347,15 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             }
                                         }
                                         Box(
-                                            modifier = Modifier.weight(0.45f).fillMaxSize()
+                                            modifier = Modifier
+                                                .weight(0.45f)
+                                                .fillMaxSize()
+                                                .padding(end = 15.dp)
                                         ){
                                             Row (
-                                                Modifier.fillMaxSize().clickable { navegaCorreo = true },
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .clickable { navegaCorreo = true },
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ){
@@ -465,16 +498,31 @@ fun cambiaNombreDistrito(sheetName: String):String{
     return nuevoSheetName
 }
 
+fun cambiaColorEstado(estado: String): Color {
+    return when (estado) {
+        "No Iniciada" -> Color(0XFFe8eaed)
+        "En curso" -> Color(0XFFc6dbe1)
+        "En revision" -> Color(0xFFfeffab)
+        "Completada" -> Color(0xFFb6ffab)
+        "Cancelada" -> Color(0xFFffabab)
+        else -> Color(0, 0, 0)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducativo: CentroEducativo){
-    val opcionesEstados = listOf("No Iniciada", "En curso", "En revisión", "Completada", "Cancelada")
+    val opcionesEstados = listOf("No Iniciada", "En curso", "En revision", "Completada", "Cancelada")
     var expanded by remember { mutableStateOf(false) }
     var nuevoEstado by remember { mutableStateOf(centroEducativo.estadoCentro) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
+        modifier = Modifier
+            .clip(CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
+            .background(cambiaColorEstado(nuevoEstado))
     ) {
         TextField(
             modifier = Modifier.menuAnchor(),
@@ -484,12 +532,18 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
+                focusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = cambiaColorEstado(nuevoEstado),
+                unfocusedContainerColor = cambiaColorEstado(nuevoEstado)
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color.Transparent)
+                .clip(RoundedCornerShape(50.dp))
+                .border(0.dp, Color.Transparent, CircleShape)
         ) {
             opcionesEstados.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -517,6 +571,11 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                         Log.d("Centros", listaEstadosCentrosCambiados.value.toString())
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    modifier = Modifier
+                        .background(cambiaColorEstado(selectionOption))
+                        .clip(CircleShape)
+                        .border(0.dp, Color.Transparent, CircleShape)
+                        .padding(3.dp),
                 )
             }
         }

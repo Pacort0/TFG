@@ -214,8 +214,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val decimalFormat = DecimalFormat("#.##")
-                        val resultadoRedondeado = decimalFormat.format(dineroRestante).toDouble()
+                        val formatoDecimal = DecimalFormat("#.##")
+                        val resultadoRedondeado = formatoDecimal.format(dineroRestante).toDouble()
                         Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp)
                     }
                 }

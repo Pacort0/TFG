@@ -121,7 +121,6 @@ import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
 import com.example.regalanavidad.viewmodels.EventosVM
-import com.example.regalanavidad.viewmodels.TareasViewModel
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
@@ -163,7 +162,6 @@ private val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-val tareasVM = TareasViewModel()
 
 @RequiresApi(Build.VERSION_CODES.O)
 val eventosVM = EventosVM()

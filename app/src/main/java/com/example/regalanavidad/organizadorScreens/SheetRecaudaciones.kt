@@ -108,12 +108,12 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
         .padding(8.dp)
         .pullRefresh(pullRefreshState)) {
         Column {
-            Column(
+            Row(
                 Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Productos Recaudados",
