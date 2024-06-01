@@ -32,6 +32,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -64,6 +67,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -92,7 +96,7 @@ import okhttp3.Response
 
 private var listaCentrosEducativos = mutableStateOf(emptyList<CentroEducativo>())
 const val infoCentrosSheetId = "1RtpW4liafATG-CW-tFozrFZzM-8tzg9e_KIj-9DT4gA"
-private var listaEstadosCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
+private var listaCentrosCambiados = mutableStateOf(emptyList<CentroEducativoRequest>())
 var centroEducativoElegido = CentroEducativo()
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -177,7 +181,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 DropdownMenuItem(
                                     text = { Text(selectionOption, fontSize = 18.sp) },
                                     onClick = {
-                                        if (listaEstadosCentrosCambiados.value.isNotEmpty()) {
+                                        if (listaCentrosCambiados.value.isNotEmpty()) {
                                             showAlertDialog = true
                                             opcionSeleccionada = selectionOption
                                         } else {
@@ -197,7 +201,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         .fillMaxWidth()
                         .weight(0.5f)
                 ) {
-                    if (listaEstadosCentrosCambiados.value.isNotEmpty()) {
+                    if (listaCentrosCambiados.value.isNotEmpty()) {
                         IconButton(onClick = {
                             Toast.makeText(context, "Actualizando centros...", Toast.LENGTH_SHORT)
                                 .show()
@@ -205,9 +209,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 updateCentrosDataInGoogleSheet(
                                     infoCentrosSheetId,
                                     cambiaNombreDistrito(distritoSeleccionado),
-                                    listaEstadosCentrosCambiados.value
+                                    listaCentrosCambiados.value
                                 )
-                                listaEstadosCentrosCambiados.value = emptyList()
+                                listaCentrosCambiados.value = emptyList()
                                 centrosLoading = true
                             }
                         }, modifier = Modifier.fillMaxWidth()) {
@@ -231,6 +235,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 LazyColumn {
                     items(listaCentrosEducativos.value.size) { index ->
                         var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
+                        var esTextField by remember { mutableStateOf(false)}
                         Card (
                             modifier = Modifier
                                 .padding(5.dp)
@@ -293,11 +298,83 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 ) {
                                     Row (
                                         horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Text(
-                                            text = "Tarea: ${listaCentrosEducativos.value[index].tareaCentro}",
-                                            fontSize = 18.sp,
-                                            textAlign = TextAlign.Start)
+                                        if (esTextField) {
+                                            val tareaOriginal by remember { mutableStateOf(listaCentrosEducativos.value[index].tareaCentro) }
+                                            var nuevaTarea by remember { mutableStateOf("") }
+                                            TextField(
+                                                placeholder = { Text(text = tareaOriginal)},
+                                                value = nuevaTarea,
+                                                onValueChange = {nuevaTarea = it},
+                                                label = { Text("Tarea", color = Color.Black) },
+                                                modifier = Modifier
+                                                    .border(1.dp, Color(216, 216, 207), CircleShape)
+                                                    .weight(0.75f)
+                                                    .padding(4.dp)
+                                                    .clip(CircleShape),
+//                                                    .onFocusChanged { focusState ->
+//                                                        if (!focusState.isFocused) {
+//                                                            esTextField = false
+//                                                        }
+//                                                    },
+                                                colors = TextFieldDefaults.colors(
+                                                    unfocusedIndicatorColor = Color.Transparent,
+                                                    focusedIndicatorColor = Color.Transparent,
+                                                    focusedContainerColor = Color(216, 216, 207),
+                                                    unfocusedContainerColor = Color(216, 216, 207),
+                                                )
+                                            )
+                                            Spacer(modifier = Modifier.width(5.dp))
+                                            Icon(
+                                                Icons.Filled.Done,
+                                                contentDescription = "Confirmar",
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .weight(0.125f)
+                                                    .clickable {
+                                                        esTextField = false
+                                                        val centro = listaCentrosEducativos.value[index]
+                                                        centro.tareaCentro = nuevaTarea
+                                                        if (listaCentrosCambiados.value.find { it.nombreCentro == centro.nombreCentro } == null) {
+                                                            val centroRequest = centro.toCentroEducativoRequest()
+                                                            centroRequest.tareaCentro = nuevaTarea
+                                                            listaCentrosCambiados.value += centroRequest
+                                                        } else {
+                                                            val indice =
+                                                                listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centro.nombreCentro }
+                                                            val newList =
+                                                                listaCentrosCambiados.value.toMutableList()
+                                                            newList[indice].tareaCentro = nuevaTarea
+                                                            listaCentrosCambiados.value =
+                                                                newList
+                                                        }
+                                                    }
+                                            )
+                                            Spacer(modifier = Modifier.width(5.dp))
+                                            Icon(
+                                                Icons.Filled.Clear,
+                                                contentDescription = "Cancelar",
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .weight(0.125f)
+                                                    .clickable { esTextField = false }
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Tarea: ${listaCentrosEducativos.value[index].tareaCentro}",
+                                                fontSize = 18.sp,
+                                                textAlign = TextAlign.Start
+                                            )
+                                            Spacer(modifier = Modifier.width(5.dp))
+                                            Icon(
+                                                Icons.Filled.Edit,
+                                                contentDescription = "Editar tarea",
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .clickable { esTextField = true }
+                                            )
+                                        }
                                     }
                                     Spacer(modifier = Modifier.height(15.dp))
                                     Row (
@@ -423,7 +500,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 distritoSeleccionado = opcionSeleccionada
                                 expanded = false
                                 centrosLoading = true
-                                listaEstadosCentrosCambiados.value = emptyList()
+                                listaCentrosCambiados.value = emptyList()
                             }
                         ) {
                             Text("Sí, estoy seguro")
@@ -453,7 +530,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
             )
         }
         BackHandler {
-            if(listaEstadosCentrosCambiados.value.isNotEmpty()){
+            if(listaCentrosCambiados.value.isNotEmpty()){
                 llamadaBackHandler = true
                 showAlertDialog = true
             } else {
@@ -554,21 +631,21 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                             centroEducativo.estadoCentro = selectionOption
 
                             // Buscar si ya existe un registro para este centro
-                            val index = listaEstadosCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
+                            val index = listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
 
                             if (index != -1) {
                                 // Si existe, sobrescribirlo
-                                val newList = listaEstadosCentrosCambiados.value.toMutableList()
+                                val newList = listaCentrosCambiados.value.toMutableList()
                                 newList[index] = centroEducativo.toCentroEducativoRequest()
-                                listaEstadosCentrosCambiados.value = newList
+                                listaCentrosCambiados.value = newList
                             } else {
                                 // Si no existe, añadirlo a la lista
-                                listaEstadosCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
+                                listaCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
                             }
                         }
                         expanded = false
                         scope.launch { drawerState.close() }
-                        Log.d("Centros", listaEstadosCentrosCambiados.value.toString())
+                        Log.d("Centros", listaCentrosCambiados.value.toString())
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     modifier = Modifier

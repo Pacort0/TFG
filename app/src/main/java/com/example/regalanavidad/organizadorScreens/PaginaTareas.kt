@@ -2,6 +2,7 @@ package com.example.regalanavidad.organizadorScreens
 
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +30,8 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
@@ -40,6 +44,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -48,12 +54,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +72,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.sharedScreens.firestore
@@ -78,10 +87,86 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun TareasScreen(navController: NavController) {
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val tabTitles = listOf("Pendientes", "Completadas")
+    var showAlertDialog by remember { mutableStateOf(false) }
+    var llamadaBackHandler by remember { mutableStateOf(false) }
+    var indexActual by remember { mutableIntStateOf(0) }
+    Column {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabTitles.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = {
+                        if (listaTareasCambiadas.value.isNotEmpty()) {
+                            showAlertDialog = true
+                            indexActual = index
+                        } else {
+                            selectedTabIndex = index
+                        }
+                    },
+                    text = { Text(text = title, fontSize = 16.sp) }
+                )
+            }
+        }
+        // Renderizar el contenido basado en la pestaña seleccionada
+        when (selectedTabIndex) {
+            0 -> TareasTabScreen(false) // Tareas pendientes
+            1 -> TareasTabScreen(true)  // Tareas completadas
+        }
+        if (showAlertDialog) {
+            AlertDialog(
+                onDismissRequest = { showAlertDialog = false },
+                title = { Text(text = "Tiene cambios sin guardar") },
+                text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                            listaTareasCambiadas.value = emptyList()
+                            if (llamadaBackHandler) {
+                                navController.popBackStack()
+                            } else {
+                                selectedTabIndex = indexActual
+                            }
+                        }
+                    ) {
+                        Text("Sí, estoy seguro")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            showAlertDialog = false
+                            llamadaBackHandler = false
+                        }
+                    ) {
+                        Text("No")
+                    }
+                }
+            )
+        }
+
+        // Manejo del botón de retroceso
+        BackHandler {
+            if (listaTareasCambiadas.value.isNotEmpty()) {
+                llamadaBackHandler = true
+                showAlertDialog = true
+            } else {
+                navController.popBackStack()
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TareasScreen(){
+fun TareasTabScreen(completadas: Boolean){
     var listaTareas by remember{ mutableStateOf(emptyList<Tarea>()) }
     var listaTareasFiltradas by remember{ mutableStateOf(emptyList<Tarea>()) }
     var showTareaDialog by remember { mutableStateOf(false) }
@@ -110,10 +195,18 @@ fun TareasScreen(){
         }
         listaTareas = firestore.getTareas()
         listaTareasFiltradas =
-            if (usuario.nombreRango != "Coordinador") {
-                listaTareas.filter { !it.completada && it.rol == usuario.nombreRango }
+            if (completadas) {
+                if (usuario.nombreRango != "Coordinador") {
+                    listaTareas.filter { it.completada && it.rol == usuario.nombreRango }
+                } else {
+                    listaTareas.filter { it.completada }
+                }
             } else {
-                listaTareas.filter { !it.completada }
+                if (usuario.nombreRango != "Coordinador") {
+                    listaTareas.filter { !it.completada && it.rol == usuario.nombreRango }
+                } else {
+                    listaTareas.filter { !it.completada }
+                }
             }
         listaTareasCambiadas.value = emptyList()
         guardarCambios = false
@@ -147,9 +240,11 @@ fun TareasScreen(){
                     IconButton(
                         onClick = { showTareaDialog = true },
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(55.dp)
                             .align(Alignment.CenterEnd)
-                            .padding(end = 20.dp))
+                            .wrapContentSize()
+                            .padding(end = 20.dp)
+                            .alpha(completadas.let { if (it) 0f else 1f }))
                     {
                         Icon(
                             Icons.Filled.AddCircle,
@@ -419,14 +514,14 @@ fun TareaCard(tarea: Tarea){
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TareaCompletadaSubMenu(drawerState = drawerState, scope = scope, tarea = tarea)
+                TareaCompletadaSubMenu(drawerState = drawerState, scope = scope, tarea = tarea, estadoPrevio = tarea.completada)
             }
         }
     }
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tarea: Tarea){
+fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tarea: Tarea, estadoPrevio: Boolean){
     val options = listOf("Completada", "Pendiente")
     var expanded by remember { mutableStateOf(false) }
     var completada by remember { mutableStateOf(tarea.completada) }
@@ -462,9 +557,18 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                     text = { Text(selectionOption, fontSize = 14.sp) },
                     onClick = {
                         if(selectionOption != tarea.completada.let { if (it) "Completada" else "Pendiente"}){
-                            completada = selectionOption.let { it == "Completada" }
+                            completada = selectionOption == "Completada"
                             tarea.completada = completada
-                            listaTareasCambiadas.value += tarea
+
+                            val index = listaTareasCambiadas.value.indexOf(tarea)
+
+                            if (index < 0 && tarea.completada != estadoPrevio) {
+                                listaTareasCambiadas.value += tarea
+                            } else if (index >= 0 && listaTareasCambiadas.value[index].completada == tarea.completada){
+                                listaTareasCambiadas.value = listaTareasCambiadas.value.filterNot { it.id == tarea.id }
+                            } else {
+                                listaTareasCambiadas.value[index].completada = tarea.completada
+                            }
                         }
                         expanded = false
                         scope.launch { drawerState.close() }

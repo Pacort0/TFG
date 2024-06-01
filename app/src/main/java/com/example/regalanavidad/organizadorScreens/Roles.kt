@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -86,7 +87,7 @@ fun RolesTabScreen(navController: NavController){
                             selectedTabIndex = index
                         }
                     },
-                    text = { Text(text = title) }
+                    text = { Text(text = title, fontSize = 16.sp)}
                 )
             }
         }
@@ -166,7 +167,8 @@ fun TabRoles(voluntarios: Boolean){
     }
 
     Box (
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(Color(246, 246, 244))
             .padding(start = 20.dp, end = 20.dp)
     ) {
@@ -272,6 +274,10 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
+        modifier = Modifier
+            .clip(CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
+            .background(Color(216, 216, 207))
     ) {
         TextField(
             modifier = Modifier.menuAnchor(),
@@ -281,12 +287,18 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
+                focusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color(216, 216, 207),
+                unfocusedContainerColor = Color(216, 216, 207)
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color.Transparent)
+                .clip(RoundedCornerShape(20.dp))
+                .border(0.dp, Color.Transparent, CircleShape)
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -301,8 +313,24 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                         scope.launch { drawerState.close() }
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = asignaLogoSegunRol(selectionOption)),
+                            contentDescription = "Icono rol", Modifier.size(32.dp)
+                        )
+                    }
                 )
             }
         }
+    }
+}
+
+fun asignaLogoSegunRol(rol: String): Int {
+    return when (rol) {
+        "Tesorería" -> R.drawable.tesorero_icono
+        "RR.II." -> R.drawable.rrii_icono
+        "Logística" -> R.drawable.logistica_icono
+        "Imagen" -> R.drawable.imagen_icono
+        else -> R.drawable.voluntario_icono
     }
 }

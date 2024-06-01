@@ -22,7 +22,7 @@ data class CentroEducativoResponse(
 
 data class CentroEducativoRequest(
     val nombreCentro: String,
-    val tareaCentro: String,
+    var tareaCentro: String,
     val estadoCentro: String
 )
 

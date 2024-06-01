@@ -274,7 +274,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
             onMapaCambiado(false)
         }
         "Tareas" -> {
-            TareasScreen()
+            TareasScreen(navController)
             onMapaCambiado(true)
         }
         "Mail" -> {
@@ -1546,6 +1546,8 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
 
 @Composable
 fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
+    var showDialog by remember { mutableStateOf(false) }
+    var indexActual by remember { mutableIntStateOf(0) }
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
@@ -1578,10 +1580,8 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                             modifier = Modifier.weight(1f))
                         if(canEdit && !isHomePage){
                             IconButton(onClick = {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[index])
-                                    onElementoEliminado(true)
-                                }
+                                indexActual = index
+                                showDialog = true
                             },
                                 modifier = Modifier.weight(0.3f)) {
                                 Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio")
@@ -1591,10 +1591,49 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                 }
             }
         }
+    } else {
+        Text(text = "No hay sitios de recogida confirmados")
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+            },
+            title = {
+                Text(text = "¿Está seguro?")
+            },
+            text = {
+                Text("¿Desea eliminar este sitio?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                        CoroutineScope(Dispatchers.IO).launch {
+                            firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[indexActual])
+                            onElementoEliminado(true)
+                        }
+                    }
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
 @Composable
 fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
+    var showDialog by remember { mutableStateOf(false) }
+    var indexActual by remember { mutableIntStateOf(0) }
     val contexto = LocalContext.current
     if(eventosConfirmados.size > 0) {
         LazyColumn(
@@ -1621,12 +1660,18 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = eventosConfirmados[index].titulo, modifier = Modifier
-                                .weight(0.6f)
-                                .align(Alignment.CenterVertically))
-                            Text(text = eventosConfirmados[index].startDate, modifier = Modifier
-                                .weight(0.4f)
-                                .align(Alignment.CenterVertically), fontSize = 15.sp)
+                            Text(
+                                text = eventosConfirmados[index].titulo,
+                                modifier = Modifier
+                                    .weight(0.6f)
+                                    .align(Alignment.CenterVertically)
+                            )
+                            Text(
+                                text = eventosConfirmados[index].startDate,
+                                modifier = Modifier
+                                    .weight(0.4f)
+                                    .align(Alignment.CenterVertically),
+                                fontSize = 15.sp)
                             if (!isHomePage) {
                                 Box {
                                     IconButton(onClick = { expanded = true }) {
@@ -1677,10 +1722,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                         if (canEdit) {
                                             DropdownMenuItem(onClick = {
                                                 expanded = false
-                                                CoroutineScope(Dispatchers.IO).launch {
-                                                    firestore.eliminaEvento(eventosConfirmados[index])
-                                                    onElementoEliminado(true)
-                                                }
+                                                indexActual = index
                                             },
                                                 text = {Text(text = "Eliminar evento", color = Color.Red)},
                                                 leadingIcon = {Icon(Icons.Filled.Delete, contentDescription = "Eliminar")})
@@ -1693,8 +1735,46 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                 }
             }
         }
+    } else {
+        Text(text = "No hay eventos confirmados")
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+            },
+            title = {
+                Text(text = "¿Está seguro?")
+            },
+            text = {
+                Text("¿Desea eliminar este evento?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                        CoroutineScope(Dispatchers.IO).launch {
+                            firestore.eliminaEvento(eventosConfirmados[indexActual])
+                            onElementoEliminado(true)
+                        }
+                    }
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
+
 fun checkIfCanEditSitios(rol: String):Boolean{
     return rol == "Coordinador" || rol == "RR.II." || rol == "Logística"
 }
