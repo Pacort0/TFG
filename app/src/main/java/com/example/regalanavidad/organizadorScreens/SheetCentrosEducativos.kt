@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
@@ -58,6 +60,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +75,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -235,7 +239,6 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 LazyColumn {
                     items(listaCentrosEducativos.value.size) { index ->
                         var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
-                        var esTextField by remember { mutableStateOf(false)}
                         Card (
                             modifier = Modifier
                                 .padding(5.dp)
@@ -300,29 +303,62 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         horizontalArrangement = Arrangement.Start,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
+                                        var esTextField by remember { mutableStateOf(false) }
+                                        val tareaOriginal = listaCentrosEducativos.value[index].tareaCentro
+                                        var nuevaTarea by remember { mutableStateOf("") }
+                                        var textFieldHasFocus by remember { mutableStateOf(false) }
+
+                                        fun saveTarea() {
+                                            esTextField = false
+                                            val centro = listaCentrosEducativos.value[index]
+                                            centro.tareaCentro = nuevaTarea
+                                            if (listaCentrosCambiados.value.find { it.nombreCentro == centro.nombreCentro } == null) {
+                                                val centroRequest = centro.toCentroEducativoRequest()
+                                                centroRequest.tareaCentro = nuevaTarea
+                                                listaCentrosCambiados.value += centroRequest
+                                            } else {
+                                                val indice = listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centro.nombreCentro }
+                                                val newList = listaCentrosCambiados.value.toMutableList()
+                                                newList[indice].tareaCentro = nuevaTarea
+                                                listaCentrosCambiados.value = newList
+                                            }
+                                        }
+
                                         if (esTextField) {
-                                            val tareaOriginal by remember { mutableStateOf(listaCentrosEducativos.value[index].tareaCentro) }
-                                            var nuevaTarea by remember { mutableStateOf("") }
+                                            DisposableEffect(Unit) {
+                                                onDispose {
+                                                    if (!textFieldHasFocus) {
+                                                        esTextField = false
+                                                    }
+                                                }
+                                            }
+
                                             TextField(
-                                                placeholder = { Text(text = tareaOriginal)},
+                                                placeholder = { Text(text = tareaOriginal) },
                                                 value = nuevaTarea,
-                                                onValueChange = {nuevaTarea = it},
+                                                onValueChange = { nuevaTarea = it },
                                                 label = { Text("Tarea", color = Color.Black) },
                                                 modifier = Modifier
                                                     .border(1.dp, Color(216, 216, 207), CircleShape)
                                                     .weight(0.75f)
                                                     .padding(4.dp)
-                                                    .clip(CircleShape),
-//                                                    .onFocusChanged { focusState ->
-//                                                        if (!focusState.isFocused) {
-//                                                            esTextField = false
-//                                                        }
-//                                                    },
+                                                    .clip(CircleShape)
+                                                    .onFocusChanged { focusState ->
+                                                        textFieldHasFocus = focusState.isFocused
+                                                    },
                                                 colors = TextFieldDefaults.colors(
                                                     unfocusedIndicatorColor = Color.Transparent,
                                                     focusedIndicatorColor = Color.Transparent,
                                                     focusedContainerColor = Color(216, 216, 207),
                                                     unfocusedContainerColor = Color(216, 216, 207),
+                                                ),
+                                                keyboardActions = KeyboardActions(
+                                                    onDone = {
+                                                        saveTarea()
+                                                    }
+                                                ),
+                                                keyboardOptions = KeyboardOptions(
+                                                    imeAction = ImeAction.Done
                                                 )
                                             )
                                             Spacer(modifier = Modifier.width(5.dp))
@@ -333,22 +369,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                     .size(20.dp)
                                                     .weight(0.125f)
                                                     .clickable {
-                                                        esTextField = false
-                                                        val centro = listaCentrosEducativos.value[index]
-                                                        centro.tareaCentro = nuevaTarea
-                                                        if (listaCentrosCambiados.value.find { it.nombreCentro == centro.nombreCentro } == null) {
-                                                            val centroRequest = centro.toCentroEducativoRequest()
-                                                            centroRequest.tareaCentro = nuevaTarea
-                                                            listaCentrosCambiados.value += centroRequest
-                                                        } else {
-                                                            val indice =
-                                                                listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centro.nombreCentro }
-                                                            val newList =
-                                                                listaCentrosCambiados.value.toMutableList()
-                                                            newList[indice].tareaCentro = nuevaTarea
-                                                            listaCentrosCambiados.value =
-                                                                newList
-                                                        }
+                                                        saveTarea()
                                                     }
                                             )
                                             Spacer(modifier = Modifier.width(5.dp))

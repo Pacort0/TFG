@@ -65,6 +65,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -211,7 +212,9 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
         mutableIntStateOf(0)
     }
 
-    NavigationBar {
+    NavigationBar (
+        containerColor = Color(0xFFd3ecaf)
+    ) {
         // looping over each tab to generate the views and navigation for each item
         tabBarItems.forEachIndexed { index, tabBarItem ->
             NavigationBarItem(
@@ -222,6 +225,9 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
                     navController.navigate(tabBarItem.title)
                     mapaOrganizadorVM.searchSitioRecogida.value = false
                 },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = Color(0xFF46f2c3),
+                ),
                 icon = {
                     TabBarIconView(
                         isSelected = selectedTabIndex == index,
@@ -330,8 +336,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 
     Box(modifier = modifier
         .fillMaxSize()
-        .background(Color(246, 246, 244))
-        .padding(10.dp)){
+        .background(Color(0XFFffffc3))
+    ){
         if (agregaSitio) {
             var alturaDialogo by remember { mutableStateOf(150.dp) }
             var buscarSitio by remember{mutableStateOf(false)}
@@ -1556,7 +1562,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         .fillMaxWidth()
                         .padding(5.dp)
                         .clip(CircleShape)
-                        .border(1.dp, Color(216, 216, 207), CircleShape)
+                        .border(1.dp, Color(0XFFffcc57), CircleShape)
                         .let {
                             if (!isHomePage) {
                                 it.clickable {
@@ -1565,7 +1571,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                             } else it
                         },
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(238,238,234)
+                        containerColor = Color(0xFFffe677)
                     )
                 ) {
                     Row(
