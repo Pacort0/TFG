@@ -13,11 +13,9 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -86,8 +84,8 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
     )
     val tareasTab = TabBarItem(
         title = "Tareas",
-        selectedIcon = Icons.Filled.Notifications,
-        unselectedIcon = Icons.Outlined.Notifications,
+        selectedIcon = ImageVector.vectorResource(id = R.drawable.lista_filled),
+        unselectedIcon =  ImageVector.vectorResource(id = R.drawable.lista_outlined)
     )
     val mapsTab = TabBarItem(
         title = "Mapa",

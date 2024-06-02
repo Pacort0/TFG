@@ -81,6 +81,7 @@ import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -506,7 +507,7 @@ fun TareaCard(tarea: Tarea){
         ) {
             Column (
                 Modifier
-                    .weight(0.55f)
+                    .weight(0.45f)
                     .padding(0.4.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -514,7 +515,7 @@ fun TareaCard(tarea: Tarea){
                 Text(text = tarea.descripcion, fontSize = 16.sp)
             }
             Column (
-                Modifier.weight(0.45f),
+                Modifier.weight(0.55f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -537,7 +538,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
             .padding(5.dp)
             .clip(CircleShape)
             .border(1.dp, BordeIndvCards, CircleShape)
-            .background(FondoIndvCards)
+            .background(FondoTarjetaInception)
     ) {
         TextField(
             modifier = Modifier.menuAnchor(),
@@ -549,14 +550,14 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = FondoIndvCards,
-                unfocusedContainerColor = FondoIndvCards
+                focusedContainerColor = FondoTarjetaInception,
+                unfocusedContainerColor = FondoTarjetaInception
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(FondoApp)
+            modifier = Modifier.background(FondoTarjetaInception)
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -584,7 +585,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                         .background(Color.Transparent)
                         .clip(RoundedCornerShape(10.dp))
                         .padding(3.dp)
-                        .border(1.dp, FondoIndvCards, RoundedCornerShape(10.dp))
+                        .border(1.dp, BordeIndvCards, RoundedCornerShape(10.dp))
                         .wrapContentSize()
                 )
             }

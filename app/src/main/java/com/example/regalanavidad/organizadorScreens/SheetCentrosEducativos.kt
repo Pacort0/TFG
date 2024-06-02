@@ -45,17 +45,17 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -144,7 +144,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
             ) {
                 Text(
                     text = "Centros Educativos",
-                    fontSize = 26.sp
+                    fontSize = 24.sp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -220,7 +220,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                     verticalArrangement = Arrangement.Center
                 ) {
                     if (listaCentrosCambiados.value.isNotEmpty()) {
-                        IconButton(
+                        ElevatedButton(
                             onClick = {
                             Toast.makeText(context, "Actualizando centros...", Toast.LENGTH_SHORT)
                                 .show()
@@ -232,10 +232,12 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 )
                                 listaCentrosCambiados.value = emptyList()
                                 centrosLoading = true }},
-                            colors = IconButtonDefaults.iconButtonColors(
+                            modifier = Modifier.width(160.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
                                 containerColor = FondoMenus
                             ),
-                            modifier = Modifier.width(160.dp)){
+                            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp))
+                        {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center

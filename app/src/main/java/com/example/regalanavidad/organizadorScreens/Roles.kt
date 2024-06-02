@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +64,11 @@ import com.example.regalanavidad.sharedScreens.firestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.example.regalanavidad.R
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 
 private var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 private var listaUsuarios = mutableStateOf(emptyList<Usuario>())
@@ -75,7 +82,11 @@ fun RolesTabScreen(navController: NavController){
     var indexActual by remember { mutableIntStateOf(0) }
 
     Column {
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            containerColor = FondoIndvCards,
+            contentColor = Color.Black )
+        {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
@@ -116,7 +127,7 @@ fun RolesTabScreen(navController: NavController){
                             }
                         }
                     ) {
-                        Text("Sí, estoy seguro")
+                        Text("Continuar")
                     }
                 },
                 dismissButton = {
@@ -169,7 +180,7 @@ fun TabRoles(voluntarios: Boolean){
     Box (
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(246, 246, 244))
+            .background(FondoApp)
             .padding(start = 20.dp, end = 20.dp)
     ) {
         Column (
@@ -186,7 +197,9 @@ fun TabRoles(voluntarios: Boolean){
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = BordeIndvCards
+                    )
                     Text(
                         text = "Cargando usuarios...",
                         modifier = Modifier.padding(top = 8.dp)
@@ -217,16 +230,16 @@ fun TabRoles(voluntarios: Boolean){
                                         .fillMaxWidth()
                                         .padding(4.dp)
                                         .clip(CircleShape)
-                                        .border(1.dp, Color(216, 216, 207), CircleShape)
+                                        .border(1.dp, BordeIndvCards, CircleShape)
                                         .wrapContentHeight(),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(238,238,234)
+                                        containerColor = FondoIndvCards
                                     )) {
                                     Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                                        Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                        Column (Modifier.weight(0.4f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                             Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
                                         }
-                                        Column (Modifier.weight(0.5f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                        Column (Modifier.weight(0.6f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                             RolesSubMenu(drawerState, scope, usuarioRegistrado)
                                         }
                                     }
@@ -241,6 +254,7 @@ fun TabRoles(voluntarios: Boolean){
         if(usuariosCargados && listaUsuariosCambiados.value.isNotEmpty()){
             val context = LocalContext.current
             FloatingActionButton(
+                containerColor = FondoMenus,
                 onClick = {
                     guardarCambios = true
                     Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
@@ -270,6 +284,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
     val options = listOf("Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuarioRegistrado.nombreRango) }
+    val rolOriginal by remember { mutableStateOf(usuarioRegistrado.nombreRango) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -277,40 +292,63 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
         modifier = Modifier
             .clip(CircleShape)
             .border(0.dp, Color.Transparent, CircleShape)
-            .background(Color(216, 216, 207))
+            .background(FondoTarjetaInception)
     ) {
         TextField(
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = asignaLogoSegunRol(rolSeleccionado)),
+                    contentDescription = "Icono rol", Modifier.size(35.dp)
+                )
+            },
             modifier = Modifier.menuAnchor(),
             readOnly = true,
+            textStyle = TextStyle(fontSize = 16.sp),
             value = rolSeleccionado,
             onValueChange = {},
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color(216, 216, 207),
-                unfocusedContainerColor = Color(216, 216, 207)
+                focusedContainerColor = FondoTarjetaInception,
+                unfocusedContainerColor = FondoTarjetaInception
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .background(Color.Transparent)
+                .background(FondoTarjetaInception)
                 .clip(RoundedCornerShape(20.dp))
                 .border(0.dp, Color.Transparent, CircleShape)
         ) {
-            options.forEach { selectionOption ->
+            options.filter { usuarioRegistrado.nombreRango != it }.forEach { selectionOption ->
                 DropdownMenuItem(
                     text = { Text(selectionOption, fontSize = 18.sp) },
                     onClick = {
-                        if(selectionOption != usuarioRegistrado.nombreRango){
-                            rolSeleccionado = selectionOption
-                            usuarioRegistrado.nombreRango = selectionOption
-                            listaUsuariosCambiados.value += usuarioRegistrado
-                        }
                         expanded = false
                         scope.launch { drawerState.close() }
+                        if(selectionOption != rolOriginal){
+                            if (!listaUsuariosCambiados.value.contains(usuarioRegistrado)){
+                                usuarioRegistrado.nombreRango = selectionOption
+                                listaUsuariosCambiados.value += usuarioRegistrado
+                            } else {
+                                listaUsuariosCambiados.value =
+                                    listaUsuariosCambiados.value.map { usuario ->
+                                        if (usuario == usuarioRegistrado) {
+                                            usuario.nombreRango = selectionOption
+                                        }
+                                        usuario
+                                    }
+                            }
+                        }
+                        else {
+                            if (listaUsuariosCambiados.value.contains(usuarioRegistrado)){
+                                listaUsuariosCambiados.value -= usuarioRegistrado
+                                usuarioRegistrado.nombreRango = rolOriginal
+                            }
+                        }
+                        rolSeleccionado = selectionOption
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     leadingIcon = {
@@ -318,7 +356,13 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                             painter = painterResource(id = asignaLogoSegunRol(selectionOption)),
                             contentDescription = "Icono rol", Modifier.size(32.dp)
                         )
-                    }
+                    },
+                    modifier = Modifier
+                        .background(Color.Transparent)
+                        .clip(RoundedCornerShape(10.dp))
+                        .padding(3.dp)
+                        .border(1.dp, BordeIndvCards, RoundedCornerShape(10.dp))
+                        .wrapContentSize()
                 )
             }
         }

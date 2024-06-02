@@ -40,6 +40,9 @@ import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.apiRouteService.ApiRouteService
 import com.example.regalanavidad.apiRouteService.RouteResponse
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -113,12 +116,14 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(FondoApp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isLoading) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                color = BordeIndvCards
+            )
             Text(
                 text = "Cargando tu posición actual...",
                 modifier = Modifier.padding(top = 8.dp)

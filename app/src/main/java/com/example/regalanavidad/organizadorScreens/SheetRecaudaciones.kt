@@ -37,15 +37,16 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -81,7 +82,6 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
-import com.google.android.gms.maps.model.Circle
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers
@@ -133,7 +133,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
             ) {
                 Text(
                     text = "Productos Recaudados",
-                    fontSize = 26.sp
+                    fontSize = 24.sp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -207,7 +207,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                         .weight(0.5f)
                 ) {
                     if (listaProductosCambiados.isNotEmpty()) {
-                        IconButton(onClick = {
+                        ElevatedButton(onClick = {
                             Toast.makeText(context, "Actualizando productos...", Toast.LENGTH_SHORT).show()
                             scope.launch(Dispatchers.IO) {
                                 updateProdDataInGoogleSheet(
@@ -218,10 +218,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 listaProductosCambiados = emptyList()
                                 productosLoading = true
                             }
-                        }, modifier = Modifier.fillMaxWidth(),
-                            colors = IconButtonDefaults.iconButtonColors(
+                        }, modifier = Modifier.width(160.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
                                 containerColor = FondoMenus
-                            )
+                            ),
+                            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -230,10 +231,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 Icon(
                                     painterResource(id = R.drawable.save),
                                     contentDescription = "Guardar cambios",
-                                    Modifier.size(32.dp)
+                                    Modifier.size(32.dp),
+                                    tint = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Guardar", fontSize = 18.sp)
+                                Text(text = "Guardar", fontSize = 18.sp, color = Color.Black)
                             }
                         }
                     }
@@ -248,8 +250,8 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 .padding(5.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 45.dp)
-                                .clip(isExpanded.let { if (!it) CircleShape else RoundedCornerShape(15.dp) })
-                                .border(1.dp, BordeIndvCards, isExpanded.let { if (!it) CircleShape else RectangleShape })
+                                .clip(RoundedCornerShape(15.dp))
+                                .border(1.dp, BordeIndvCards, RectangleShape)
                                 .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
@@ -332,7 +334,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(40.dp))
+                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(34.dp))
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
                                                     Column(
@@ -399,7 +401,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(40.dp))
+                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(34.dp))
                                                     }
                                                 }
                                             }

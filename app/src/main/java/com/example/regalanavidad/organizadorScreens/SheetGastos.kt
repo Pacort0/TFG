@@ -142,7 +142,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Gastos",
-                        fontSize = 26.sp,
+                        fontSize = 24.sp,
                         modifier = Modifier.align(Alignment.Center),
                     )
                     if (usuario.nombreRango != "Voluntario") {

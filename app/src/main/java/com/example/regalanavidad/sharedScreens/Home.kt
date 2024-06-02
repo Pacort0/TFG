@@ -29,10 +29,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
@@ -68,6 +70,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -125,6 +128,7 @@ import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.viewmodels.EventosVM
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
@@ -344,19 +348,27 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         .background(FondoApp)
     ){
         if (agregaSitio) {
-            var alturaDialogo by remember { mutableStateOf(150.dp) }
+            var alturaDialogo by remember { mutableStateOf(180.dp) }
             var buscarSitio by remember{mutableStateOf(false)}
             var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
              Dialog(onDismissRequest = { agregaSitio = false }) {
                  Box(
                      modifier = Modifier
                          .fillMaxWidth()
-                         .height(alturaDialogo)
-                         .background(Color.LightGray)
+                         .height(alturaDialogo.let { if (prediccionesNuevoSitioRecogida.isNotEmpty()) 480.dp else it })
+                         .background(FondoApp)
                          .padding(35.dp)
-                         .clip(RoundedCornerShape(20.dp))
                  ) {
-                     Column {
+                     Column (
+                         Modifier
+                             .fillMaxWidth()
+                             .wrapContentHeight()
+                             .padding(6.dp),
+                         horizontalAlignment = Alignment.CenterHorizontally,
+                         verticalArrangement = Arrangement.Center
+                     ) {
+                         Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                         Spacer(modifier = Modifier.height(16.dp))
                          OutlinedTextField(
                              value = textoBusqueda,
                              onValueChange = { nuevaBusqueda ->
@@ -365,21 +377,33 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                  scope.launch {
                                      prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
                                  } },
-                             label = { Text("Buscar") },
+                             label = { Text("Buscar sitio", color = Color.Black) },
+                             leadingIcon = {
+                                 Icon(
+                                     painter = painterResource(id = R.drawable.lupa),
+                                     contentDescription = "Lupa",
+                                     modifier = Modifier.size(24.dp)) },
                              modifier = Modifier
                                  .fillMaxWidth()
                                  .onFocusChanged { focusState ->
                                      buscarSitio = focusState.isFocused
-                                 })
+                                 },
+                             colors = OutlinedTextFieldDefaults.colors(
+                                 focusedContainerColor = FondoIndvCards,
+                                 unfocusedContainerColor = FondoIndvCards,
+                                 focusedBorderColor = BordeIndvCards,
+                                 unfocusedBorderColor = BordeIndvCards
+                             ))
                          if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
                              LazyColumn {
-                                 alturaDialogo = 400.dp
                                  val topSitios = prediccionesNuevoSitioRecogida.take(4)
                                  items(topSitios.size) { index ->
                                      Card(
                                          modifier = Modifier
                                              .padding(5.dp)
                                              .fillMaxWidth()
+                                             .border(1.dp, BordeIndvCards, CircleShape)
+                                             .clip(CircleShape)
                                              .height(70.dp)
                                              .clickable {
                                                  scope.launch(Dispatchers.IO) {
@@ -391,7 +415,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                      agregaSitio = false
                                                  }
                                              }
-                                             .padding(0.dp, 5.dp)
+                                             .padding(0.dp, 5.dp),
+                                         colors = CardDefaults.cardColors(
+                                             containerColor = FondoIndvCards
+                                         )
                                      ) {
                                          Column(
                                              modifier = Modifier.padding(8.dp)
@@ -425,7 +452,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida) } }
                 val fechaDialogState = rememberMaterialDialogState()
                 val horaDialogState = rememberMaterialDialogState()
-                var alturaDialogo by remember { mutableStateOf(450.dp) }
+                val alturaDialogo by remember { mutableStateOf(420.dp) }
                 var buscarSitio by remember{mutableStateOf(false)}
 
 
@@ -433,21 +460,42 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(alturaDialogo)
-                            .background(Color.LightGray)
-                            .padding(35.dp)
+                            .height(alturaDialogo.let { if (prediccionesNuevoSitioEvento.isNotEmpty()) 610.dp else it })
+                            .background(FondoApp)
+                            .padding(top = 15.dp, start = 30.dp, end = 30.dp, bottom = 15.dp)
                             .clip(RoundedCornerShape(20.dp))
                     ) {
                         Column (
                             Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
+                                .wrapContentHeight()
                                 .padding(6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            OutlinedTextField(value = nombreEvento, onValueChange = { nombreEvento = it }, label = { Text("Nombre del evento") })
+                            Text(text = "Nuevo evento", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            OutlinedTextField(
+                                value = nombreEvento,
+                                onValueChange = { nombreEvento = it },
+                                label = { Text("Nombre del evento", color = Color.Black) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FondoIndvCards,
+                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedBorderColor = BordeIndvCards,
+                                    unfocusedBorderColor = BordeIndvCards
+                                ))
                             Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(value = descripcionEvento, onValueChange = {descripcionEvento = it}, label = {Text("Descripción del evento")})
+                            OutlinedTextField(
+                                value = descripcionEvento,
+                                onValueChange = {descripcionEvento = it},
+                                label = {Text("Descripción del evento", color = Color.Black)},
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FondoIndvCards,
+                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedBorderColor = BordeIndvCards,
+                                    unfocusedBorderColor = BordeIndvCards
+                                ))
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = textoBusqueda,
@@ -458,16 +506,21 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda)
                                     }
                                 },
-                                label = { Text("Lugar del evento:") },
+                                label = { Text("Lugar del evento", color = Color.Black) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         buscarSitio = focusState.isFocused
-                                    }
+                                    },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FondoIndvCards,
+                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedBorderColor = BordeIndvCards,
+                                    unfocusedBorderColor = BordeIndvCards
+                                )
                             )
                             if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty()){
                                 LazyColumn {
-                                    alturaDialogo = 610.dp
                                     val topSitios = prediccionesNuevoSitioEvento.take(4)
                                     items(topSitios.size) { index ->
                                         Card(
@@ -475,15 +528,19 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 .padding(5.dp)
                                                 .height(70.dp)
                                                 .fillMaxWidth()
+                                                .border(1.dp, BordeIndvCards, CircleShape)
+                                                .background(FondoIndvCards)
                                                 .clickable {
                                                     sitioEvento =
                                                         prediccionesNuevoSitioEvento[index]
-                                                    alturaDialogo = 450.dp
                                                     textoBusqueda =
                                                         prediccionesNuevoSitioEvento[index].nombreSitio
                                                     buscarSitio = false
                                                 }
-                                                .padding(0.dp, 5.dp)
+                                                .padding(0.dp, 5.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = FondoIndvCards
+                                            )
                                         ) {
                                             Column(
                                                 modifier = Modifier.padding(8.dp)
@@ -506,6 +563,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             Text(text = fechaFormateada, Modifier.clickable { fechaDialogState.show() })
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = horaFormateada, Modifier.clickable { horaDialogState.show() })
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                         MaterialDialog(
                             dialogState = fechaDialogState,
@@ -559,8 +617,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             )
                         }
                         Row (modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(0.dp, 0.dp, 14.dp, 14.dp)) {
+                            .align(Alignment.BottomCenter)
+                            .padding(0.dp, 0.dp, 0.dp, 14.dp)) {
                             Button(onClick = { agregaEvento = false}, Modifier.background(Color.Transparent)) {
                                 Text(text = "Cancelar")
                             }
@@ -654,7 +712,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center,
                                     ) {
-                                        CircularProgressIndicator()
+                                        CircularProgressIndicator(
+                                            color = BordeIndvCards
+                                        )
                                         Text(
                                             text = "Cargando sitios...",
                                             modifier = Modifier.padding(top = 8.dp)
@@ -676,7 +736,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 Text(
                                                     text = "Sitios de recogida",
                                                     textAlign = TextAlign.Center,
-                                                    fontSize = 22.sp,
+                                                    fontSize = 24.sp,
                                                     modifier = Modifier.align(Alignment.Center),
                                                 )
                                                 if (canEditSitios) {
@@ -757,7 +817,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        CircularProgressIndicator()
+                                        CircularProgressIndicator(
+                                            color = BordeIndvCards
+                                        )
                                         Text(
                                             text = "Cargando eventos...",
                                             modifier = Modifier.padding(top = 8.dp)
@@ -780,7 +842,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Text(
                                                         text = "Eventos próximos",
                                                         textAlign = TextAlign.Center,
-                                                        fontSize = 22.sp,
+                                                        fontSize = 24.sp,
                                                         modifier = Modifier.align(Alignment.Center),
                                                         )
                                                     if (canEditEventos) {
@@ -1151,7 +1213,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         },
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .border(1.dp, BordeIndvCards, RoundedCornerShape(20.dp))
+                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
                                     ) {
                                         CartaRSS(R.drawable.logo_ig, "Instagram")
                                     }
@@ -1173,7 +1235,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             Log.e("Error", "Tiktok no está instalado")
                                             startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
                                         } },
-                                        modifier = Modifier.fillMaxSize()) {
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
+                                    ) {
                                         CartaRSS(R.drawable.logo_tiktok, "TikTok")
                                     }
                                 }
@@ -1194,7 +1259,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             Log.e("Error", "Whatsapp no está instalado")
                                             startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")), null)
                                         } },
-                                        modifier = Modifier.fillMaxSize()) {
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
+                                    ) {
                                         CartaRSS(R.drawable.logo_whatsapp, "WhatsApp")
                                     }
                                 }
@@ -1678,7 +1746,6 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                     )
                 ) {
                     var expanded by remember { mutableStateOf(false) }
-
                     Column {
                         Row(
                             modifier = Modifier
@@ -1706,7 +1773,8 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                     }
                                     DropdownMenu(
                                         expanded = expanded,
-                                        onDismissRequest = { expanded = false }
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier.background(FondoTarjetaInception)
                                     ) {
                                         DropdownMenuItem(onClick = {
                                             expanded = false
@@ -1739,20 +1807,50 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                             }
                                         },
                                             text = {Text("Añadir al calendario")},
-                                            leadingIcon = {Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario")})
+                                            leadingIcon = {Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario")},
+                                            modifier = Modifier
+                                                .background(Color.Transparent)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .padding(3.dp)
+                                                .border(
+                                                    1.dp,
+                                                    BordeIndvCards,
+                                                    RoundedCornerShape(10.dp)
+                                                )
+                                                .wrapContentSize())
                                         DropdownMenuItem(onClick = {
                                             expanded = false
                                             onEventoEscogido(eventosConfirmados[index])
                                         },
                                             text = {Text("Ver en el mapa")},
-                                            leadingIcon = {Icon(Icons.Filled.LocationOn, contentDescription = "Ver en el mapa")})
+                                            leadingIcon = {Icon(Icons.Filled.LocationOn, contentDescription = "Ver en el mapa")},
+                                            modifier = Modifier
+                                                .background(Color.Transparent)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .padding(3.dp)
+                                                .border(
+                                                    1.dp,
+                                                    BordeIndvCards,
+                                                    RoundedCornerShape(10.dp)
+                                                )
+                                                .wrapContentSize())
                                         if (canEdit) {
                                             DropdownMenuItem(onClick = {
                                                 expanded = false
                                                 indexActual = index
                                             },
                                                 text = {Text(text = "Eliminar evento", color = Color.Red)},
-                                                leadingIcon = {Icon(Icons.Filled.Delete, contentDescription = "Eliminar")})
+                                                leadingIcon = {Icon(Icons.Filled.Delete, contentDescription = "Eliminar")},
+                                                modifier = Modifier
+                                                    .background(Color.Transparent)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .padding(3.dp)
+                                                    .border(
+                                                        1.dp,
+                                                        BordeIndvCards,
+                                                        RoundedCornerShape(10.dp)
+                                                    )
+                                                    .wrapContentSize())
                                         }
                                     }
                                 }
