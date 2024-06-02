@@ -7,6 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="naranjaClaro">#FFECD3A5</color>
-    <color name="naranjaOscuro">#FFFFA600</color>
+    <color name="naranjaClaroLogin">#FFECD3A5</color>
+    <color name="naranjaOscuroLogin">#FFFFA600</color>
 </resources>

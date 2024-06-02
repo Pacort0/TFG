@@ -64,6 +64,9 @@ import com.example.regalanavidad.sharedScreens.dineroRecaudado
 import com.example.regalanavidad.sharedScreens.donacionesSheetId
 import com.example.regalanavidad.sharedScreens.getDonationDataFromGoogleSheet
 import com.example.regalanavidad.sharedScreens.usuario
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -119,7 +122,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(246, 246, 244))
+            .background(FondoApp)
             .pullRefresh(pullRefreshState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -139,7 +142,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Gastos",
-                        fontSize = 24.sp,
+                        fontSize = 26.sp,
                         modifier = Modifier.align(Alignment.Center),
                     )
                     if (usuario.nombreRango != "Voluntario") {
@@ -182,7 +185,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         .weight(0.15f)
                         .clip(CircleShape)
                         .background(Color(semaforoDineroRestante(dineroRestante, dineroRecaudado)))
-                        .border(0.dp, Color(216, 216, 207), CircleShape)
+                        .border(2.dp, BordeIndvCards, CircleShape)
                         .wrapContentHeight(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -402,9 +405,9 @@ fun GastoCard(gasto: Gasto){
             .padding(5.dp)
             .clip(CircleShape)
             .height(60.dp)
-            .border(1.dp, Color(216, 216, 207), CircleShape),
+            .border(1.dp, BordeIndvCards, CircleShape),
         colors = CardDefaults.cardColors(
-            containerColor = Color(238,238,234)
+            containerColor = FondoIndvCards
         )
     ) {
         Row (

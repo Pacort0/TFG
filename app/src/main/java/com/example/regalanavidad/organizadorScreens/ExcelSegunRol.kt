@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoMenus
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -39,7 +41,7 @@ fun ExcelCoordinador(navController: NavController){
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(10.dp)
+        modifier = Modifier.fillMaxSize().background(FondoApp)
     ) {
         Row (
             Modifier
@@ -87,7 +89,7 @@ private fun CartaExcel(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(184, 243, 175)),
+                .background(FondoMenus),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

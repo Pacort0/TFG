@@ -121,6 +121,10 @@ import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.viewmodels.EventosVM
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
@@ -213,7 +217,8 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
     }
 
     NavigationBar (
-        containerColor = Color(0xFFd3ecaf)
+        modifier = Modifier.height(80.dp),
+        containerColor = FondoMenus
     ) {
         // looping over each tab to generate the views and navigation for each item
         tabBarItems.forEachIndexed { index, tabBarItem ->
@@ -226,7 +231,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
                     mapaOrganizadorVM.searchSitioRecogida.value = false
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color(0xFF46f2c3),
+                    indicatorColor = FondoApp
                 ),
                 icon = {
                     TabBarIconView(
@@ -336,7 +341,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
 
     Box(modifier = modifier
         .fillMaxSize()
-        .background(Color(0XFFffffc3))
+        .background(FondoApp)
     ){
         if (agregaSitio) {
             var alturaDialogo by remember { mutableStateOf(150.dp) }
@@ -873,15 +878,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Modifier.fillMaxSize()
                                                 ) {
                                                     LaunchedEffect(key1 = Unit) {
-                                                        if (dineroRecaudado.value.isEmpty()){
-                                                            recaudacionsLoading = true
-                                                            val donacionResponse = getDonationDataFromGoogleSheet(
-                                                                donacionesSheetId,
-                                                                "donaciones"
-                                                            )
-                                                            dineroRecaudado.value = donacionResponse.donaciones
-                                                            recaudacionsLoading = false
-                                                        }
+                                                        recaudacionsLoading = true
+                                                        val donacionResponse = getDonationDataFromGoogleSheet(
+                                                            donacionesSheetId,
+                                                            "donaciones"
+                                                        )
+                                                        dineroRecaudado.value = donacionResponse.donaciones
+                                                        recaudacionsLoading = false
                                                     }
                                                     if (recaudacionsLoading) {
                                                         Text(text = "Cargando...")
@@ -1000,81 +1003,96 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         bottom = 0.dp
                                                     )
                                             ) {
-                                                Row (
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .wrapContentHeight()
-                                                        .weight(0.3f),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Column (
-                                                        Modifier.fillMaxSize(),
-                                                        verticalArrangement = Arrangement.Center,
-                                                        horizontalAlignment = Alignment.CenterHorizontally
-                                                    ){
-                                                        Text(
-                                                            text = "Próximo evento:",
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 28.sp,
-                                                            color = Color.Black
-                                                        )
-                                                        eventoVM.value.titulo.let {
+                                                if (eventoVM.value.titulo != "") {
+                                                    Row (
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .wrapContentHeight()
+                                                            .weight(0.3f),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Column (
+                                                            Modifier.fillMaxSize(),
+                                                            verticalArrangement = Arrangement.Center,
+                                                            horizontalAlignment = Alignment.CenterHorizontally
+                                                        ){
+                                                            Text(
+                                                                text = "Próximo evento:",
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 28.sp,
+                                                                color = Color.Black
+                                                            )
+                                                            eventoVM.value.titulo.let {
                                                                 Text(
                                                                     text = it,
                                                                     fontWeight = FontWeight.Bold,
                                                                     fontSize = 18.sp,
                                                                     color = Color.Black
                                                                 )
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .weight(0.45f),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    eventoVM.value.startDate.let {
-                                                        val valoresFecha = eventoVM.value.startDate.split("/")
-                                                        Column (
-                                                            Modifier.fillMaxSize(),
-                                                            verticalArrangement = Arrangement.Center,
-                                                            horizontalAlignment = Alignment.CenterHorizontally
-                                                        ) {
-                                                            Text(
-                                                                text = valoresFecha[0],
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 60.sp,
-                                                                color = Color.Black
-                                                            )
-                                                            Spacer(modifier = Modifier.height(5.dp))
-                                                            Text(
-                                                                text = cambiaNumeroPorMes(
-                                                                    valoresFecha[1]
-                                                                ),
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 20.sp,
-                                                                color = Color.Black
-                                                            )
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .weight(0.45f),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        eventoVM.value.startDate.let {
+                                                            val valoresFecha = eventoVM.value.startDate.split("/")
+                                                            Column (
+                                                                Modifier.fillMaxSize(),
+                                                                verticalArrangement = Arrangement.Center,
+                                                                horizontalAlignment = Alignment.CenterHorizontally
+                                                            ) {
+                                                                Text(
+                                                                    text = valoresFecha[0],
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    fontSize = 60.sp,
+                                                                    color = Color.Black
+                                                                )
+                                                                Spacer(modifier = Modifier.height(5.dp))
+                                                                Text(
+                                                                    text = cambiaNumeroPorMes(
+                                                                        valoresFecha[1]
+                                                                    ),
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    fontSize = 20.sp,
+                                                                    color = Color.Black
+                                                                )
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .weight(0.25f),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    eventoVM.value.lugar.let {
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .weight(0.25f),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        eventoVM.value.lugar.let {
                                                             Text(
                                                                 text = it.nombreSitio,
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 20.sp,
                                                                 color = Color.Black
                                                             )
+                                                        }
+                                                    }
+                                                } else {
+                                                    Row (
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(
+                                                            text = "No hay eventos próximos",
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 20.sp,
+                                                            color = Color.Black
+                                                        )
                                                     }
                                                 }
                                             }
@@ -1103,7 +1121,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                                 .padding(5.dp, 0.dp, 0.dp, 0.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = Color.Transparent
                             )
                         ) {
                             Column (
@@ -1131,7 +1149,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")), null)
                                             }
                                         },
-                                        modifier = Modifier.fillMaxSize()
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .border(1.dp, BordeIndvCards, RoundedCornerShape(20.dp))
                                     ) {
                                         CartaRSS(R.drawable.logo_ig, "Instagram")
                                     }
@@ -1216,9 +1236,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
             FloatingActionButton(
                 onClick = { redactaEmail = true },
-                Modifier
+                containerColor = FondoMenus,
+                modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(0.dp, 0.dp, 14.dp, 35.dp)
+                    .padding(12.dp, 0.dp, 0.dp, 35.dp)
                     .height(40.dp)
                     .width(if (pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
             ) {
@@ -1307,7 +1328,7 @@ fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
             color = Color(44, 173, 18),
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.End,
             modifier = Modifier.weight(0.6f)
         )
     }
@@ -1562,7 +1583,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         .fillMaxWidth()
                         .padding(5.dp)
                         .clip(CircleShape)
-                        .border(1.dp, Color(0XFFffcc57), CircleShape)
+                        .border(1.dp, BordeIndvCards, CircleShape)
                         .let {
                             if (!isHomePage) {
                                 it.clickable {
@@ -1571,7 +1592,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                             } else it
                         },
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFffe677)
+                        containerColor = FondoIndvCards
                     )
                 ) {
                     Row(
@@ -1651,9 +1672,9 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         .fillMaxWidth()
                         .padding(5.dp)
                         .clip(CircleShape)
-                        .border(1.dp, Color(216, 216, 207), CircleShape),
+                        .border(1.dp, BordeIndvCards, CircleShape),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(238,238,234)
+                        containerColor = FondoIndvCards
                     )
                 ) {
                     var expanded by remember { mutableStateOf(false) }

@@ -7,6 +7,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -34,12 +38,14 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -53,7 +59,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -68,6 +76,12 @@ import com.example.regalanavidad.modelos.DetallesProducto
 import com.example.regalanavidad.modelos.Producto
 import com.example.regalanavidad.modelos.ProductoResponse
 import com.example.regalanavidad.modelos.RequestPostRecaudacion
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
+import com.google.android.gms.maps.model.Circle
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers
@@ -105,9 +119,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
     }
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(8.dp)
+        .background(FondoApp)
         .pullRefresh(pullRefreshState)) {
-        Column {
+        Column (
+            modifier = Modifier.padding(8.dp)
+        ) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -117,7 +133,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
             ) {
                 Text(
                     text = "Productos Recaudados",
-                    fontSize = 24.sp
+                    fontSize = 26.sp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -136,21 +152,32 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .border(0.dp, Color.Black, CircleShape)
+                            .background(FondoMenus)
                     ) {
                         TextField(
-                            modifier = Modifier.menuAnchor(),
+                            modifier = Modifier
+                                .menuAnchor()
+                                .clip(CircleShape)
+                                .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = productoSeleccionado,
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
                                 unfocusedIndicatorColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedContainerColor = FondoMenus,
+                                focusedContainerColor = FondoMenus
                             )
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .background(FondoMenus)
                         ) {
                             opcionesDistritos.forEach { selectionOption ->
                                 DropdownMenuItem(
@@ -166,7 +193,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                         }
                                     },
                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                )
+                                    modifier = Modifier
+                                        .background(FondoMenus)
+                                        .padding(5.dp),
+                                    )
                             }
                         }
                     }
@@ -188,7 +218,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 listaProductosCambiados = emptyList()
                                 productosLoading = true
                             }
-                        }, modifier = Modifier.fillMaxWidth()) {
+                        }, modifier = Modifier.fillMaxWidth(),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = FondoMenus
+                            )
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
@@ -196,10 +230,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 Icon(
                                     painterResource(id = R.drawable.save),
                                     contentDescription = "Guardar cambios",
-                                    Modifier.size(30.dp)
+                                    Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Guardar cambios")
+                                Text(text = "Guardar", fontSize = 18.sp)
                             }
                         }
                     }
@@ -211,15 +245,20 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                         var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
                         Card (
                             modifier = Modifier
-                                .padding(8.dp)
+                                .padding(5.dp)
                                 .fillParentMaxWidth()
-                                .heightIn(min = 60.dp)
+                                .heightIn(min = 45.dp)
+                                .clip(isExpanded.let { if (!it) CircleShape else RoundedCornerShape(15.dp) })
+                                .border(1.dp, BordeIndvCards, isExpanded.let { if (!it) CircleShape else RectangleShape })
                                 .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
                                         easing = LinearOutSlowInEasing
                                     )
-                                )
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = FondoIndvCards
+                            )
                         ) {
                             Row (
                                 horizontalArrangement = Arrangement.Center,
@@ -240,15 +279,17 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                         Icons.Default.KeyboardArrowUp
                                     } }, contentDescription = "Contraer", Modifier.size(30.dp))
                                 }
-                                Column (Modifier.weight(0.48f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
+                                Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                                     Text(text = listaProductos[index].nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                                 }
-                                Column (Modifier.weight(0.42f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                    Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                             if (isExpanded) {
-                                Column {
+                                Column (
+                                    modifier = Modifier.padding(10.dp)
+                                ) {
                                     listaProductos[index].tipos.forEach { tipo ->
                                         val cantidadOriginalProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
                                         var cantidadProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
@@ -257,12 +298,23 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxSize()
+                                                .border(1.dp, BordeIndvCards, CircleShape)
+                                                .clip(CircleShape)
+                                                .background(FondoTarjetaInception)
                                                 .padding(8.dp)){
                                             Column (Modifier.weight(0.35f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                                Text(text = tipo.tipo)
+                                                Text(text = tipo.tipo, fontSize = 20.sp)
                                             }
-                                            Column (Modifier.weight(0.65f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                                Row {
+                                            Column (Modifier
+                                                .weight(0.65f),
+                                                horizontalAlignment = Alignment.End,
+                                                verticalArrangement = Arrangement.Center)
+                                            {
+                                                Row (
+                                                    modifier = Modifier.fillMaxSize().padding(end = 12.dp),
+                                                    verticalAlignment = Alignment.Bottom,
+                                                    horizontalArrangement = Arrangement.End
+                                                ) {
                                                     IconButton(onClick = {
                                                         cantidadProd--
                                                         tipo.cantidad = cantidadProd.toString()
@@ -287,11 +339,11 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                         horizontalAlignment = Alignment.CenterHorizontally,
                                                         verticalArrangement = Arrangement.Center
                                                     ) {
-                                                        Text(text = "Cantidad")
+                                                        Text(text = "Cantidad", fontSize = 18.sp)
                                                         Spacer(modifier = Modifier.height(4.dp))
                                                         TextField(
                                                             value = "$cantidadProd",
-                                                            textStyle = TextStyle(textAlign = TextAlign.Center),
+                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 22.sp),
                                                             onValueChange = { cantidad ->
                                                                 val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
                                                                 if (trimmedCantidad.isEmpty()) {
@@ -315,10 +367,17 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                     tipo.tipo
                                                                 )
                                                             },
+                                                            colors = TextFieldDefaults.colors(
+                                                                unfocusedIndicatorColor = Color.Transparent,
+                                                                focusedIndicatorColor = Color.Transparent,
+                                                                focusedContainerColor = Color.Transparent,
+                                                                unfocusedContainerColor = Color.Transparent,
+                                                            ),
                                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                             modifier = Modifier
                                                                 .width(70.dp)
                                                                 .wrapContentHeight()
+                                                                .background(Color.Transparent)
                                                                 .align(Alignment.CenterHorizontally),
                                                         )
                                                     }

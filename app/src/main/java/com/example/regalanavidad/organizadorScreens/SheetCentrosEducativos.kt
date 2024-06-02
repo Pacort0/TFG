@@ -55,6 +55,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -86,6 +87,10 @@ import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.CentroEducativoRequest
 import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.modelos.RequestPostCentroEducativo
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoMenus
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineScope
@@ -125,7 +130,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
     }
     Box(modifier = Modifier
         .fillMaxSize()
-        .background(Color(246, 246, 244))
+        .background(FondoApp)
         .padding(8.dp)
         .pullRefresh(pullRefreshState)
     ) {
@@ -139,14 +144,14 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
             ) {
                 Text(
                     text = "Centros Educativos",
-                    fontSize = 24.sp
+                    fontSize = 26.sp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row (
                 Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -160,26 +165,30 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         onExpandedChange = { expanded = !expanded },
                         modifier = Modifier
                             .clip(CircleShape)
-                            .border(0.dp, Color(216, 216, 207), CircleShape)
-                            .background(Color(238, 238, 234))
+                            .border(0.dp, Color.Black, CircleShape)
+                            .background(FondoMenus)
                     ) {
                         TextField(
                             modifier = Modifier
                                 .menuAnchor()
                                 .clip(CircleShape)
-                                .border(0.dp, Color(216, 216, 207), CircleShape),
+                                .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = distritoSeleccionado,
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
                                 unfocusedIndicatorColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent
+                                focusedIndicatorColor = Color.Transparent,
+                                focusedContainerColor = FondoMenus,
+                                unfocusedContainerColor = FondoMenus
                             )
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .background(FondoMenus)
                         ) {
                             opcionesDistritos.forEach { selectionOption ->
                                 DropdownMenuItem(
@@ -195,6 +204,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         }
                                     },
                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                    modifier = Modifier
+                                        .background(FondoMenus)
+                                        .padding(5.dp),
                                 )
                             }
                         }
@@ -203,10 +215,13 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .weight(0.5f)
+                        .weight(0.5f),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     if (listaCentrosCambiados.value.isNotEmpty()) {
-                        IconButton(onClick = {
+                        IconButton(
+                            onClick = {
                             Toast.makeText(context, "Actualizando centros...", Toast.LENGTH_SHORT)
                                 .show()
                             scope.launch(Dispatchers.IO) {
@@ -216,9 +231,11 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                     listaCentrosCambiados.value
                                 )
                                 listaCentrosCambiados.value = emptyList()
-                                centrosLoading = true
-                            }
-                        }, modifier = Modifier.fillMaxWidth()) {
+                                centrosLoading = true }},
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = FondoMenus
+                            ),
+                            modifier = Modifier.width(160.dp)){
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
@@ -226,10 +243,10 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 Icon(
                                     painterResource(id = R.drawable.save),
                                     contentDescription = "Guardar cambios",
-                                    Modifier.size(30.dp)
+                                    Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Guardar cambios")
+                                Text(text = "Guardar", fontSize = 18.sp)
                             }
                         }
                     }
@@ -246,7 +263,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 .heightIn(min = 80.dp)
                                 .wrapContentHeight()
                                 .clip(CircleShape)
-                                .border(1.dp, Color(216, 216, 207), CircleShape)
+                                .border(1.dp, BordeIndvCards, CircleShape)
                                 .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
@@ -254,7 +271,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                     )
                                 ),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(238,238,234)
+                                containerColor = FondoIndvCards
                             )
                         ) {
                             Row (
@@ -339,7 +356,6 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 onValueChange = { nuevaTarea = it },
                                                 label = { Text("Tarea", color = Color.Black) },
                                                 modifier = Modifier
-                                                    .border(1.dp, Color(216, 216, 207), CircleShape)
                                                     .weight(0.75f)
                                                     .padding(4.dp)
                                                     .clip(CircleShape)
@@ -349,8 +365,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 colors = TextFieldDefaults.colors(
                                                     unfocusedIndicatorColor = Color.Transparent,
                                                     focusedIndicatorColor = Color.Transparent,
-                                                    focusedContainerColor = Color(216, 216, 207),
-                                                    unfocusedContainerColor = Color(216, 216, 207),
+                                                    focusedContainerColor = BordeIndvCards,
+                                                    unfocusedContainerColor = BordeIndvCards,
                                                 ),
                                                 keyboardActions = KeyboardActions(
                                                     onDone = {
@@ -619,7 +635,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
             .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
+            .border(1.dp, Color.Black, CircleShape)
             .background(cambiaColorEstado(nuevoEstado))
     ) {
         TextField(

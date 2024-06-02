@@ -160,14 +160,14 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                                 }
                             )
                         },
+                        content = { innerPadding -> //NavHost
+                            OrganizadorNavHost(innerPadding, navController, homeTab, tareasTab, mapsTab, rolesTab, sheetsTab, onMapaCambiado, mapaOrganizadorVM)
+                        },
                         bottomBar = {
                             TabView(tabBarItems, navController, mapaOrganizadorVM) { title ->
                                 currentTabTitle = title
                             }
                         },
-                        content = { innerPadding -> //NavHost
-                            OrganizadorNavHost(innerPadding, navController, homeTab, tareasTab, mapsTab, rolesTab, sheetsTab, onMapaCambiado, mapaOrganizadorVM)
-                        }
                     )
                 }
             )

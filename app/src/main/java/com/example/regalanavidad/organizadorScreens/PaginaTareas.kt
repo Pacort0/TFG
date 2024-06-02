@@ -77,6 +77,10 @@ import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.usuario
+import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoMenus
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -86,7 +90,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
+private var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
+private var primeraVez = mutableStateOf(true)
+private var navigate = mutableStateOf(false)
+private var listaTareas = mutableStateOf(emptyList<Tarea>())
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -97,7 +104,11 @@ fun TareasScreen(navController: NavController) {
     var llamadaBackHandler by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
     Column {
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            containerColor = FondoIndvCards,
+            contentColor = Color.Black
+        ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
@@ -167,7 +178,6 @@ fun TareasScreen(navController: NavController) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TareasTabScreen(completadas: Boolean){
-    var listaTareas by remember{ mutableStateOf(emptyList<Tarea>()) }
     var listaTareasFiltradas by remember{ mutableStateOf(emptyList<Tarea>()) }
     var showTareaDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -188,38 +198,38 @@ fun TareasTabScreen(completadas: Boolean){
     })
 
     LaunchedEffect(key1 = guardarCambios) {
-        if (listaTareasCambiadas.value.isNotEmpty() && !refresca){
-            listaTareasCambiadas.value.forEach { tarea ->
-                firestore.editaTarea(tarea)
+        if (listaTareasCambiadas.value.isNotEmpty() || !navigate.value) {
+            if (!refresca){
+                listaTareasCambiadas.value.forEach { tarea ->
+                    firestore.editaTarea(tarea)
+                }
             }
+            listaTareas.value = firestore.getTareas()
+            listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
+            listaTareasCambiadas.value = emptyList()
+            guardarCambios = false
+            refresca = false
+            if (primeraVez.value) {
+                navigate.value = true
+                primeraVez.value = false
+            }
+        } else {
+            listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
+            listaTareasCambiadas.value = emptyList()
+            guardarCambios = false
+            refresca = false
         }
-        listaTareas = firestore.getTareas()
-        listaTareasFiltradas =
-            if (completadas) {
-                if (usuario.nombreRango != "Coordinador") {
-                    listaTareas.filter { it.completada && it.rol == usuario.nombreRango }
-                } else {
-                    listaTareas.filter { it.completada }
-                }
-            } else {
-                if (usuario.nombreRango != "Coordinador") {
-                    listaTareas.filter { !it.completada && it.rol == usuario.nombreRango }
-                } else {
-                    listaTareas.filter { !it.completada }
-                }
-            }
-        listaTareasCambiadas.value = emptyList()
-        guardarCambios = false
-        refresca = false
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(246, 246, 244))
+            .background(FondoApp)
             .pullRefresh(pullRefreshState)
     ) {
         Column (
-            Modifier.fillMaxSize().padding(10.dp),
+            Modifier
+                .fillMaxSize()
+                .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -290,6 +300,7 @@ fun TareasTabScreen(completadas: Boolean){
         }
         if(listaTareasCambiadas.value.isNotEmpty()){
             FloatingActionButton(
+                containerColor = FondoMenus,
                 onClick = {
                     guardarCambios = true
                     Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
@@ -484,10 +495,10 @@ fun TareaCard(tarea: Tarea){
             .padding(8.dp)
             .fillMaxWidth()
             .clip(CircleShape)
-            .border(1.dp, Color(216, 216, 207), CircleShape)
+            .border(1.dp, BordeIndvCards, CircleShape)
             .heightIn(min = 60.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(238,238,234)
+            containerColor = FondoIndvCards
         )
     ) {
         Row (
@@ -495,22 +506,15 @@ fun TareaCard(tarea: Tarea){
         ) {
             Column (
                 Modifier
-                    .weight(0.4f)
+                    .weight(0.55f)
                     .padding(0.4.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = tarea.descripcion, fontSize = 14.sp)
+                Text(text = tarea.descripcion, fontSize = 16.sp)
             }
             Column (
-                Modifier.weight(0.22f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = tarea.fechaLimite, fontSize = 14.sp)
-            }
-            Column (
-                Modifier.weight(0.382f),
+                Modifier.weight(0.45f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -530,27 +534,29 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
+            .padding(5.dp)
             .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
-            .background(Color(238,238,234))
+            .border(1.dp, BordeIndvCards, CircleShape)
+            .background(FondoIndvCards)
     ) {
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
             value = completada.let { if (it) "Completada" else "Pendiente" },
             onValueChange = {},
-            textStyle = TextStyle(fontSize = 13.sp),
+            textStyle = TextStyle(fontSize = 16.sp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color(238,238,234),
-                unfocusedContainerColor = Color(238,238,234)
+                focusedContainerColor = FondoIndvCards,
+                unfocusedContainerColor = FondoIndvCards
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(FondoApp)
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -575,9 +581,31 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     modifier = Modifier
-                        .background(Color(246, 246, 244))
+                        .background(Color.Transparent)
+                        .clip(RoundedCornerShape(10.dp))
+                        .padding(3.dp)
+                        .border(1.dp, FondoIndvCards, RoundedCornerShape(10.dp))
+                        .wrapContentSize()
                 )
             }
         }
     }
+}
+
+fun filtraTareas(listaTareas: List<Tarea>, completadas: Boolean): List<Tarea> {
+    val listaTareasFiltradas =
+        if (completadas) {
+            if (usuario.nombreRango != "Coordinador") {
+                listaTareas.filter { it.completada && it.rol == usuario.nombreRango }
+            } else {
+                listaTareas.filter { it.completada }
+            }
+        } else {
+            if (usuario.nombreRango != "Coordinador") {
+                listaTareas.filter { !it.completada && it.rol == usuario.nombreRango }
+            } else {
+                listaTareas.filter { !it.completada }
+            }
+        }
+    return listaTareasFiltradas
 }
