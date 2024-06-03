@@ -75,6 +75,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -158,7 +159,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .weight(0.5f)
+                        .weight(0.55f)
                 ) {
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -175,6 +176,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = distritoSeleccionado,
+                            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
@@ -215,7 +217,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .weight(0.5f),
+                        .weight(0.45f),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -644,6 +646,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             modifier = Modifier.menuAnchor(),
             readOnly = true,
             value = nuevoEstado,
+            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
             onValueChange = {},
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(

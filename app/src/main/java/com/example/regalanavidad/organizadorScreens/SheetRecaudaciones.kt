@@ -164,6 +164,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = productoSeleccionado,
+                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp),
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(

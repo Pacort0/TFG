@@ -44,6 +44,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -341,7 +342,7 @@ fun TareasTabScreen(completadas: Boolean){
                 .width(350.dp)
                 .height(320.dp)
                 .padding(35.dp)
-                .background(Color.LightGray)
+                .background(FondoApp)
                 .clip(RoundedCornerShape(20.dp))) {
                 Column(
                     Modifier.padding(10.dp),
@@ -352,18 +353,32 @@ fun TareasTabScreen(completadas: Boolean){
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier
+                                .background(FondoTarjetaInception)
+                                .clip(CircleShape)
+                                .border(0.dp, Color.Black, CircleShape)
                         ) {
                             TextField(
-                                modifier = Modifier.menuAnchor(),
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .clip(CircleShape)
+                                    .border(0.dp, Color.Black, CircleShape),
                                 readOnly = true,
                                 value = rolSeleccionado,
                                 onValueChange = {},
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FondoIndvCards,
+                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedBorderColor = BordeIndvCards,
+                                    unfocusedBorderColor = BordeIndvCards
+                                )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
+                                modifier = Modifier
+                                    .background(FondoMenus)
                             ) {
                                 options.forEach { selectionOption ->
                                     DropdownMenuItem(
@@ -374,6 +389,9 @@ fun TareasTabScreen(completadas: Boolean){
                                             scope.launch { drawerState.close() }
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier
+                                            .background(FondoMenus)
+                                            .padding(5.dp),
                                     )
                                 }
                             }
@@ -386,9 +404,17 @@ fun TareasTabScreen(completadas: Boolean){
                             label = {
                                 Text(
                                     text = "Cargo de la tarea",
-                                    fontSize = 14.sp
+                                    fontSize = 14.sp,
+                                    color = Color.Black
                                 )
-                            })
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = FondoIndvCards,
+                                unfocusedContainerColor = FondoIndvCards,
+                                focusedBorderColor = BordeIndvCards,
+                                unfocusedBorderColor = BordeIndvCards
+                            )
+                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -399,40 +425,67 @@ fun TareasTabScreen(completadas: Boolean){
                                 text = "Descripción de la tarea",
                                 fontSize = 13.sp
                             )
-                        })
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FondoIndvCards,
+                            unfocusedContainerColor = FondoIndvCards,
+                            focusedBorderColor = BordeIndvCards,
+                            unfocusedBorderColor = BordeIndvCards
+                        )
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Column (
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Fecha límite de la tarea",
-                            fontSize = 13.sp,
+                            fontSize = 16.sp,
                             modifier = Modifier.align(Alignment.Start)
                         )
                         Text(
                             text = fechaFormateada,
+                            fontSize = 16.sp,
                             modifier = Modifier.clickable { fechaDialogState.show() }
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         Modifier
-                            .weight(0.2f),
+                            .weight(0.2f).fillMaxWidth(),
                         verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Column(Modifier.weight(0.36f)) {}
                         Column(
                             Modifier
-                                .weight(0.32f)
+                                .weight(0.5f)
+                                .clip(CircleShape)
+                                .padding(start = 8.dp, end = 8.dp)
+                                .border(0.dp, Color.Black, CircleShape)
+                                .background(FondoTarjetaInception)
                                 .clickable {
                                     showTareaDialog = false
-                                }) {
-                            Text(text = "CANCELAR", fontSize = 13.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
+                                },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "CANCELAR",
+                                fontSize = 14.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .fillMaxWidth()                            )
                         }
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column(
                             Modifier
-                                .weight(0.32f)
+                                .weight(0.5f)
+                                .clip(CircleShape)
+                                .padding(start = 8.dp, end = 8.dp)
+                                .border(0.dp, Color.Black, CircleShape)
+                                .background(FondoTarjetaInception)
                                 .clickable {
                                     if (descripcion.isNotEmpty()) {
                                         val tarea =
@@ -456,8 +509,20 @@ fun TareasTabScreen(completadas: Boolean){
                                             )
                                             .show()
                                     }
-                                }) {
-                            Text(text = "GUARDAR", fontSize = 13.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
+                                },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "GUARDAR",
+                                fontSize = 14.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .fillMaxWidth()
+                            )
                         }
                     }
                 }

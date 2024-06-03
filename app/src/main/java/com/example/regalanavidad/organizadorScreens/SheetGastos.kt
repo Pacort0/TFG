@@ -35,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,6 +68,7 @@ import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -198,13 +200,13 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(text = "Recaudado: $dineroRecaudado€",
-                            fontSize = 18.sp,
+                            fontSize = 17.sp,
                             modifier = Modifier.weight(0.53f).padding(start = 8.dp),
                             textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(text = "Gastado: $totalGastado€",
-                            fontSize = 18.sp,
+                            fontSize = 17.sp,
                             modifier = Modifier.weight(0.47f).padding(end = 8.dp),
                             textAlign = TextAlign.Center
                         )
@@ -218,7 +220,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val formatoDecimal = DecimalFormat("#.##")
-                        val resultadoRedondeado = formatoDecimal.format(dineroRestante).toDouble()
+                        val resultadoRedondeado = formatoDecimal.format(dineroRestante).replace(",", ".").toDouble()
                         Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp)
                     }
                 }
@@ -269,11 +271,11 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     .width(350.dp)
                     .height(425.dp)
                     .padding(35.dp)
-                    .background(Color.LightGray)
+                    .background(FondoApp)
                     .clip(RoundedCornerShape(20.dp))
             ) {
                 Column(
-                    Modifier.padding(10.dp),
+                    Modifier.padding(10.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -282,27 +284,45 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         onValueChange = { motivoGasto = it },
                         label = {
                             Text(
-                                text = "Motivo del gasto"
+                                text = "Motivo del gasto",
+                                color = Color.Black
                             )
-                        })
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FondoIndvCards,
+                            unfocusedContainerColor = FondoIndvCards,
+                            focusedBorderColor = BordeIndvCards,
+                            unfocusedBorderColor = BordeIndvCards
+                        )
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = cantidadGasto,
                         onValueChange = { cantidadGasto = it },
                         label = {
                             Text(
-                                text = "Cantidad del gasto"
+                                text = "Cantidad del gasto",
+                                color = Color.Black
                             )
-                        })
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FondoIndvCards,
+                            unfocusedContainerColor = FondoIndvCards,
+                            focusedBorderColor = BordeIndvCards,
+                            unfocusedBorderColor = BordeIndvCards
+                        ))
                     Spacer(modifier = Modifier.height(8.dp))
                     Column {
                         Text(
                             text = "Fecha del gasto",
-                            fontSize = 12.sp,
+                            fontSize = 16.sp,
+                            color = Color.Black,
                             modifier = Modifier.align(Alignment.Start)
                         )
                         Text(
                             text = fechaFormateada,
+                            color = Color.Black,
+                            fontSize = 16.sp,
                             modifier = Modifier.clickable { fechaDialogState.show() }
                         )
                     }
@@ -312,33 +332,53 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         onValueChange = { pagadoPor = it },
                         label = {
                             Text(
-                                text = "Pagado por"
+                                text = "Pagado por",
+                                color = Color.Black
                             )
-                        })
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = FondoIndvCards,
+                            unfocusedContainerColor = FondoIndvCards,
+                            focusedBorderColor = BordeIndvCards,
+                            unfocusedBorderColor = BordeIndvCards
+                        ))
                     Row(
                         Modifier
-                            .weight(0.2f),
+                            .weight(0.2f).fillMaxWidth(),
                         verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Column(Modifier.weight(0.36f)) {}
                         Column(
                             Modifier
-                                .weight(0.32f)
+                                .weight(0.5f)
+                                .clip(CircleShape)
+                                .padding(start = 8.dp, end = 8.dp)
+                                .border(0.dp, Color.Black, CircleShape)
+                                .background(FondoTarjetaInception)
                                 .clickable {
                                     showGastoDialog = false
-                                }) {
+                                },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = "CANCELAR",
-                                fontSize = 13.sp,
-                                color = Color.Magenta,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .fillMaxWidth()
                             )
                         }
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column(
                             Modifier
-                                .weight(0.32f)
+                                .weight(0.5f)
+                                .clip(CircleShape)
+                                .border(0.dp, Color.Black, CircleShape)
+                                .padding(start = 8.dp, end = 8.dp)
+                                .background(FondoTarjetaInception)
                                 .clickable {
                                     if (motivoGasto.isNotEmpty() && cantidadGasto.isNotEmpty() && pagadoPor.isNotEmpty()) {
                                         val gasto =
@@ -362,12 +402,18 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                             )
                                             .show()
                                     }
-                                }) {
+                                },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = "GUARDAR",
-                                fontSize = 13.sp,
-                                color = Color.Magenta,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .fillMaxWidth()
                             )
                         }
                     }
