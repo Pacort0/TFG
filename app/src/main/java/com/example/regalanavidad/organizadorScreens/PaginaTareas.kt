@@ -32,6 +32,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
@@ -68,7 +69,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -451,42 +451,41 @@ fun TareasTabScreen(completadas: Boolean){
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         Modifier
-                            .weight(0.2f).fillMaxWidth(),
+                            .weight(0.2f),
                         verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.End
                     ) {
                         Column(
                             Modifier
                                 .weight(0.5f)
-                                .clip(CircleShape)
-                                .padding(start = 8.dp, end = 8.dp)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .background(FondoTarjetaInception)
-                                .clickable {
-                                    showTareaDialog = false
-                                },
+                                .padding(start = 8.dp, end = 4.dp)
+                                .background(Color.Transparent),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "CANCELAR",
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .fillMaxWidth()                            )
+                            Button(
+                                onClick = { showTareaDialog = false },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BordeIndvCards
+                                )
+                            ) {
+                                Text(
+                                    text = "Cancelar",
+                                    fontSize = 13.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                         Column(
                             Modifier
                                 .weight(0.5f)
-                                .clip(CircleShape)
-                                .padding(start = 8.dp, end = 8.dp)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .background(FondoTarjetaInception)
-                                .clickable {
+                                .padding(start = 4.dp, end = 8.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Button(
+                                onClick = {
                                     if (descripcion.isNotEmpty()) {
                                         val tarea =
                                             Tarea(
@@ -507,22 +506,17 @@ fun TareasTabScreen(completadas: Boolean){
                                                 "Por favor, llena todos los campos",
                                                 Toast.LENGTH_SHORT
                                             )
-                                            .show()
-                                    }
-                                },
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "GUARDAR",
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .fillMaxWidth()
-                            )
+                                            .show() } },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BordeIndvCards
+                                )) {
+                                Text(
+                                    text = "Guardar",
+                                    fontSize = 13.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }

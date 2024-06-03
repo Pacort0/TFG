@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -52,7 +54,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,13 +169,16 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
             val dineroRestante = dineroRecaudado - totalGastado
 
             Column(
-                modifier = Modifier.weight(0.9f)
+                modifier = Modifier
+                    .weight(0.9f)
                     .background(Color.Transparent),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ){
                 LazyColumn (
-                    modifier = Modifier.weight(0.8f).padding(12.dp),
+                    modifier = Modifier
+                        .weight(0.8f)
+                        .padding(12.dp),
                     ) {
                     items(listaGastos.size) { index ->
                         GastoCard(gasto = listaGastos[index])
@@ -201,13 +205,17 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     ) {
                         Text(text = "Recaudado: $dineroRecaudado€",
                             fontSize = 17.sp,
-                            modifier = Modifier.weight(0.53f).padding(start = 8.dp),
+                            modifier = Modifier
+                                .weight(0.53f)
+                                .padding(start = 8.dp),
                             textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(text = "Gastado: $totalGastado€",
                             fontSize = 17.sp,
-                            modifier = Modifier.weight(0.47f).padding(end = 8.dp),
+                            modifier = Modifier
+                                .weight(0.47f)
+                                .padding(end = 8.dp),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -268,14 +276,16 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
         Dialog(onDismissRequest = { showGastoDialog = false }) {
             Box(
                 modifier = Modifier
-                    .width(350.dp)
+                    .fillMaxWidth()
                     .height(425.dp)
                     .padding(35.dp)
                     .background(FondoApp)
                     .clip(RoundedCornerShape(20.dp))
             ) {
                 Column(
-                    Modifier.padding(10.dp).fillMaxWidth(),
+                    Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -312,18 +322,22 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             unfocusedBorderColor = BordeIndvCards
                         ))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Column {
+                    Column (
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
                             text = "Fecha del gasto",
                             fontSize = 16.sp,
                             color = Color.Black,
-                            modifier = Modifier.align(Alignment.Start)
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                         Text(
                             text = fechaFormateada,
                             color = Color.Black,
                             fontSize = 16.sp,
-                            modifier = Modifier.clickable { fechaDialogState.show() }
+                            modifier = Modifier
+                                .clickable { fechaDialogState.show() }
+                                .align(Alignment.CenterHorizontally)
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -344,77 +358,73 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         ))
                     Row(
                         Modifier
-                            .weight(0.2f).fillMaxWidth(),
+                            .weight(0.2f)
+                            .fillMaxWidth(),
                         verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Column(
                             Modifier
                                 .weight(0.5f)
-                                .clip(CircleShape)
-                                .padding(start = 8.dp, end = 8.dp)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .background(FondoTarjetaInception)
-                                .clickable {
-                                    showGastoDialog = false
-                                },
+                                .padding(start = 8.dp, end = 4.dp)
+                                .background(Color.Transparent),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "CANCELAR",
-                                fontSize = 15.sp,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .fillMaxWidth()
-                            )
+                            Button(
+                                onClick = { showGastoDialog = false },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BordeIndvCards
+                                )
+                            ) {
+                                Text(
+                                    text = "Cancelar",
+                                    fontSize = 13.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                         Column(
                             Modifier
                                 .weight(0.5f)
-                                .clip(CircleShape)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .padding(start = 8.dp, end = 8.dp)
-                                .background(FondoTarjetaInception)
-                                .clickable {
-                                    if (motivoGasto.isNotEmpty() && cantidadGasto.isNotEmpty() && pagadoPor.isNotEmpty()) {
-                                        val gasto =
-                                            Gasto(
-                                                motivoGasto,
-                                                fechaFormateada,
-                                                cantidadGasto,
-                                                pagadoPor
-                                            )
-                                        showGastoDialog = false
-                                        scope.launch(Dispatchers.IO) {
-                                            updateGastosDataInGoogleSheet(gasto)
-                                            recargarGastos = true
-                                        }
-                                    } else {
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                "Por favor, llena todos los campos",
-                                                Toast.LENGTH_SHORT
-                                            )
-                                            .show()
-                                    }
-                                },
+                                .padding(start = 4.dp, end = 8.dp),
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "GUARDAR",
-                                fontSize = 15.sp,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .fillMaxWidth()
-                            )
+                            Button(
+                                onClick = {
+                                if (motivoGasto.isNotEmpty() && cantidadGasto.isNotEmpty() && pagadoPor.isNotEmpty()) {
+                                val gasto =
+                                    Gasto(
+                                        motivoGasto,
+                                        fechaFormateada,
+                                        cantidadGasto,
+                                        pagadoPor
+                                    )
+                                showGastoDialog = false
+                                scope.launch(Dispatchers.IO) {
+                                    updateGastosDataInGoogleSheet(gasto)
+                                    recargarGastos = true
+                                }
+                            } else {
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Por favor, llena todos los campos",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show() } },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BordeIndvCards
+                                )) {
+                                Text(
+                                    text = "Guardar",
+                                    fontSize = 13.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
