@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +32,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.regalanavidad.R
+import com.example.regalanavidad.ui.theme.BordeIndvCards
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,6 +75,7 @@ fun ProfileScreen() {
                 settingsForm = it
                 isNameChanged = it.text != usuario.nombre
             },
+            textStyle = TextStyle(color = Color.Black),
             label = { Text(text = "Nombre de usuario") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,9 +88,11 @@ fun ProfileScreen() {
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        Text(text = usuario.correo)
+        Text(text = usuario.correo, color = Color.Black)
+
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = usuario.nombreRango)
+
+        Text(text = usuario.nombreRango, color = Color.Black)
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -103,6 +109,9 @@ fun ProfileScreen() {
         // Show the Save button if name is changed and not empty
         if (isNameChanged && settingsForm.text.isNotBlank()) {
             Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BordeIndvCards
+                ),
                 onClick = {
                     usuario.nombre = settingsForm.text
                     Toast.makeText(context, "Cambiando nombre", Toast.LENGTH_SHORT).show()
@@ -115,7 +124,7 @@ fun ProfileScreen() {
                     .fillMaxWidth()
                     .padding(top = 16.dp)
             ) {
-                Text(text = "Guardar cambios")
+                Text(text = "Guardar cambios", color = Color.Black)
             }
         }
     }

@@ -95,6 +95,7 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
                 value = email,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 onValueChange = {email = it},
+                textStyle = TextStyle(color = Color.Black),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(247, 228, 198),
                     unfocusedContainerColor = Color(247, 228, 198),

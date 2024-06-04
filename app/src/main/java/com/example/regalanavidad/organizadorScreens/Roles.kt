@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -98,7 +99,7 @@ fun RolesTabScreen(navController: NavController){
                             selectedTabIndex = index
                         }
                     },
-                    text = { Text(text = title, fontSize = 16.sp)}
+                    text = { Text(text = title, fontSize = 16.sp, color = Color.Black,)}
                 )
             }
         }
@@ -111,11 +112,15 @@ fun RolesTabScreen(navController: NavController){
         // Mostrar el AlertDialog si es necesario
         if (showAlertDialog) {
             AlertDialog(
+                containerColor = FondoApp,
                 onDismissRequest = { showAlertDialog = false },
-                title = { Text(text = "Tiene cambios sin guardar") },
-                text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?") },
+                title = { Text(text = "Tiene cambios sin guardar", color = Color.Black) },
+                text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?", color = Color.Black) },
                 confirmButton = {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                             listaUsuariosCambiados.value = emptyList()
@@ -127,17 +132,20 @@ fun RolesTabScreen(navController: NavController){
                             }
                         }
                     ) {
-                        Text("Continuar")
+                        Text("Continuar", color = Color.Black)
                     }
                 },
                 dismissButton = {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                             llamadaBackHandler = false
                         }
                     ) {
-                        Text("No")
+                        Text("No", color = Color.Black)
                     }
                 }
             )

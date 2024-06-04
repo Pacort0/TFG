@@ -133,7 +133,8 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
             ) {
                 Text(
                     text = "Productos Recaudados",
-                    fontSize = 24.sp
+                    fontSize = 24.sp,
+                    color = Color.Black
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -164,7 +165,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = productoSeleccionado,
-                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp),
+                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
@@ -182,7 +183,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                         ) {
                             opcionesDistritos.forEach { selectionOption ->
                                 DropdownMenuItem(
-                                    text = { Text(selectionOption, fontSize = 18.sp) },
+                                    text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                                     onClick = {
                                         if (listaProductosCambiados.isNotEmpty()) {
                                             showAlertDialog = true
@@ -280,13 +281,21 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                         Icons.Default.KeyboardArrowDown
                                     } else {
                                         Icons.Default.KeyboardArrowUp
-                                    } }, contentDescription = "Contraer", Modifier.size(30.dp))
+                                    } }, contentDescription = "Contraer", Modifier.size(30.dp), tint = Color.Black)
                                 }
                                 Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                                    Text(text = listaProductos[index].nombre, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = listaProductos[index].nombre,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black)
                                 }
                                 Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    Text(text = "Cantidad total: ${listaProductos[index].cantidadTotal}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = "Cantidad total: ${listaProductos[index].cantidadTotal}",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black)
                                 }
                             }
                             if (isExpanded) {
@@ -306,7 +315,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                 .background(FondoTarjetaInception)
                                                 .padding(8.dp)){
                                             Column (Modifier.weight(0.35f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                                Text(text = tipo.tipo, fontSize = 20.sp)
+                                                Text(
+                                                    text = tipo.tipo,
+                                                    fontSize = 20.sp,
+                                                    color = Color.Black)
                                             }
                                             Column (Modifier
                                                 .weight(0.65f),
@@ -335,18 +347,21 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(34.dp))
+                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(34.dp), tint = Color.Black)
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
                                                     Column(
                                                         horizontalAlignment = Alignment.CenterHorizontally,
                                                         verticalArrangement = Arrangement.Center
                                                     ) {
-                                                        Text(text = "Cantidad", fontSize = 18.sp)
+                                                        Text(
+                                                            text = "Cantidad",
+                                                            fontSize = 18.sp,
+                                                            color = Color.Black)
                                                         Spacer(modifier = Modifier.height(4.dp))
                                                         TextField(
                                                             value = "$cantidadProd",
-                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 22.sp),
+                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 22.sp, color = Color.Black),
                                                             onValueChange = { cantidad ->
                                                                 val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
                                                                 if (trimmedCantidad.isEmpty()) {
@@ -402,7 +417,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(34.dp))
+                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(34.dp), tint = Color.Black)
                                                     }
                                                 }
                                             }
@@ -439,27 +454,35 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
     }
     if(showAlertDialog){
         AlertDialog(
+            containerColor = FondoApp,
             onDismissRequest = {
                 showAlertDialog = false
             },
             title = {
-                Text(text = "Tiene cambios sin guardar")
+                Text(text = "Tiene cambios sin guardar", color = Color.Black)
             },
             text = {
-                Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
+                Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?",
+                    color = Color.Black)
             },
             confirmButton = {
                 if(llamadaBackHandler){
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                             navController.popBackStack()
                         }
                     ){
-                        Text("Sí, estoy seguro")
+                        Text("Sí, estoy seguro", color = Color.Black)
                     }
                 } else {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                             productoSeleccionado = opcionSeleccionada
@@ -468,27 +491,33 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             listaProductosCambiados = emptyList<Producto>().toMutableList()
                         }
                     ) {
-                        Text("Sí, estoy seguro")
+                        Text("Sí, estoy seguro", color = Color.Black)
                     }
                 }
             },
             dismissButton = {
                 if (llamadaBackHandler){
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                             llamadaBackHandler = false
                         }
                     ){
-                        Text(text = "No")
+                        Text(text = "No", color = Color.Black)
                     }
                 } else {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BordeIndvCards
+                        ),
                         onClick = {
                             showAlertDialog = false
                         }
                     ) {
-                        Text("No")
+                        Text("No", color = Color.Black)
                     }
                 }
             }

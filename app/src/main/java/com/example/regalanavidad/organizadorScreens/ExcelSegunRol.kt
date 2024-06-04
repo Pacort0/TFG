@@ -118,6 +118,7 @@ private fun CartaExcel(
             ) {
                 Text(
                     text = textoCarta,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     fontSize = 25.sp,

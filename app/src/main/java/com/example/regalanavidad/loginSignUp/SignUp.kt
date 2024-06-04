@@ -101,6 +101,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     )
                 },
                 value = usuario,
+                textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
@@ -126,6 +127,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     )
                 },
                 value = email,
+                textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
@@ -151,6 +153,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     )
                 },
                 value = password,
+                textStyle = TextStyle(color = Color.Black),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,

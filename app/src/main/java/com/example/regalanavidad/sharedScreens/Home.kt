@@ -50,6 +50,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -98,6 +99,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -245,7 +247,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
                         badgeAmount = tabBarItem.badgeAmount
                     )
                 },
-                label = {Text(tabBarItem.title)})
+                label = {Text(tabBarItem.title, color = Color.Black,)})
         }
     }
 }
@@ -263,7 +265,8 @@ fun TabBarIconView(
     BadgedBox(badge = { TabBarBadgeView(badgeAmount) }) {
         Icon(
             imageVector = if (isSelected) {selectedIcon} else {unselectedIcon},
-            contentDescription = title
+            contentDescription = title,
+            tint = Color.Black
         )
     }
 }
@@ -366,10 +369,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                          horizontalAlignment = Alignment.CenterHorizontally,
                          verticalArrangement = Arrangement.Center
                      ) {
-                         Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                         Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                          Spacer(modifier = Modifier.height(16.dp))
                          OutlinedTextField(
                              value = textoBusqueda,
+                             textStyle = TextStyle(color = Color.Black),
                              onValueChange = { nuevaBusqueda ->
                                  textoBusqueda = nuevaBusqueda
                                  buscarSitio = true
@@ -424,10 +428,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                          ) {
                                              if(topSitios[index].nombreSitio != ""){
                                                     LazyRow {
-                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp) }
+                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp, color = Color.Black) }
                                                     }
                                                  LazyRow {
-                                                     item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp) }
+                                                     item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
                                                  }
                                              }
                                          }
@@ -472,11 +476,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(text = "Nuevo evento", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "Nuevo evento", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
                                 value = nombreEvento,
                                 onValueChange = { nombreEvento = it },
+                                textStyle = TextStyle(color = Color.Black),
                                 label = { Text("Nombre del evento", color = Color.Black) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
@@ -488,6 +493,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             OutlinedTextField(
                                 value = descripcionEvento,
                                 onValueChange = {descripcionEvento = it},
+                                textStyle = TextStyle(color = Color.Black),
                                 label = {Text("Descripción del evento", color = Color.Black)},
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
@@ -498,6 +504,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = textoBusqueda,
+                                textStyle = TextStyle(color = Color.Black),
                                 onValueChange = { nuevaBusqueda ->
                                     textoBusqueda = nuevaBusqueda
                                     buscarSitio = true
@@ -546,10 +553,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             ) {
                                                 if(topSitios[index].nombreSitio != ""){
                                                     LazyRow {
-                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp) }
+                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp, color = Color.Black) }
                                                     }
                                                     LazyRow {
-                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp) }
+                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
                                                     }
                                                 }
                                             }
@@ -559,9 +566,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = fechaFormateada, Modifier.clickable { fechaDialogState.show() })
+                            Text(text = fechaFormateada,
+                                Modifier.clickable { fechaDialogState.show() },
+                                color = Color.Black)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = horaFormateada, Modifier.clickable { horaDialogState.show() })
+                            Text(text = horaFormateada,
+                                Modifier.clickable { horaDialogState.show() },
+                                color = Color.Black)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         MaterialDialog(
@@ -642,7 +653,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     }
                                 }
                             }, Modifier.background(Color.Transparent)) {
-                                Text(text = "Guardar")
+                                Text(text = "Guardar", color = Color.Black)
                             }
                         }
                     }
@@ -716,7 +727,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         )
                                         Text(
                                             text = "Cargando sitios...",
-                                            modifier = Modifier.padding(top = 8.dp)
+                                            modifier = Modifier.padding(top = 8.dp),
+                                            color = Color.Black
                                         )
                                     }
                                 } else {
@@ -734,6 +746,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             Box(modifier = Modifier.fillMaxWidth()) {
                                                 Text(
                                                     text = "Sitios de recogida",
+                                                    color = Color.Black,
                                                     textAlign = TextAlign.Center,
                                                     fontSize = 24.sp,
                                                     modifier = Modifier.align(Alignment.Center),
@@ -749,7 +762,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                 Icon(
                                                                     Icons.Filled.AddCircle,
                                                                     "Agregar sitio",
-                                                                    Modifier.fillMaxSize()
+                                                                    Modifier.fillMaxSize(),
+                                                                    Color.Black
                                                                 )
                                                             }
                                                     }
@@ -765,7 +779,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 }
                                             )
                                         } else {
-                                            Text(text = "No hay sitios de recogida confirmados")
+                                            Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
                                         }
                                     }
                                 }
@@ -821,7 +835,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         )
                                         Text(
                                             text = "Cargando eventos...",
-                                            modifier = Modifier.padding(top = 8.dp)
+                                            modifier = Modifier.padding(top = 8.dp),
+                                            color = Color.Black
                                         )
                                     }
                                 } else {
@@ -843,6 +858,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         textAlign = TextAlign.Center,
                                                         fontSize = 24.sp,
                                                         modifier = Modifier.align(Alignment.Center),
+                                                        color = Color.Black
                                                         )
                                                     if (canEditEventos) {
                                                         IconButton(
@@ -855,7 +871,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             Icon(
                                                                 Icons.Filled.AddCircle,
                                                                 "Agregar evento",
-                                                                Modifier.fillMaxSize()
+                                                                Modifier.fillMaxSize(),
+                                                                tint = Color.Black
                                                             )
                                                         }
                                                     }
@@ -874,7 +891,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         }
                                     }
                                     else {
-                                        Text(text = "No hay eventos confirmados")
+                                        Text(text = "No hay eventos confirmados", color = Color.Black)
                                     }
                                 }
                             }
@@ -1330,32 +1347,39 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
     if (showCloseAppDialog){
         AlertDialog(
+            containerColor = FondoApp,
             onDismissRequest = {
                 showCloseAppDialog = false
             },
             title = {
-                Text(text = "¿Cerrar la aplicación?")
+                Text(text = "¿Cerrar la aplicación?", color = Color.Black)
             },
             text = {
-                Text("¿Desea cerrar la aplicación?")
+                Text("¿Desea cerrar la aplicación?", color = Color.Black)
             },
             confirmButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         ActivityCompat.finishAffinity(context as Activity)
                         exitProcess(0)
                     }
                 ) {
-                    Text("Sí, estoy seguro")
+                    Text("Sí, estoy seguro", color = Color.Black)
                 }
             },
             dismissButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showCloseAppDialog = false
                     }
                 ) {
-                    Text("No")
+                    Text("No", color = Color.Black)
                 }
             }
         )
@@ -1671,6 +1695,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                     ) {
                         Text(
                             text = sitiosRecogidaConfirmados[index].nombreSitio,
+                            color = Color.Black,
                             modifier = Modifier.weight(1f))
                         if(canEdit && !isHomePage){
                             IconButton(onClick = {
@@ -1678,7 +1703,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                                 showDialog = true
                             },
                                 modifier = Modifier.weight(0.3f)) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio")
+                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio", tint = Color.Black)
                             }
                         }
                     }
@@ -1686,21 +1711,25 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
             }
         }
     } else {
-        Text(text = "No hay sitios de recogida confirmados")
+        Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
     }
     if (showDialog) {
         AlertDialog(
+            containerColor = FondoApp,
             onDismissRequest = {
                 showDialog = false
             },
             title = {
-                Text(text = "¿Está seguro?")
+                Text(text = "¿Está seguro?", color = Color.Black)
             },
             text = {
-                Text("¿Desea eliminar este sitio?")
+                Text("¿Desea eliminar este sitio?", color = Color.Black)
             },
             confirmButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showDialog = false
                         CoroutineScope(Dispatchers.IO).launch {
@@ -1709,16 +1738,19 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         }
                     }
                 ) {
-                    Text("Eliminar")
+                    Text("Eliminar", color = Color.Black)
                 }
             },
             dismissButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black
+                    ),
                     onClick = {
                         showDialog = false
                     }
                 ) {
-                    Text("No")
+                    Text("No", color = Color.Black,)
                 }
             }
         )
@@ -1757,10 +1789,12 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                 text = eventosConfirmados[index].titulo,
                                 modifier = Modifier
                                     .weight(0.6f)
-                                    .align(Alignment.CenterVertically)
+                                    .align(Alignment.CenterVertically),
+                                color = Color.Black,
                             )
                             Text(
                                 text = eventosConfirmados[index].startDate,
+                                color = Color.Black,
                                 modifier = Modifier
                                     .weight(0.4f)
                                     .align(Alignment.CenterVertically),
@@ -1805,8 +1839,12 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                                 startActivity(contexto, intent, null)
                                             }
                                         },
-                                            text = {Text("Añadir al calendario")},
-                                            leadingIcon = {Icon(Icons.Filled.DateRange, contentDescription = "Añadir al calendario")},
+                                            text = {Text("Añadir al calendario", color = Color.Black)},
+                                            leadingIcon = {Icon(
+                                                Icons.Filled.DateRange,
+                                                contentDescription = "Añadir al calendario",
+                                                tint = Color.Black
+                                            )},
                                             modifier = Modifier
                                                 .background(Color.Transparent)
                                                 .clip(RoundedCornerShape(10.dp))
@@ -1821,8 +1859,12 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                             expanded = false
                                             onEventoEscogido(eventosConfirmados[index])
                                         },
-                                            text = {Text("Ver en el mapa")},
-                                            leadingIcon = {Icon(Icons.Filled.LocationOn, contentDescription = "Ver en el mapa")},
+                                            text = {Text("Ver en el mapa", color = Color.Black,)},
+                                            leadingIcon = { Icon(
+                                                    Icons.Filled.LocationOn,
+                                                    contentDescription = "Ver en el mapa",
+                                                    tint = Color.Black
+                                                )},
                                             modifier = Modifier
                                                 .background(Color.Transparent)
                                                 .clip(RoundedCornerShape(10.dp))
@@ -1839,7 +1881,11 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                                 indexActual = index
                                             },
                                                 text = {Text(text = "Eliminar evento", color = Color.Red)},
-                                                leadingIcon = {Icon(Icons.Filled.Delete, contentDescription = "Eliminar")},
+                                                leadingIcon = {Icon(
+                                                    Icons.Filled.Delete,
+                                                    contentDescription = "Eliminar",
+                                                    tint = Color.Black
+                                                )},
                                                 modifier = Modifier
                                                     .background(Color.Transparent)
                                                     .clip(RoundedCornerShape(10.dp))
@@ -1860,21 +1906,25 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
             }
         }
     } else {
-        Text(text = "No hay eventos confirmados")
+        Text(text = "No hay eventos confirmados", color = Color.Black)
     }
     if (showDialog) {
         AlertDialog(
+            containerColor = FondoApp,
             onDismissRequest = {
                 showDialog = false
             },
             title = {
-                Text(text = "¿Está seguro?")
+                Text(text = "¿Está seguro?", color = Color.Black)
             },
             text = {
-                Text("¿Desea eliminar este evento?")
+                Text("¿Desea eliminar este evento?", color = Color.Black)
             },
             confirmButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showDialog = false
                         CoroutineScope(Dispatchers.IO).launch {
@@ -1883,16 +1933,19 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         }
                     }
                 ) {
-                    Text("Eliminar")
+                    Text("Eliminar", color = Color.Black)
                 }
             },
             dismissButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showDialog = false
                     }
                 ) {
-                    Text("No")
+                    Text("No", color = Color.Black)
                 }
             }
         )

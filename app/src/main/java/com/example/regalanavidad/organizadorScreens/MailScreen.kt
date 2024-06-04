@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,11 +51,13 @@ fun MailScreen(navController: NavController){
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             ),
+            textStyle = TextStyle(color = Color.Black),
             onValueChange = { correoContacto = it }
         )
         TextField(
             label = { Text(text = "Asunto") },
             value = asuntoCorreo,
+            textStyle = TextStyle(color = Color.Black),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -62,6 +66,7 @@ fun MailScreen(navController: NavController){
         )
         TextField(
             label = { Text(text = "Mensaje") },
+            textStyle = TextStyle(color = Color.Black),
             value = mensajeCorreo,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,

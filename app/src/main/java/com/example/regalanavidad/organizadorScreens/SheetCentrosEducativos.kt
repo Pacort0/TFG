@@ -145,7 +145,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
             ) {
                 Text(
                     text = "Centros Educativos",
-                    fontSize = 24.sp
+                    fontSize = 24.sp,
+                    color = Color.Black
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -176,7 +177,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 .border(0.dp, Color.Black, CircleShape),
                             readOnly = true,
                             value = distritoSeleccionado,
-                            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
+                            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.Black),
                             onValueChange = {},
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
@@ -194,7 +195,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         ) {
                             opcionesDistritos.forEach { selectionOption ->
                                 DropdownMenuItem(
-                                    text = { Text(selectionOption, fontSize = 18.sp) },
+                                    text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                                     onClick = {
                                         if (listaCentrosCambiados.value.isNotEmpty()) {
                                             showAlertDialog = true
@@ -247,10 +248,11 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 Icon(
                                     painterResource(id = R.drawable.save),
                                     contentDescription = "Guardar cambios",
-                                    Modifier.size(32.dp)
+                                    Modifier.size(32.dp),
+                                    tint = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Guardar", fontSize = 18.sp)
+                                Text(text = "Guardar", fontSize = 18.sp, color = Color.Black)
                             }
                         }
                     }
@@ -295,7 +297,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         Icons.Default.KeyboardArrowDown
                                     } else {
                                         Icons.Default.KeyboardArrowUp
-                                    } }, contentDescription = "Contraer", Modifier.size(30.dp))
+                                    } }, contentDescription = "Contraer", Modifier.size(30.dp), tint = Color.Black)
                                 }
                                 Column (
                                     Modifier
@@ -303,7 +305,12 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         .wrapContentHeight(),
                                     horizontalAlignment = Alignment.Start,
                                     verticalArrangement = Arrangement.Center) {
-                                    Text(text = listaCentrosEducativos.value[index].nombreCentro, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = listaCentrosEducativos.value[index].nombreCentro,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
                                 }
                                 Column (
                                     Modifier
@@ -357,6 +364,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             TextField(
                                                 placeholder = { Text(text = tareaOriginal) },
                                                 value = nuevaTarea,
+                                                textStyle = TextStyle(color = Color.Black),
                                                 onValueChange = { nuevaTarea = it },
                                                 label = { Text("Tarea", color = Color.Black) },
                                                 modifier = Modifier
@@ -390,7 +398,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                     .weight(0.125f)
                                                     .clickable {
                                                         saveTarea()
-                                                    }
+                                                    },
+                                                tint = Color.Black
                                             )
                                             Spacer(modifier = Modifier.width(5.dp))
                                             Icon(
@@ -399,13 +408,15 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 modifier = Modifier
                                                     .size(20.dp)
                                                     .weight(0.125f)
-                                                    .clickable { esTextField = false }
+                                                    .clickable { esTextField = false },
+                                                tint = Color.Black
                                             )
                                         } else {
                                             Text(
                                                 text = "Tarea: ${listaCentrosEducativos.value[index].tareaCentro}",
                                                 fontSize = 18.sp,
-                                                textAlign = TextAlign.Start
+                                                textAlign = TextAlign.Start,
+                                                color = Color.Black
                                             )
                                             Spacer(modifier = Modifier.width(5.dp))
                                             Icon(
@@ -413,7 +424,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 contentDescription = "Editar tarea",
                                                 modifier = Modifier
                                                     .size(20.dp)
-                                                    .clickable { esTextField = true }
+                                                    .clickable { esTextField = true },
+                                                tint = Color.Black
                                             )
                                         }
                                     }
@@ -445,10 +457,11 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             ) {
                                                 Icon(
                                                     Icons.Filled.Call,
-                                                    "Llamar"
+                                                    "Llamar",
+                                                    tint = Color.Black
                                                 )
                                                 Spacer(modifier = Modifier.width(5.dp))
-                                                Text(text = "Llamar")
+                                                Text(text = "Llamar", color = Color.Black)
                                             }
                                         }
                                         Box (
@@ -461,7 +474,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Text(text = "|", fontSize = 28.sp)
+                                                Text(text = "|", fontSize = 28.sp, color = Color.Black)
                                             }
                                         }
                                         Box(
@@ -479,10 +492,11 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             ){
                                                 Icon(
                                                     Icons.Filled.Email,
-                                                    "Correo"
+                                                    "Correo",
+                                                    tint = Color.Black
                                                 )
                                                 Spacer(modifier = Modifier.width(5.dp))
-                                                Text(text = "Redactar correo")
+                                                Text(text = "Redactar correo", color = Color.Black)
                                             }
                                         }
                                     }
@@ -507,35 +521,44 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Cargando centros...",
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp),
+                        color = Color.Black
                     )
                 }
             }
         }
         if(showAlertDialog){
             AlertDialog(
+                containerColor = FondoApp,
                 onDismissRequest = {
                     showAlertDialog = false
                 },
                 title = {
-                    Text(text = "Tiene cambios sin guardar")
+                    Text(text = "Tiene cambios sin guardar", color = Color.Black)
                 },
                 text = {
-                    Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?")
+                    Text("Si sale de la página sin guardar los cambios, perderá la información modificada.\n¿Está seguro de querer continuar?",
+                        color = Color.Black)
                 },
                 confirmButton = {
                     if(llamadaBackHandler){
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BordeIndvCards
+                            ),
                             onClick = {
                                 showAlertDialog = false
                                 navController.popBackStack()
                             }
                         ){
-                            Text("Sí, estoy seguro")
+                            Text("Sí, estoy seguro", color = Color.Black)
                         }
                     }
                     else {
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BordeIndvCards
+                            ),
                             onClick = {
                                 showAlertDialog = false
                                 distritoSeleccionado = opcionSeleccionada
@@ -544,27 +567,33 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 listaCentrosCambiados.value = emptyList()
                             }
                         ) {
-                            Text("Sí, estoy seguro")
+                            Text("Sí, estoy seguro", color = Color.Black)
                         }
                     }
                 },
                 dismissButton = {
                     if (llamadaBackHandler){
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BordeIndvCards
+                            ),
                             onClick = {
                                 showAlertDialog = false
                                 llamadaBackHandler = false
                             }
                         ){
-                            Text(text = "No")
+                            Text(text = "No", color = Color.Black)
                         }
                     } else {
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BordeIndvCards
+                            ),
                             onClick = {
                                 showAlertDialog = false
                             }
                         ) {
-                            Text("No")
+                            Text("No", color = Color.Black)
                         }
                     }
                 }
@@ -646,7 +675,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             modifier = Modifier.menuAnchor(),
             readOnly = true,
             value = nuevoEstado,
-            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
+            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.Black),
             onValueChange = {},
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
@@ -666,7 +695,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
         ) {
             opcionesEstados.forEach { selectionOption ->
                 DropdownMenuItem(
-                    text = { Text(selectionOption, fontSize = 18.sp) },
+                    text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                     onClick = {
                         if(selectionOption != centroEducativo.estadoCentro){
                             nuevoEstado = selectionOption

@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -147,6 +148,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         text = "Gastos",
                         fontSize = 24.sp,
                         modifier = Modifier.align(Alignment.Center),
+                        color = Color.Black
                     )
                     if (usuario.nombreRango != "Voluntario") {
                         IconButton(
@@ -154,10 +156,13 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             modifier = Modifier
                                 .size(65.dp)
                                 .align(Alignment.CenterEnd)
-                                .padding(end = 30.dp)
+                                .padding(end = 30.dp),
                         )
                         {
-                            Icon(Icons.Filled.AddCircle, "Agregar sitio", Modifier.fillMaxSize())
+                            Icon(Icons.Filled.AddCircle,
+                                "Agregar sitio",
+                                Modifier.fillMaxSize(),
+                                tint = Color.Black)
                         }
                     }
                 }
@@ -205,6 +210,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     ) {
                         Text(text = "Recaudado: $dineroRecaudado€",
                             fontSize = 17.sp,
+                            color = Color.Black,
                             modifier = Modifier
                                 .weight(0.53f)
                                 .padding(start = 8.dp),
@@ -216,7 +222,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             modifier = Modifier
                                 .weight(0.47f)
                                 .padding(end = 8.dp),
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = Color.Black
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -229,7 +236,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     ) {
                         val formatoDecimal = DecimalFormat("#.##")
                         val resultadoRedondeado = formatoDecimal.format(dineroRestante).replace(",", ".").toDouble()
-                        Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp)
+                        Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp, color = Color.Black)
                     }
                 }
             }
@@ -246,7 +253,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Cargando gastos...",
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
+                    color = Color.Black
                 )
             }
         }
@@ -303,11 +311,13 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             unfocusedContainerColor = FondoIndvCards,
                             focusedBorderColor = BordeIndvCards,
                             unfocusedBorderColor = BordeIndvCards
-                        )
+                        ),
+                        textStyle = TextStyle(color = Color.Black)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = cantidadGasto,
+                        textStyle = TextStyle(color = Color.Black),
                         onValueChange = { cantidadGasto = it },
                         label = {
                             Text(
@@ -343,6 +353,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = pagadoPor,
+                        textStyle = TextStyle(color = Color.Black),
                         onValueChange = { pagadoPor = it },
                         label = {
                             Text(
@@ -477,21 +488,21 @@ fun GastoCard(gasto: Gasto){
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.motivoGasto, fontSize = 18.sp)
+                Text(text = gasto.motivoGasto, fontSize = 18.sp, color = Color.Black)
             }
             Column (
                 Modifier.weight(0.3f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.fechaGasto, fontSize = 16.sp)
+                Text(text = gasto.fechaGasto, fontSize = 16.sp, color = Color.Black)
             }
             Column (
                 Modifier.weight(0.2f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.cantidadGasto, fontSize = 18.sp)
+                Text(text = gasto.cantidadGasto, fontSize = 18.sp, color = Color.Black)
             }
         }
     }

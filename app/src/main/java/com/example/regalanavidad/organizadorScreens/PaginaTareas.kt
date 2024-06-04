@@ -245,6 +245,7 @@ fun TareasTabScreen(completadas: Boolean){
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Tareas",
+                        color = Color.Black,
                         fontSize = 24.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.align(Alignment.Center),
@@ -261,7 +262,8 @@ fun TareasTabScreen(completadas: Boolean){
                         Icon(
                             Icons.Filled.AddCircle,
                             "Agregar tarea",
-                            Modifier.fillMaxSize()
+                            Modifier.fillMaxSize(),
+                            Color.Black
                         )
                     }
                 }
@@ -272,7 +274,7 @@ fun TareasTabScreen(completadas: Boolean){
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Cargando tareas...", fontSize = 18.sp)
+                    Text(text = "Cargando tareas...", fontSize = 18.sp, color = Color.Black)
                 }
             } else {
                 Column(
@@ -325,6 +327,7 @@ fun TareasTabScreen(completadas: Boolean){
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
                         text = "Guardar",
+                        color = Color.Black,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -571,7 +574,7 @@ fun TareaCard(tarea: Tarea){
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = tarea.descripcion, fontSize = 16.sp)
+                Text(text = tarea.descripcion, fontSize = 16.sp, color = Color.Black)
             }
             Column (
                 Modifier.weight(0.55f),
@@ -604,7 +607,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
             readOnly = true,
             value = completada.let { if (it) "Completada" else "Pendiente" },
             onValueChange = {},
-            textStyle = TextStyle(fontSize = 16.sp),
+            textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
@@ -620,7 +623,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
-                    text = { Text(selectionOption, fontSize = 14.sp) },
+                    text = { Text(selectionOption, fontSize = 14.sp, color = Color.Black) },
                     onClick = {
                         if(selectionOption != tarea.completada.let { if (it) "Completada" else "Pendiente"}){
                             completada = selectionOption == "Completada"

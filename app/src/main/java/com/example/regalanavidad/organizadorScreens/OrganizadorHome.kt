@@ -153,6 +153,8 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                                         Icon(
                                             Icons.Filled.AccountCircle,
                                             "Localized description",
+                                            Modifier,
+                                            Color.Black
                                         )
                                     }
                                 }
