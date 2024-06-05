@@ -247,7 +247,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
                         badgeAmount = tabBarItem.badgeAmount
                     )
                 },
-                label = {Text(tabBarItem.title, color = Color.Black,)})
+                label = {Text(tabBarItem.title, color = Color.Black)})
         }
     }
 }
@@ -344,6 +344,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     var showCloseAppDialog by remember {mutableStateOf(false)}
     val eventoVM = eventosVM.proximoEvento.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf())}
+    var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+
+    if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
+        prediccionesNuevoSitioRecogida = emptyList()
+    }
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -352,8 +358,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         if (agregaSitio) {
             var alturaDialogo by remember { mutableStateOf(180.dp) }
             var buscarSitio by remember{mutableStateOf(false)}
-            var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
-             Dialog(onDismissRequest = { agregaSitio = false }) {
+             Dialog(onDismissRequest = {
+                 textoBusqueda = ""
+                 agregaSitio = false
+             }) {
                  Box(
                      modifier = Modifier
                          .fillMaxWidth()
@@ -385,7 +393,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                  Icon(
                                      painter = painterResource(id = R.drawable.lupa),
                                      contentDescription = "Lupa",
-                                     modifier = Modifier.size(24.dp)) },
+                                     modifier = Modifier.size(24.dp),
+                                     tint = Color.Black
+                                 ) },
                              modifier = Modifier
                                  .fillMaxWidth()
                                  .onFocusChanged { focusState ->
@@ -397,17 +407,21 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                  focusedBorderColor = BordeIndvCards,
                                  unfocusedBorderColor = BordeIndvCards
                              ))
+                         if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
+                             prediccionesNuevoSitioRecogida = emptyList()
+                         }
                          if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
                              LazyColumn {
                                  val topSitios = prediccionesNuevoSitioRecogida.take(4)
                                  items(topSitios.size) { index ->
                                      Card(
                                          modifier = Modifier
-                                             .padding(5.dp)
-                                             .fillMaxWidth()
-                                             .border(1.dp, BordeIndvCards, CircleShape)
-                                             .clip(CircleShape)
+                                             .padding(top = 5.dp, end = 5.dp)
                                              .height(70.dp)
+                                             .fillMaxWidth()
+                                             .clip(CircleShape)
+                                             .border(1.dp, BordeIndvCards, CircleShape)
+                                             .background(FondoIndvCards)
                                              .clickable {
                                                  scope.launch(Dispatchers.IO) {
                                                      firestore.insertaSitioRecogida(topSitios[index])
@@ -445,7 +459,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         }
 
             if (agregaEvento) {
-                var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
                 var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
                 var nombreEvento by remember { mutableStateOf("") }
                 var descripcionEvento by remember {mutableStateOf("")}
@@ -486,6 +499,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
+                                    cursorColor = Color.Black,
                                     focusedBorderColor = BordeIndvCards,
                                     unfocusedBorderColor = BordeIndvCards
                                 ))
@@ -498,6 +512,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
+                                    cursorColor = Color.Black,
                                     focusedBorderColor = BordeIndvCards,
                                     unfocusedBorderColor = BordeIndvCards
                                 ))
@@ -516,24 +531,32 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onFocusChanged { focusState ->
+                                        if (!focusState.isFocused) {
+                                            prediccionesNuevoSitioEvento = emptyList()
+                                        }
                                         buscarSitio = focusState.isFocused
                                     },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
+                                    cursorColor = Color.Black,
                                     focusedBorderColor = BordeIndvCards,
                                     unfocusedBorderColor = BordeIndvCards
                                 )
                             )
+                            if (textoBusqueda == "" && prediccionesNuevoSitioEvento.isNotEmpty()){
+                                prediccionesNuevoSitioEvento = emptyList()
+                            }
                             if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty()){
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioEvento.take(4)
                                     items(topSitios.size) { index ->
                                         Card(
                                             modifier = Modifier
-                                                .padding(5.dp)
+                                                .padding(top = 5.dp, end = 5.dp)
                                                 .height(70.dp)
                                                 .fillMaxWidth()
+                                                .clip(CircleShape)
                                                 .border(1.dp, BordeIndvCards, CircleShape)
                                                 .background(FondoIndvCards)
                                                 .clickable {
@@ -564,16 +587,17 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     }
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = fechaFormateada,
-                                Modifier.clickable { fechaDialogState.show() },
-                                color = Color.Black)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = horaFormateada,
-                                Modifier.clickable { horaDialogState.show() },
-                                color = Color.Black)
-                            Spacer(modifier = Modifier.height(8.dp))
+                            if (prediccionesNuevoSitioEvento.isEmpty()){
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = fechaFormateada,
+                                    Modifier.clickable { fechaDialogState.show() },
+                                    color = Color.Black)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = horaFormateada,
+                                    Modifier.clickable { horaDialogState.show() },
+                                    color = Color.Black)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                         }
                         MaterialDialog(
                             dialogState = fechaDialogState,
@@ -626,34 +650,49 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 is24HourClock = true
                             )
                         }
-                        Row (modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(0.dp, 0.dp, 0.dp, 14.dp)) {
-                            Button(onClick = { agregaEvento = false}, Modifier.background(Color.Transparent)) {
-                                Text(text = "Cancelar")
-                            }
-                            Button(onClick = {
-                                if(sitioEvento.nombreSitio == ""){
-                                    Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
-                                } else if(nombreEvento == ""){
-                                    Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    val evento = Evento(
-                                        id = generarClaveAleatoria(15),
-                                        titulo = nombreEvento,
-                                        descripcion = descripcionEvento,
-                                        startDate = fechaFormateada,
-                                        horaComienzo = horaFormateada,
-                                        lugar = sitioEvento
-                                    )
-                                    scope.launch {
-                                        firestore.insertaEvento(evento)
-                                        recargarEventos = true
-                                        agregaEvento = false
-                                    }
+                        if (prediccionesNuevoSitioEvento.isEmpty()){
+                            Row (modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(0.dp, 0.dp, 0.dp, 14.dp)) {
+                                Button(
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = BordeIndvCards
+                                    ),
+                                    onClick = {
+                                        textoBusqueda = ""
+                                        agregaEvento = false },
+                                    modifier = Modifier.background(Color.Transparent))
+                                {
+                                    Text(text = "Cancelar", color = Color.Black)
                                 }
-                            }, Modifier.background(Color.Transparent)) {
-                                Text(text = "Guardar", color = Color.Black)
+                                Button(
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = BordeIndvCards
+                                    ),
+                                    onClick = {
+                                        if(sitioEvento.nombreSitio == ""){
+                                            Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
+                                        } else if(nombreEvento == ""){
+                                            Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            val evento = Evento(
+                                                id = generarClaveAleatoria(15),
+                                                titulo = nombreEvento,
+                                                descripcion = descripcionEvento,
+                                                startDate = fechaFormateada,
+                                                horaComienzo = horaFormateada,
+                                                lugar = sitioEvento
+                                            )
+                                            scope.launch {
+                                                firestore.insertaEvento(evento)
+                                                recargarEventos = true
+                                                agregaEvento = false
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.background(Color.Transparent)) {
+                                    Text(text = "Guardar", color = Color.Black)
+                                }
                             }
                         }
                     }
@@ -1331,10 +1370,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp))
+                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp), tint = Color.Black)
                     if (pagerState.currentPage == 0 || pagerState.currentPage == 1){
                         Spacer(modifier = Modifier.width(3.dp))
-                        Text(text = "Redactar correo")
+                        Text(text = "Redactar correo", color = Color.Black)
                     }
                 }
             }
@@ -1567,23 +1606,27 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
     }
 }
 @Composable
-fun ShowDialog(showDialog: MutableState<Boolean>, navController: NavController) {
+fun CierraSesionDialog(showDialog: MutableState<Boolean>, navController: NavController) {
     val context = LocalContext.current
 
     if (showDialog.value) {
         AlertDialog(
+            containerColor = FondoApp,
             onDismissRequest = {
                 //Cierra el mensaje de alerta cuando el usuario pincha fuera de la pantalla o en el botón de 'Atrás'
                 showDialog.value = false
             },
             title = {
-                Text(text = "¿Está seguro?")
+                Text(text = "¿Está seguro?", color = Color.Black)
             },
             text = {
-                Text("¿Desea cerrar su sesión?")
+                Text("¿Desea cerrar su sesión?", color = Color.Black)
             },
             confirmButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showDialog.value = false
                         auth.signOut()
@@ -1592,16 +1635,19 @@ fun ShowDialog(showDialog: MutableState<Boolean>, navController: NavController) 
                         navController.popBackStack()
                     }
                 ) {
-                    Text("Sí, estoy seguro")
+                    Text("Sí, estoy seguro", color = Color.Black)
                 }
             },
             dismissButton = {
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BordeIndvCards
+                    ),
                     onClick = {
                         showDialog.value = false
                     }
                 ) {
-                    Text("No")
+                    Text("No", color = Color.Black)
                 }
             }
         )
@@ -1664,7 +1710,7 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
 
 @Composable
 fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
-    var showDialog by remember { mutableStateOf(false) }
+    var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
@@ -1700,7 +1746,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         if(canEdit && !isHomePage){
                             IconButton(onClick = {
                                 indexActual = index
-                                showDialog = true
+                                showEliminarDialog = true
                             },
                                 modifier = Modifier.weight(0.3f)) {
                                 Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio", tint = Color.Black)
@@ -1713,11 +1759,11 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
     } else {
         Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
     }
-    if (showDialog) {
+    if (showEliminarDialog) {
         AlertDialog(
             containerColor = FondoApp,
             onDismissRequest = {
-                showDialog = false
+                showEliminarDialog = false
             },
             title = {
                 Text(text = "¿Está seguro?", color = Color.Black)
@@ -1731,7 +1777,7 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         containerColor = BordeIndvCards
                     ),
                     onClick = {
-                        showDialog = false
+                        showEliminarDialog = false
                         CoroutineScope(Dispatchers.IO).launch {
                             firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[indexActual])
                             onElementoEliminado(true)
@@ -1744,13 +1790,13 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black
+                        containerColor = BordeIndvCards
                     ),
                     onClick = {
-                        showDialog = false
+                        showEliminarDialog = false
                     }
                 ) {
-                    Text("No", color = Color.Black,)
+                    Text("No", color = Color.Black)
                 }
             }
         )
@@ -1802,7 +1848,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                             if (!isHomePage) {
                                 Box {
                                     IconButton(onClick = { expanded = true }) {
-                                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
+                                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.Black)
                                     }
                                     DropdownMenu(
                                         expanded = expanded,
@@ -1859,7 +1905,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                             expanded = false
                                             onEventoEscogido(eventosConfirmados[index])
                                         },
-                                            text = {Text("Ver en el mapa", color = Color.Black,)},
+                                            text = {Text("Ver en el mapa", color = Color.Black)},
                                             leadingIcon = { Icon(
                                                     Icons.Filled.LocationOn,
                                                     contentDescription = "Ver en el mapa",

@@ -55,12 +55,13 @@ import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.sharedScreens.InformacionSubMenu
 import com.example.regalanavidad.sharedScreens.ProfileScreen
 import com.example.regalanavidad.sharedScreens.ScreenContent
-import com.example.regalanavidad.sharedScreens.ShowDialog
+import com.example.regalanavidad.sharedScreens.CierraSesionDialog
 import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.checkIfCanManageEmails
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.sharedScreens.drawerItems
 import com.example.regalanavidad.sharedScreens.usuario
+import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import com.example.regalanavidad.voluntarioScreens.ComoAyudar
@@ -132,9 +133,9 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                         topBar = {
                             TopAppBar(
                                 colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = Color(0xFFd3ecaf)
+                                    containerColor = FondoMenus
                                 ),
-                                title = { Text(text = currentTabTitle, fontSize = 25.sp) },
+                                title = { Text(text = currentTabTitle, fontSize = 25.sp, color = Color.Black) },
                                 navigationIcon = {
                                     IconButton(onClick = {
                                         scope.launch {
@@ -142,7 +143,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                                         }
                                         mapaOrganizadorVM.searchSitioRecogida.value = false
                                     }) {
-                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description")
+                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description", tint = Color.Black)
                                     }
                                 },
                                 actions = {
@@ -246,7 +247,7 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
     val showDialog = remember { mutableStateOf(false) }
 
     if (showDialog.value) {
-        ShowDialog(showDialog = showDialog, navController)
+        CierraSesionDialog(showDialog = showDialog, navController)
     }
     ModalDrawerSheet (modifier = Modifier.width(270.dp)) {
         Text("Regala Navidad", modifier = Modifier.padding(16.dp))

@@ -90,6 +90,7 @@ fun RolesTabScreen(navController: NavController){
         {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
+                    selectedContentColor = Color.Black,
                     selected = selectedTabIndex == index,
                     onClick = {
                         if (listaUsuariosCambiados.value.isNotEmpty()) {
@@ -99,7 +100,7 @@ fun RolesTabScreen(navController: NavController){
                             selectedTabIndex = index
                         }
                     },
-                    text = { Text(text = title, fontSize = 16.sp, color = Color.Black,)}
+                    text = { Text(text = title, fontSize = 16.sp, color = Color.Black)}
                 )
             }
         }
@@ -158,6 +159,7 @@ fun RolesTabScreen(navController: NavController){
                 showAlertDialog = true
             } else {
                 navController.popBackStack()
+                listaUsuariosCambiados.value = emptyList()
             }
         }
     }
@@ -198,7 +200,7 @@ fun TabRoles(voluntarios: Boolean){
                 Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(8.dp), fontSize = 24.sp, textAlign = TextAlign.Center)
+                    .padding(8.dp), fontSize = 24.sp, textAlign = TextAlign.Center, color = Color.Black)
             if (!usuariosCargados || listaUsuarios.value.isEmpty()){
                 Column (
                     modifier = Modifier.fillMaxSize(),
@@ -306,15 +308,16 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
             leadingIcon = {
                 Icon(
                     painter = painterResource(id = asignaLogoSegunRol(rolSeleccionado)),
-                    contentDescription = "Icono rol", Modifier.size(35.dp)
+                    contentDescription = "Icono rol", Modifier.size(35.dp),
+                    tint = Color.Black
                 )
             },
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            textStyle = TextStyle(fontSize = 16.sp),
+            textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
             value = rolSeleccionado,
             onValueChange = {},
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            trailingIcon = { TrailingIconMio(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
@@ -332,7 +335,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
         ) {
             options.filter { usuarioRegistrado.nombreRango != it }.forEach { selectionOption ->
                 DropdownMenuItem(
-                    text = { Text(selectionOption, fontSize = 18.sp) },
+                    text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                     onClick = {
                         expanded = false
                         scope.launch { drawerState.close() }
@@ -362,7 +365,8 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = asignaLogoSegunRol(selectionOption)),
-                            contentDescription = "Icono rol", Modifier.size(32.dp)
+                            contentDescription = "Icono rol", Modifier.size(32.dp),
+                            tint = Color.Black
                         )
                     },
                     modifier = Modifier

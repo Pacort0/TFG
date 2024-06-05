@@ -73,6 +73,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -179,7 +180,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                             value = distritoSeleccionado,
                             textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.Black),
                             onValueChange = {},
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            trailingIcon = { TrailingIconMio(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent,
@@ -264,12 +265,12 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
                         Card (
                             modifier = Modifier
-                                .padding(5.dp)
+                                .padding(top = 5.dp, start = 5.dp, end = 5.dp, bottom = 0.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 80.dp)
                                 .wrapContentHeight()
-                                .clip(CircleShape)
-                                .border(1.dp, BordeIndvCards, CircleShape)
+                                .clip(RoundedCornerShape(20.dp))
+                                .border(1.dp, BordeIndvCards, RectangleShape)
                                 .animateContentSize(
                                     animationSpec = tween(
                                         durationMillis = 300,
@@ -605,6 +606,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                 showAlertDialog = true
             } else {
                 navController.popBackStack()
+                listaCentrosCambiados.value = emptyList()
             }
         }
         PullRefreshIndicator(
@@ -677,7 +679,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             value = nuevoEstado,
             textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.Black),
             onValueChange = {},
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            trailingIcon = { TrailingIconMio(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,

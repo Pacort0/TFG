@@ -167,7 +167,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             value = productoSeleccionado,
                             textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
                             onValueChange = {},
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            trailingIcon = { TrailingIconMio(expanded = expanded) },
                             colors = TextFieldDefaults.colors(
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent,
@@ -252,7 +252,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 .padding(5.dp)
                                 .fillParentMaxWidth()
                                 .heightIn(min = 45.dp)
-                                .clip(RoundedCornerShape(15.dp))
+                                .clip(RoundedCornerShape(20.dp))
                                 .border(1.dp, BordeIndvCards, RectangleShape)
                                 .animateContentSize(
                                     animationSpec = tween(
@@ -286,14 +286,14 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                                     Text(
                                         text = listaProductos[index].nombre,
-                                        fontSize = 18.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black)
                                 }
                                 Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
                                     Text(
                                         text = "Cantidad total: ${listaProductos[index].cantidadTotal}",
-                                        fontSize = 18.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black)
                                 }
@@ -314,7 +314,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                 .clip(CircleShape)
                                                 .background(FondoTarjetaInception)
                                                 .padding(8.dp)){
-                                            Column (Modifier.weight(0.35f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                            Column (Modifier.weight(0.35f),
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center)
+                                            {
                                                 Text(
                                                     text = tipo.tipo,
                                                     fontSize = 20.sp,
@@ -327,7 +330,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                             {
                                                 Row (
                                                     modifier = Modifier.fillMaxSize().padding(end = 12.dp),
-                                                    verticalAlignment = Alignment.Bottom,
+                                                    verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.End
                                                 ) {
                                                     IconButton(onClick = {
@@ -347,58 +350,48 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(34.dp), tint = Color.Black)
+                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(31.dp), tint = Color.Black)
                                                     }
                                                     Spacer(modifier = Modifier.width(4.dp))
-                                                    Column(
-                                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                                        verticalArrangement = Arrangement.Center
-                                                    ) {
-                                                        Text(
-                                                            text = "Cantidad",
-                                                            fontSize = 18.sp,
-                                                            color = Color.Black)
-                                                        Spacer(modifier = Modifier.height(4.dp))
-                                                        TextField(
-                                                            value = "$cantidadProd",
-                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 22.sp, color = Color.Black),
-                                                            onValueChange = { cantidad ->
-                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
-                                                                if (trimmedCantidad.isEmpty()) {
-                                                                    cantidadProd = 0 // O cualquier valor predeterminado
-                                                                } else {
-                                                                    val nuevaCantidad = trimmedCantidad.toInt()
-                                                                    cantidadProd = nuevaCantidad
-                                                                }
-                                                                tipo.cantidad = cantidadProd.toString()
+                                                    TextField(
+                                                        value = "$cantidadProd",
+                                                        textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 20.sp, color = Color.Black),
+                                                        onValueChange = { cantidad ->
+                                                            val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
+                                                            if (trimmedCantidad.isEmpty()) {
+                                                                cantidadProd = 0 // O cualquier valor predeterminado
+                                                            } else {
+                                                                val nuevaCantidad = trimmedCantidad.toInt()
+                                                                cantidadProd = nuevaCantidad
+                                                            }
+                                                            tipo.cantidad = cantidadProd.toString()
 
-                                                                val producto = listaProductos[index]
-                                                                val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
+                                                            val producto = listaProductos[index]
+                                                            val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
 
-                                                                listaProductosCambiados = gestionaLista(
-                                                                    cantidadProd,
-                                                                    cantidadOriginalProd,
-                                                                    productoExistente,
-                                                                    listaProductosCambiados,
-                                                                    listaProductos,
-                                                                    index,
-                                                                    tipo.tipo
-                                                                )
-                                                            },
-                                                            colors = TextFieldDefaults.colors(
-                                                                unfocusedIndicatorColor = Color.Transparent,
-                                                                focusedIndicatorColor = Color.Transparent,
-                                                                focusedContainerColor = Color.Transparent,
-                                                                unfocusedContainerColor = Color.Transparent,
-                                                            ),
-                                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                            modifier = Modifier
-                                                                .width(70.dp)
-                                                                .wrapContentHeight()
-                                                                .background(Color.Transparent)
-                                                                .align(Alignment.CenterHorizontally),
-                                                        )
-                                                    }
+                                                            listaProductosCambiados = gestionaLista(
+                                                                cantidadProd,
+                                                                cantidadOriginalProd,
+                                                                productoExistente,
+                                                                listaProductosCambiados,
+                                                                listaProductos,
+                                                                index,
+                                                                tipo.tipo
+                                                            )
+                                                        },
+                                                        colors = TextFieldDefaults.colors(
+                                                            unfocusedIndicatorColor = Color.Transparent,
+                                                            focusedIndicatorColor = Color.Transparent,
+                                                            focusedContainerColor = Color.Transparent,
+                                                            unfocusedContainerColor = Color.Transparent,
+                                                        ),
+                                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                        modifier = Modifier
+                                                            .width(70.dp)
+                                                            .wrapContentHeight()
+                                                            .background(Color.Transparent)
+                                                            .align(Alignment.CenterVertically),
+                                                    )
                                                     Spacer(modifier = Modifier.width(4.dp))
                                                     IconButton(onClick = {
                                                         cantidadProd++
@@ -417,7 +410,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             tipo.tipo
                                                         )
                                                     }) {
-                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(34.dp), tint = Color.Black)
+                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(31.dp), tint = Color.Black)
                                                     }
                                                 }
                                             }
@@ -529,6 +522,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
             showAlertDialog = true
         } else {
             navController.popBackStack()
+            listaProductosCambiados = emptyList<Producto>().toMutableList()
         }
     }
 }

@@ -48,7 +48,7 @@ import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.sharedScreens.InformacionSubMenu
 import com.example.regalanavidad.sharedScreens.ProfileScreen
 import com.example.regalanavidad.sharedScreens.ScreenContent
-import com.example.regalanavidad.sharedScreens.ShowDialog
+import com.example.regalanavidad.sharedScreens.CierraSesionDialog
 import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.sharedScreens.drawerItems
@@ -177,7 +177,7 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
     val showDialog = remember { mutableStateOf(false) }
 
     if (showDialog.value) {
-        ShowDialog(showDialog, navController)
+        CierraSesionDialog(showDialog, navController)
     }
     ModalDrawerSheet(modifier = Modifier.width(270.dp)) {
         Text("Regala Navidad", modifier = Modifier.padding(16.dp))

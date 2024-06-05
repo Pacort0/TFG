@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -65,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -113,6 +115,7 @@ fun TareasScreen(navController: NavController) {
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
+                    selectedContentColor = Color.Black,
                     selected = selectedTabIndex == index,
                     onClick = {
                         if (listaTareasCambiadas.value.isNotEmpty()) {
@@ -171,6 +174,7 @@ fun TareasScreen(navController: NavController) {
                 showAlertDialog = true
             } else {
                 navController.popBackStack()
+                listaTareasCambiadas.value = emptyList()
             }
         }
     }
@@ -368,11 +372,13 @@ fun TareasTabScreen(completadas: Boolean){
                                     .border(0.dp, Color.Black, CircleShape),
                                 readOnly = true,
                                 value = rolSeleccionado,
+                                textStyle = TextStyle(color = Color.Black),
                                 onValueChange = {},
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                trailingIcon = { TrailingIconMio(expanded = expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
+                                    cursorColor = Color.Black,
                                     focusedBorderColor = BordeIndvCards,
                                     unfocusedBorderColor = BordeIndvCards
                                 )
@@ -385,7 +391,7 @@ fun TareasTabScreen(completadas: Boolean){
                             ) {
                                 options.forEach { selectionOption ->
                                     DropdownMenuItem(
-                                        text = { Text(selectionOption, fontSize = 18.sp) },
+                                        text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                                         onClick = {
                                             rolSeleccionado = selectionOption
                                             expanded = false
@@ -404,6 +410,7 @@ fun TareasTabScreen(completadas: Boolean){
                             value = usuario.nombreRango,
                             onValueChange = {},
                             readOnly = true,
+                            textStyle = TextStyle(color = Color.Black),
                             label = {
                                 Text(
                                     text = "Cargo de la tarea",
@@ -414,6 +421,7 @@ fun TareasTabScreen(completadas: Boolean){
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = FondoIndvCards,
                                 unfocusedContainerColor = FondoIndvCards,
+                                cursorColor = Color.Black,
                                 focusedBorderColor = BordeIndvCards,
                                 unfocusedBorderColor = BordeIndvCards
                             )
@@ -423,6 +431,7 @@ fun TareasTabScreen(completadas: Boolean){
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
+                        textStyle = TextStyle(color = Color.Black),
                         label = {
                             Text(
                                 text = "Descripción de la tarea",
@@ -432,6 +441,7 @@ fun TareasTabScreen(completadas: Boolean){
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = FondoIndvCards,
                             unfocusedContainerColor = FondoIndvCards,
+                            cursorColor = Color.Black,
                             focusedBorderColor = BordeIndvCards,
                             unfocusedBorderColor = BordeIndvCards
                         )
@@ -442,12 +452,14 @@ fun TareasTabScreen(completadas: Boolean){
                     ) {
                         Text(
                             text = "Fecha límite de la tarea",
+                            color = Color.Black,
                             fontSize = 16.sp,
                             modifier = Modifier.align(Alignment.Start)
                         )
                         Text(
                             text = fechaFormateada,
                             fontSize = 16.sp,
+                            color = Color.Black,
                             modifier = Modifier.clickable { fechaDialogState.show() }
                         )
                     }
@@ -608,10 +620,11 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
             value = completada.let { if (it) "Completada" else "Pendiente" },
             onValueChange = {},
             textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            trailingIcon = { TrailingIconMio(expanded = expanded) },
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
+                cursorColor = Color.Black,
                 focusedContainerColor = FondoTarjetaInception,
                 unfocusedContainerColor = FondoTarjetaInception
             )
@@ -671,4 +684,15 @@ fun filtraTareas(listaTareas: List<Tarea>, completadas: Boolean): List<Tarea> {
             }
         }
     return listaTareasFiltradas
+}
+
+@ExperimentalMaterial3Api
+@Composable
+fun TrailingIconMio(expanded: Boolean) {
+    Icon(
+        Icons.Filled.ArrowDropDown,
+        null,
+        Modifier.rotate(if (expanded) 180f else 0f),
+        tint = Color.Black
+    )
 }
