@@ -3,7 +3,9 @@ package com.example.regalanavidad.sharedScreens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -54,13 +56,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,7 +70,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -312,6 +309,26 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
     }
 }
 
+@Composable
+fun CargandoSitiosScreen(){
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoApp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            color = BordeIndvCards
+        )
+        Text(
+            text = "Cargando sitios...",
+            color = Color.Black,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -340,122 +357,142 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         initialPageOffsetFraction = 0f,
         pageCount = { 4 }
     )
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var showCloseAppDialog by remember {mutableStateOf(false)}
     val eventoVM = eventosVM.proximoEvento.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf())}
     var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+    var mostrarTodo by remember { mutableStateOf(false) }
+    var cargando by remember { mutableStateOf(true) }
 
     if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
         prediccionesNuevoSitioRecogida = emptyList()
     }
 
-    Box(modifier = modifier
-        .fillMaxSize()
-        .background(FondoApp)
-    ){
-        if (agregaSitio) {
-            var alturaDialogo by remember { mutableStateOf(180.dp) }
-            var buscarSitio by remember{mutableStateOf(false)}
-             Dialog(onDismissRequest = {
-                 textoBusqueda = ""
-                 agregaSitio = false
-             }) {
-                 Box(
-                     modifier = Modifier
-                         .fillMaxWidth()
-                         .height(alturaDialogo.let { if (prediccionesNuevoSitioRecogida.isNotEmpty()) 480.dp else it })
-                         .background(FondoApp)
-                         .padding(35.dp)
-                 ) {
-                     Column (
-                         Modifier
-                             .fillMaxWidth()
-                             .wrapContentHeight()
-                             .padding(6.dp),
-                         horizontalAlignment = Alignment.CenterHorizontally,
-                         verticalArrangement = Arrangement.Center
-                     ) {
-                         Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                         Spacer(modifier = Modifier.height(16.dp))
-                         OutlinedTextField(
-                             value = textoBusqueda,
-                             textStyle = TextStyle(color = Color.Black),
-                             onValueChange = { nuevaBusqueda ->
-                                 textoBusqueda = nuevaBusqueda
-                                 buscarSitio = true
-                                 scope.launch {
-                                     prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
-                                 } },
-                             label = { Text("Buscar sitio", color = Color.Black) },
-                             leadingIcon = {
-                                 Icon(
-                                     painter = painterResource(id = R.drawable.lupa),
-                                     contentDescription = "Lupa",
-                                     modifier = Modifier.size(24.dp),
-                                     tint = Color.Black
-                                 ) },
-                             modifier = Modifier
-                                 .fillMaxWidth()
-                                 .onFocusChanged { focusState ->
-                                     buscarSitio = focusState.isFocused
-                                 },
-                             colors = OutlinedTextFieldDefaults.colors(
-                                 focusedContainerColor = FondoIndvCards,
-                                 unfocusedContainerColor = FondoIndvCards,
-                                 focusedBorderColor = BordeIndvCards,
-                                 unfocusedBorderColor = BordeIndvCards
-                             ))
-                         if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
-                             prediccionesNuevoSitioRecogida = emptyList()
-                         }
-                         if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
-                             LazyColumn {
-                                 val topSitios = prediccionesNuevoSitioRecogida.take(4)
-                                 items(topSitios.size) { index ->
-                                     Card(
-                                         modifier = Modifier
-                                             .padding(top = 5.dp, end = 5.dp)
-                                             .height(70.dp)
-                                             .fillMaxWidth()
-                                             .clip(CircleShape)
-                                             .border(1.dp, BordeIndvCards, CircleShape)
-                                             .background(FondoIndvCards)
-                                             .clickable {
-                                                 scope.launch(Dispatchers.IO) {
-                                                     firestore.insertaSitioRecogida(topSitios[index])
-                                                     textoBusqueda = ""
-                                                     alturaDialogo = 150.dp
-                                                     buscarSitio = false
-                                                     recargarSitios = true
-                                                     agregaSitio = false
-                                                 }
-                                             }
-                                             .padding(0.dp, 5.dp),
-                                         colors = CardDefaults.cardColors(
-                                             containerColor = FondoIndvCards
-                                         )
-                                     ) {
-                                         Column(
-                                             modifier = Modifier.padding(8.dp)
-                                         ) {
-                                             if(topSitios[index].nombreSitio != ""){
+    LaunchedEffect(key1 = hayInternet, key2 = Unit) {
+        cargando = true
+        hayInternet = hayInternet(connectivityManager)
+        cargando = false
+        mostrarTodo = hayInternet
+    }
+
+    if (cargando){
+        CargandoSitiosScreen()
+    } else if (!mostrarTodo){
+        NoInternetScreen(
+            onRetry = {
+                hayInternet = true
+            }
+        )
+    } else{
+        Box(modifier = modifier
+            .fillMaxSize()
+            .background(FondoApp)
+        ){
+            if (agregaSitio) {
+                var alturaDialogo by remember { mutableStateOf(180.dp) }
+                var buscarSitio by remember{mutableStateOf(false)}
+                Dialog(onDismissRequest = {
+                    textoBusqueda = ""
+                    agregaSitio = false
+                }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(alturaDialogo.let { if (prediccionesNuevoSitioRecogida.isNotEmpty()) 480.dp else it })
+                            .background(FondoApp)
+                            .padding(35.dp)
+                    ) {
+                        Column (
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            OutlinedTextField(
+                                value = textoBusqueda,
+                                textStyle = TextStyle(color = Color.Black),
+                                onValueChange = { nuevaBusqueda ->
+                                    textoBusqueda = nuevaBusqueda
+                                    buscarSitio = true
+                                    scope.launch {
+                                        prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
+                                    } },
+                                label = { Text("Buscar sitio", color = Color.Black) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.lupa),
+                                        contentDescription = "Lupa",
+                                        modifier = Modifier.size(24.dp),
+                                        tint = Color.Black
+                                    ) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        buscarSitio = focusState.isFocused
+                                    },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FondoIndvCards,
+                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedBorderColor = BordeIndvCards,
+                                    unfocusedBorderColor = BordeIndvCards
+                                ))
+                            if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
+                                prediccionesNuevoSitioRecogida = emptyList()
+                            }
+                            if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
+                                LazyColumn {
+                                    val topSitios = prediccionesNuevoSitioRecogida.take(4)
+                                    items(topSitios.size) { index ->
+                                        Card(
+                                            modifier = Modifier
+                                                .padding(top = 5.dp, end = 5.dp)
+                                                .height(70.dp)
+                                                .fillMaxWidth()
+                                                .clip(CircleShape)
+                                                .border(1.dp, BordeIndvCards, CircleShape)
+                                                .background(FondoIndvCards)
+                                                .clickable {
+                                                    scope.launch(Dispatchers.IO) {
+                                                        firestore.insertaSitioRecogida(topSitios[index])
+                                                        textoBusqueda = ""
+                                                        alturaDialogo = 150.dp
+                                                        buscarSitio = false
+                                                        recargarSitios = true
+                                                        agregaSitio = false
+                                                    }
+                                                }
+                                                .padding(0.dp, 5.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = FondoIndvCards
+                                            )
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(8.dp)
+                                            ) {
+                                                if(topSitios[index].nombreSitio != ""){
                                                     LazyRow {
                                                         item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp, color = Color.Black) }
                                                     }
-                                                 LazyRow {
-                                                     item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
-                                                 }
-                                             }
-                                         }
-                                     }
-                                 }
-                             }
-                         }
-                     }
-                 }
-             }
-        }
+                                                    LazyRow {
+                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             if (agregaEvento) {
                 var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
@@ -697,189 +734,80 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     }
                 }
             }
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(10.dp)
-        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(10.dp)
+            ) {
 //            Text(
 //                text = "Hola ${usuario.nombre}!",
 //                modifier = modifier.padding(0.dp, 10.dp)
 //            )
 
-            HorizontalPager(
-                state = pagerState,
-                beyondBoundsPageCount = 1,
-                contentPadding = PaddingValues(6.dp, 0.dp, 6.dp, 0.dp),
-                pageSpacing = 5.dp,
-                verticalAlignment = Alignment.CenterVertically
-            ) { page ->
-                when (page) {
-                    0 -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    val pageOffset =
-                                        ((pagerState.currentPage) + pagerState.currentPageOffsetFraction).absoluteValue
-                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            LaunchedEffect(key1 = recargarSitios) {
-                                sitiosLoading = true
-                                sitiosRecogidaConfirmados.clear()
-                                val sitiosRecogida = firestore.getSitiosRecogida()
-                                sitiosRecogida.forEach { sitioRecogida ->
-                                    sitiosRecogidaConfirmados.add(sitioRecogida)
-                                }
-                                haySitios = sitiosRecogidaConfirmados.size != 0
-                                recargarSitios = false
-                                sitiosLoading = false
-                            }
-                            Box(modifier = Modifier
-                                .fillMaxSize()
-                                .fillMaxSize()
-                                .background(color = Color.Transparent)) {
-                                if(sitiosLoading){
-                                    Column (
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(Color.Transparent),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center,
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = BordeIndvCards
-                                        )
-                                        Text(
-                                            text = "Cargando sitios...",
-                                            modifier = Modifier.padding(top = 8.dp),
-                                            color = Color.Black
-                                        )
-                                    }
-                                } else {
-                                    Column(
-                                        Modifier.fillMaxSize(),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ){
-                                        Row (
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .padding(5.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Box(modifier = Modifier.fillMaxWidth()) {
-                                                Text(
-                                                    text = "Sitios de recogida",
-                                                    color = Color.Black,
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 24.sp,
-                                                    modifier = Modifier.align(Alignment.Center),
-                                                )
-                                                if (canEditSitios) {
-                                                    IconButton(
-                                                        onClick = { agregaSitio = true },
-                                                        modifier = Modifier
-                                                            .size(58.dp)
-                                                            .align(Alignment.CenterEnd)
-                                                            .padding(end = 20.dp))
-                                                            {
-                                                                Icon(
-                                                                    Icons.Filled.AddCircle,
-                                                                    "Agregar sitio",
-                                                                    Modifier.fillMaxSize(),
-                                                                    Color.Black
-                                                                )
-                                                            }
-                                                    }
-                                                }
-                                        }
-                                        if(haySitios){
-                                            ListaSitiosConfirmados(sitiosRecogidaConfirmados,
-                                                false,
-                                                canEditSitios,
-                                                onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                                onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                                    navegaSitio = true
-                                                }
-                                            )
-                                        } else {
-                                            Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    1 -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    val pageOffset =
-                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
-                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            Box (
+                HorizontalPager(
+                    state = pagerState,
+                    beyondBoundsPageCount = 1,
+                    contentPadding = PaddingValues(6.dp, 0.dp, 6.dp, 0.dp),
+                    pageSpacing = 5.dp,
+                    verticalAlignment = Alignment.CenterVertically
+                ) { page ->
+                    when (page) {
+                        0 -> {
+                            Card(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color = Color.Transparent)
+                                    .fillMaxHeight()
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        val pageOffset =
+                                            ((pagerState.currentPage) + pagerState.currentPageOffsetFraction).absoluteValue
+                                        val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                        alpha = lerp(
+                                            start = 0.5f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                )
                             ) {
-                                LaunchedEffect(key1 = recargarEventos) {
-                                    eventosLoading = true
-                                    eventosConfirmados.clear()
-                                    val eventos = firestore.getEventos()
-                                    eventos.forEach { evento ->
-                                        eventosConfirmados.add(evento)
+                                LaunchedEffect(key1 = recargarSitios) {
+                                    sitiosLoading = true
+                                    sitiosRecogidaConfirmados.clear()
+                                    val sitiosRecogida = firestore.getSitiosRecogida()
+                                    sitiosRecogida.forEach { sitioRecogida ->
+                                        sitiosRecogidaConfirmados.add(sitioRecogida)
                                     }
-                                    hayEventos = eventosConfirmados.size != 0
-                                    recargarEventos = false
-                                    eventosLoading = false
+                                    haySitios = sitiosRecogidaConfirmados.size != 0
+                                    recargarSitios = false
+                                    sitiosLoading = false
                                 }
-                                if (eventosLoading) {
-                                    Column (
-                                        modifier = Modifier.fillMaxSize(),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = BordeIndvCards
-                                        )
-                                        Text(
-                                            text = "Cargando eventos...",
-                                            modifier = Modifier.padding(top = 8.dp),
-                                            color = Color.Black
-                                        )
-                                    }
-                                } else {
-                                    if (hayEventos) {
+                                Box(modifier = Modifier
+                                    .fillMaxSize()
+                                    .fillMaxSize()
+                                    .background(color = Color.Transparent)) {
+                                    if(sitiosLoading){
                                         Column (
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Transparent),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center,
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = BordeIndvCards
+                                            )
+                                            Text(
+                                                text = "Cargando sitios...",
+                                                modifier = Modifier.padding(top = 8.dp),
+                                                color = Color.Black
+                                            )
+                                        }
+                                    } else {
+                                        Column(
                                             Modifier.fillMaxSize(),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ){
@@ -892,184 +820,294 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             ) {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
-                                                        text = "Eventos próximos",
+                                                        text = "Sitios de recogida",
+                                                        color = Color.Black,
                                                         textAlign = TextAlign.Center,
                                                         fontSize = 24.sp,
                                                         modifier = Modifier.align(Alignment.Center),
-                                                        color = Color.Black
-                                                        )
-                                                    if (canEditEventos) {
+                                                    )
+                                                    if (canEditSitios) {
                                                         IconButton(
-                                                            onClick = { agregaEvento = true },
+                                                            onClick = { agregaSitio = true },
                                                             modifier = Modifier
                                                                 .size(58.dp)
                                                                 .align(Alignment.CenterEnd)
-                                                                .padding(end = 20.dp)                                                            )
+                                                                .padding(end = 20.dp))
                                                         {
                                                             Icon(
                                                                 Icons.Filled.AddCircle,
-                                                                "Agregar evento",
+                                                                "Agregar sitio",
                                                                 Modifier.fillMaxSize(),
-                                                                tint = Color.Black
+                                                                Color.Black
                                                             )
                                                         }
                                                     }
                                                 }
                                             }
-                                            ListaEventosConfirmados(
-                                                eventosConfirmados,
-                                                false,
-                                                canEditSitios,
-                                                onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                                                onEventoEscogido = {
-                                                        evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
-                                                    navegaSitio = true
-                                                }
-                                            )
+                                            if(haySitios){
+                                                ListaSitiosConfirmados(sitiosRecogidaConfirmados,
+                                                    false,
+                                                    canEditSitios,
+                                                    onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                                                    onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                                        navegaSitio = true
+                                                    }
+                                                )
+                                            } else {
+                                                Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
+                                            }
                                         }
-                                    }
-                                    else {
-                                        Text(text = "No hay eventos confirmados", color = Color.Black)
                                     }
                                 }
                             }
                         }
-                    }
-                    2 -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Transparent)
-                                .graphicsLayer {
-                                    val pageOffset =
-                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
-                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            Column (
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                        1 -> {
+                            Card(
                                 modifier = Modifier
-                                    .background(Color.Transparent))
-                            {
-                                Row (
-                                    Modifier
-                                        .weight(0.5f)
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    .fillMaxHeight()
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        val pageOffset =
+                                            ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                        val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                        alpha = lerp(
+                                            start = 0.5f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                Box (
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color = Color.Transparent)
                                 ) {
-                                    OutlinedCard(
-                                        onClick = {},
-                                        modifier = Modifier.fillMaxSize()
+                                    LaunchedEffect(key1 = recargarEventos) {
+                                        eventosLoading = true
+                                        eventosConfirmados.clear()
+                                        val eventos = firestore.getEventos()
+                                        eventos.forEach { evento ->
+                                            eventosConfirmados.add(evento)
+                                        }
+                                        hayEventos = eventosConfirmados.size != 0
+                                        recargarEventos = false
+                                        eventosLoading = false
+                                    }
+                                    if (eventosLoading) {
+                                        Column (
+                                            modifier = Modifier.fillMaxSize(),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = BordeIndvCards
+                                            )
+                                            Text(
+                                                text = "Cargando eventos...",
+                                                modifier = Modifier.padding(top = 8.dp),
+                                                color = Color.Black
+                                            )
+                                        }
+                                    } else {
+                                        if (hayEventos) {
+                                            Column (
+                                                Modifier.fillMaxSize(),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ){
+                                                Row (
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(5.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                                        Text(
+                                                            text = "Eventos próximos",
+                                                            textAlign = TextAlign.Center,
+                                                            fontSize = 24.sp,
+                                                            modifier = Modifier.align(Alignment.Center),
+                                                            color = Color.Black
+                                                        )
+                                                        if (canEditEventos) {
+                                                            IconButton(
+                                                                onClick = { agregaEvento = true },
+                                                                modifier = Modifier
+                                                                    .size(58.dp)
+                                                                    .align(Alignment.CenterEnd)
+                                                                    .padding(end = 20.dp)                                                            )
+                                                            {
+                                                                Icon(
+                                                                    Icons.Filled.AddCircle,
+                                                                    "Agregar evento",
+                                                                    Modifier.fillMaxSize(),
+                                                                    tint = Color.Black
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                ListaEventosConfirmados(
+                                                    eventosConfirmados,
+                                                    false,
+                                                    canEditSitios,
+                                                    onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
+                                                    onEventoEscogido = {
+                                                            evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                                        navegaSitio = true
+                                                    }
+                                                )
+                                            }
+                                        }
+                                        else {
+                                            Text(text = "No hay eventos confirmados", color = Color.Black)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        2 -> {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Transparent)
+                                    .graphicsLayer {
+                                        val pageOffset =
+                                            ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                        val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                        alpha = lerp(
+                                            start = 0.5f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                    modifier = Modifier
+                                        .background(Color.Transparent))
+                                {
+                                    Row (
+                                        Modifier
+                                            .weight(0.5f)
+                                            .padding(10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box (
+                                        OutlinedCard(
+                                            onClick = {},
                                             modifier = Modifier.fillMaxSize()
                                         ) {
-                                            Image(
-                                                painter = painterResource(id = R.drawable.dinero_recaudado_wp),
-                                                contentDescription = "Background Ig Image",
-                                                contentScale = ContentScale.Crop,
+                                            Box (
                                                 modifier = Modifier.fillMaxSize()
-                                            )
-                                            Row(
-                                                Modifier
-                                                    .fillMaxSize()
-                                                    .padding(16.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Column (
-                                                    Modifier.fillMaxSize()
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.dinero_recaudado_wp),
+                                                    contentDescription = "Background Ig Image",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                                Row(
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .padding(16.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
                                                 ) {
-                                                    LaunchedEffect(key1 = Unit) {
-                                                        recaudacionsLoading = true
-                                                        val donacionResponse = getDonationDataFromGoogleSheet(
-                                                            donacionesSheetId,
-                                                            "donaciones"
-                                                        )
-                                                        dineroRecaudado.value = donacionResponse.donaciones
-                                                        recaudacionsLoading = false
-                                                    }
-                                                    if (recaudacionsLoading) {
-                                                        Text(text = "Cargando...")
-                                                    } else {
-                                                        Row (
-                                                            Modifier
-                                                                .fillMaxWidth()
-                                                                .weight(0.1f),
-                                                            horizontalArrangement = Arrangement.Center
-                                                        ) {
-                                                            Text(text = "Dinero recaudado:",
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 24.sp,
-                                                                color = Color.White)
+                                                    Column (
+                                                        Modifier.fillMaxSize()
+                                                    ) {
+                                                        LaunchedEffect(key1 = Unit) {
+                                                            recaudacionsLoading = true
+                                                            val donacionResponse = getDonationDataFromGoogleSheet(
+                                                                donacionesSheetId,
+                                                                "donaciones"
+                                                            )
+                                                            dineroRecaudado.value = donacionResponse.donaciones
+                                                            recaudacionsLoading = false
                                                         }
-                                                        dineroRecaudado.value.forEach { donacion ->
+                                                        if (recaudacionsLoading) {
+                                                            Text(text = "Cargando...")
+                                                        } else {
                                                             Row (
-                                                                modifier
-                                                                    .fillMaxSize()
-                                                                    .weight(
-                                                                        if (donacion.tipo == "TOTAL") 0.3f else 0.2f
-                                                                    )
+                                                                Modifier
+                                                                    .fillMaxWidth()
+                                                                    .weight(0.1f),
+                                                                horizontalArrangement = Arrangement.Center
                                                             ) {
-                                                                Card(
-                                                                    modifier = Modifier
+                                                                Text(text = "Dinero recaudado:",
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    fontSize = 24.sp,
+                                                                    color = Color.White)
+                                                            }
+                                                            dineroRecaudado.value.forEach { donacion ->
+                                                                Row (
+                                                                    modifier
                                                                         .fillMaxSize()
-                                                                        .padding(8.dp),
-                                                                    shape = MaterialTheme.shapes.medium,
-                                                                    colors = CardDefaults.cardColors(
-                                                                        containerColor = Color.Transparent
-                                                                    )
+                                                                        .weight(
+                                                                            if (donacion.tipo == "TOTAL") 0.3f else 0.2f
+                                                                        )
                                                                 ) {
-                                                                    Box(
-                                                                        modifier = modifier
-                                                                            .graphicsLayer {
-                                                                                alpha =
-                                                                                    0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
-                                                                            }
-                                                                            .drawBehind {
-                                                                                drawIntoCanvas { canvas ->
-                                                                                    val paint =
-                                                                                        Paint()
-                                                                                    val frameworkPaint =
-                                                                                        paint.asFrameworkPaint()
-                                                                                    frameworkPaint.color =
-                                                                                        0x99FFFFFF.toInt()
-                                                                                    frameworkPaint.maskFilter =
-                                                                                        android.graphics.BlurMaskFilter(
-                                                                                            30f,
-                                                                                            android.graphics.BlurMaskFilter.Blur.NORMAL
-                                                                                        )
-                                                                                    canvas.nativeCanvas.apply {
-                                                                                        drawRect(
-                                                                                            0f,
-                                                                                            0f,
-                                                                                            size.width,
-                                                                                            size.height,
-                                                                                            frameworkPaint
-                                                                                        )
+                                                                    Card(
+                                                                        modifier = Modifier
+                                                                            .fillMaxSize()
+                                                                            .padding(8.dp),
+                                                                        shape = MaterialTheme.shapes.medium,
+                                                                        colors = CardDefaults.cardColors(
+                                                                            containerColor = Color.Transparent
+                                                                        )
+                                                                    ) {
+                                                                        Box(
+                                                                            modifier = modifier
+                                                                                .graphicsLayer {
+                                                                                    alpha =
+                                                                                        0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
+                                                                                }
+                                                                                .drawBehind {
+                                                                                    drawIntoCanvas { canvas ->
+                                                                                        val paint =
+                                                                                            Paint()
+                                                                                        val frameworkPaint =
+                                                                                            paint.asFrameworkPaint()
+                                                                                        frameworkPaint.color =
+                                                                                            0x99FFFFFF.toInt()
+                                                                                        frameworkPaint.maskFilter =
+                                                                                            android.graphics.BlurMaskFilter(
+                                                                                                30f,
+                                                                                                android.graphics.BlurMaskFilter.Blur.NORMAL
+                                                                                            )
+                                                                                        canvas.nativeCanvas.apply {
+                                                                                            drawRect(
+                                                                                                0f,
+                                                                                                0f,
+                                                                                                size.width,
+                                                                                                size.height,
+                                                                                                frameworkPaint
+                                                                                            )
+                                                                                        }
                                                                                     }
                                                                                 }
-                                                                            }
-                                                                    ){
-                                                                        Box (modifier = Modifier.fillMaxSize()){
-                                                                            when(donacion.tipo) {
-                                                                                "BIZUM" -> DonacionRow(donacion, R.drawable.bizum)
-                                                                                "EFECTIVO" -> DonacionRow(donacion, R.drawable.dinero_efectivo)
-                                                                                "TRANSFERENCIA" -> DonacionRow(donacion, R.drawable.transferencia)
-                                                                                "TOTAL" -> DonacionRow(donacion, R.drawable.total)
+                                                                        ){
+                                                                            Box (modifier = Modifier.fillMaxSize()){
+                                                                                when(donacion.tipo) {
+                                                                                    "BIZUM" -> DonacionRow(donacion, R.drawable.bizum)
+                                                                                    "EFECTIVO" -> DonacionRow(donacion, R.drawable.dinero_efectivo)
+                                                                                    "TRANSFERENCIA" -> DonacionRow(donacion, R.drawable.transferencia)
+                                                                                    "TOTAL" -> DonacionRow(donacion, R.drawable.total)
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
@@ -1081,134 +1119,134 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             }
                                         }
                                     }
-                                }
-                                Row (
-                                    Modifier
-                                        .weight(0.5f),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clickable {
-                                                coroutineScope.launch(Dispatchers.IO) {
-                                                    pagerState.animateScrollToPage(1)
-                                                }
-                                            },
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = Color.Transparent
-                                        )
+                                    Row (
+                                        Modifier
+                                            .weight(0.5f),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize()
-                                        ) {
-                                            Image(
-                                                painter = painterResource(id = R.drawable.dia_calendario),
-                                                contentDescription = "Background Ig Image",
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                            )
-                                            Column (
-                                                Modifier
-                                                    .fillMaxSize()
-                                                    .padding(
-                                                        top = 68.dp,
-                                                        start = 5.dp,
-                                                        end = 5.dp,
-                                                        bottom = 0.dp
-                                                    )
-                                            ) {
-                                                if (eventoVM.value.titulo != "") {
-                                                    Row (
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .wrapContentHeight()
-                                                            .weight(0.3f),
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        Column (
-                                                            Modifier.fillMaxSize(),
-                                                            verticalArrangement = Arrangement.Center,
-                                                            horizontalAlignment = Alignment.CenterHorizontally
-                                                        ){
-                                                            Text(
-                                                                text = "Próximo evento:",
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 28.sp,
-                                                                color = Color.Black
-                                                            )
-                                                            eventoVM.value.titulo.let {
-                                                                Text(
-                                                                    text = it,
-                                                                    fontWeight = FontWeight.Bold,
-                                                                    fontSize = 18.sp,
-                                                                    color = Color.Black
-                                                                )
-                                                            }
-                                                        }
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable {
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        pagerState.animateScrollToPage(1)
                                                     }
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .weight(0.45f),
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        eventoVM.value.startDate.let {
-                                                            val valoresFecha = eventoVM.value.startDate.split("/")
+                                                },
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = Color.Transparent
+                                            )
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.dia_calendario),
+                                                    contentDescription = "Background Ig Image",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                                Column (
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .padding(
+                                                            top = 68.dp,
+                                                            start = 5.dp,
+                                                            end = 5.dp,
+                                                            bottom = 0.dp
+                                                        )
+                                                ) {
+                                                    if (eventoVM.value.titulo != "") {
+                                                        Row (
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .wrapContentHeight()
+                                                                .weight(0.3f),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.Center
+                                                        ) {
                                                             Column (
                                                                 Modifier.fillMaxSize(),
                                                                 verticalArrangement = Arrangement.Center,
                                                                 horizontalAlignment = Alignment.CenterHorizontally
-                                                            ) {
+                                                            ){
                                                                 Text(
-                                                                    text = valoresFecha[0],
+                                                                    text = "Próximo evento:",
                                                                     fontWeight = FontWeight.Bold,
-                                                                    fontSize = 60.sp,
+                                                                    fontSize = 28.sp,
                                                                     color = Color.Black
                                                                 )
-                                                                Spacer(modifier = Modifier.height(5.dp))
+                                                                eventoVM.value.titulo.let {
+                                                                    Text(
+                                                                        text = it,
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        fontSize = 18.sp,
+                                                                        color = Color.Black
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .weight(0.45f),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.Center
+                                                        ) {
+                                                            eventoVM.value.startDate.let {
+                                                                val valoresFecha = eventoVM.value.startDate.split("/")
+                                                                Column (
+                                                                    Modifier.fillMaxSize(),
+                                                                    verticalArrangement = Arrangement.Center,
+                                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                                ) {
+                                                                    Text(
+                                                                        text = valoresFecha[0],
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        fontSize = 60.sp,
+                                                                        color = Color.Black
+                                                                    )
+                                                                    Spacer(modifier = Modifier.height(5.dp))
+                                                                    Text(
+                                                                        text = cambiaNumeroPorMes(
+                                                                            valoresFecha[1]
+                                                                        ),
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        fontSize = 20.sp,
+                                                                        color = Color.Black
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .weight(0.25f),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.Center
+                                                        ) {
+                                                            eventoVM.value.lugar.let {
                                                                 Text(
-                                                                    text = cambiaNumeroPorMes(
-                                                                        valoresFecha[1]
-                                                                    ),
+                                                                    text = it.nombreSitio,
                                                                     fontWeight = FontWeight.Bold,
                                                                     fontSize = 20.sp,
                                                                     color = Color.Black
                                                                 )
                                                             }
                                                         }
-                                                    }
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .weight(0.25f),
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        eventoVM.value.lugar.let {
+                                                    } else {
+                                                        Row (
+                                                            modifier = Modifier.fillMaxSize(),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.Center
+                                                        ) {
                                                             Text(
-                                                                text = it.nombreSitio,
+                                                                text = "No hay eventos próximos",
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 20.sp,
                                                                 color = Color.Black
                                                             )
                                                         }
-                                                    }
-                                                } else {
-                                                    Row (
-                                                        modifier = Modifier.fillMaxSize(),
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        Text(
-                                                            text = "No hay eventos próximos",
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 20.sp,
-                                                            color = Color.Black
-                                                        )
                                                     }
                                                 }
                                             }
@@ -1217,107 +1255,119 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             }
                         }
-                    }
-                    3 -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Transparent)
-                                .graphicsLayer {
-                                    val pageOffset =
-                                        ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
-                                    val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            Column (
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                        3 -> {
+                            Card(
                                 modifier = Modifier
-                                    .background(Color.Transparent))
-                            {
-                                Row (
-                                    Modifier
-                                        .weight(0.5f)
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    OutlinedCard(
-                                        onClick = {
-                                            val uri = Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
+                                    .fillMaxSize()
+                                    .background(Color.Transparent)
+                                    .graphicsLayer {
+                                        val pageOffset =
+                                            ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
+                                        val scale = lerp(0.7f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                                        alpha = lerp(
+                                            start = 0.5f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                        )
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .padding(5.dp, 0.dp, 0.dp, 0.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                    modifier = Modifier
+                                        .background(Color.Transparent))
+                                {
+                                    Row (
+                                        Modifier
+                                            .weight(0.5f)
+                                            .padding(10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedCard(
+                                            onClick = {
+                                                val uri = Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
+                                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                                intent.setPackage("com.instagram.android")
+                                                try {
+                                                    startActivity(context, intent, null)
+                                                } catch (e: ActivityNotFoundException) {
+                                                    Log.e("Error", "Instagram no está instalado")
+                                                    startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")), null)
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .border(
+                                                    1.dp,
+                                                    Color.Black,
+                                                    RoundedCornerShape(20.dp)
+                                                )
+                                        ) {
+                                            CartaRSS(R.drawable.logo_ig, "Instagram")
+                                        }
+                                    }
+                                    Row (
+                                        Modifier
+                                            .weight(0.5f)
+                                            .padding(10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedCard(onClick = {
+                                            val uri = Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
                                             val intent = Intent(Intent.ACTION_VIEW, uri)
-                                            intent.setPackage("com.instagram.android")
+                                            intent.setPackage("com.tiktok.android")
                                             try {
                                                 startActivity(context, intent, null)
                                             } catch (e: ActivityNotFoundException) {
-                                                Log.e("Error", "Instagram no está instalado")
-                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")), null)
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
-                                    ) {
-                                        CartaRSS(R.drawable.logo_ig, "Instagram")
+                                                Log.e("Error", "Tiktok no está instalado")
+                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
+                                            } },
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .border(
+                                                    1.dp,
+                                                    Color.Black,
+                                                    RoundedCornerShape(20.dp)
+                                                )
+                                        ) {
+                                            CartaRSS(R.drawable.logo_tiktok, "TikTok")
+                                        }
                                     }
-                                }
-                                Row (
-                                    Modifier
-                                        .weight(0.5f)
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    OutlinedCard(onClick = {
-                                        val uri = Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
-                                        val intent = Intent(Intent.ACTION_VIEW, uri)
-                                        intent.setPackage("com.tiktok.android")
-                                        try {
-                                            startActivity(context, intent, null)
-                                        } catch (e: ActivityNotFoundException) {
-                                            Log.e("Error", "Tiktok no está instalado")
-                                            startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
-                                        } },
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
+                                    Row (
+                                        Modifier
+                                            .weight(0.5f)
+                                            .padding(10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        CartaRSS(R.drawable.logo_tiktok, "TikTok")
-                                    }
-                                }
-                                Row (
-                                    Modifier
-                                        .weight(0.5f)
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    OutlinedCard(onClick = {
-                                        val uri = Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
-                                        val intent = Intent(Intent.ACTION_VIEW, uri)
-                                        intent.setPackage("com.whatsapp.android")
-                                        try {
-                                            startActivity(context, intent, null)
-                                        } catch (e: ActivityNotFoundException) {
-                                            Log.e("Error", "Whatsapp no está instalado")
-                                            startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")), null)
-                                        } },
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .border(1.dp, Color.Black, RoundedCornerShape(20.dp))
-                                    ) {
-                                        CartaRSS(R.drawable.logo_whatsapp, "WhatsApp")
+                                        OutlinedCard(onClick = {
+                                            val uri = Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            intent.setPackage("com.whatsapp.android")
+                                            try {
+                                                startActivity(context, intent, null)
+                                            } catch (e: ActivityNotFoundException) {
+                                                Log.e("Error", "Whatsapp no está instalado")
+                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")), null)
+                                            } },
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .border(
+                                                    1.dp,
+                                                    Color.Black,
+                                                    RoundedCornerShape(20.dp)
+                                                )
+                                        ) {
+                                            CartaRSS(R.drawable.logo_whatsapp, "WhatsApp")
+                                        }
                                     }
                                 }
                             }
@@ -1325,62 +1375,62 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     }
                 }
             }
-        }
-        Row(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
-                Box(
-                    modifier = Modifier
-                        .padding(3.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(10.dp)
-                )
-            }
-        }
-        if(navegaSitio){
-            mapaOrganizadorVM.searchSitioRecogida.value = true
-            agregaSitio = false
-            agregaEvento = false
-
-            MapsScreen(navController, mapaOrganizadorVM)
-            onMapaCambiado(true)
-            navController.navigate("Mapa")
-            navegaSitio = false
-        }
-        if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
-            FloatingActionButton(
-                onClick = { redactaEmail = true },
-                containerColor = FondoMenus,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp, 0.dp, 0.dp, 35.dp)
-                    .height(40.dp)
-                    .width(if (pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
+            Row(
+                Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                repeat(pagerState.pageCount) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                    Box(
+                        modifier = Modifier
+                            .padding(3.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .size(10.dp)
+                    )
+                }
+            }
+            if(navegaSitio){
+                mapaOrganizadorVM.searchSitioRecogida.value = true
+                agregaSitio = false
+                agregaEvento = false
+
+                MapsScreen(navController, mapaOrganizadorVM)
+                onMapaCambiado(true)
+                navController.navigate("Mapa")
+                navegaSitio = false
+            }
+            if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
+                FloatingActionButton(
+                    onClick = { redactaEmail = true },
+                    containerColor = FondoMenus,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp, 0.dp, 0.dp, 35.dp)
+                        .height(40.dp)
+                        .width(if (pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
                 ) {
-                    Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp), tint = Color.Black)
-                    if (pagerState.currentPage == 0 || pagerState.currentPage == 1){
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Text(text = "Redactar correo", color = Color.Black)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp), tint = Color.Black)
+                        if (pagerState.currentPage == 0 || pagerState.currentPage == 1){
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(text = "Redactar correo", color = Color.Black)
+                        }
                     }
                 }
             }
-        }
-        if(redactaEmail){
-            centroEducativoElegido = CentroEducativo()
-            navController.navigate("Mail")
-            redactaEmail = false
+            if(redactaEmail){
+                centroEducativoElegido = CentroEducativo()
+                navController.navigate("Mail")
+                redactaEmail = false
+            }
         }
     }
     if (showCloseAppDialog){

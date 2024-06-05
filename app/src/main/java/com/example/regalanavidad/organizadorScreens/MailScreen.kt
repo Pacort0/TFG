@@ -1,7 +1,9 @@
 package com.example.regalanavidad.organizadorScreens
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -23,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,13 +46,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.R
+import com.example.regalanavidad.modelos.CentroEducativo
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MailScreen(navController: NavController){
     var correoContacto by remember { mutableStateOf(centroEducativoElegido.correoCentro) }
@@ -59,6 +60,9 @@ fun MailScreen(navController: NavController){
     var mensajeCorreo by remember { mutableStateOf("") }
     val contexto = LocalContext.current
     var showAlertDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
 
     Column (
         modifier = Modifier
