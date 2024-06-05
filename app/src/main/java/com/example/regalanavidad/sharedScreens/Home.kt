@@ -163,7 +163,6 @@ import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años")
 val auth = Firebase.auth
 var usuario = Usuario()
 val firestore = FirestoreManager()
@@ -1553,56 +1552,6 @@ private fun cambiaNumeroPorMes(numero: String): String {
         "11" -> "Noviembre"
         "12" -> "Diciembre"
         else -> "Error"
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, scope: CoroutineScope){
-    val options = listOf("¿Qué es Regala Navidad?", "Datos y objetivos", "¿Cómo puedo ayudar?") // Add your sub-options here
-    var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf(options[0]) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-    ) {
-        TextField(
-            modifier = Modifier.menuAnchor(),
-            readOnly = true,
-            value = "Información",
-            onValueChange = {},
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            options.forEach { selectionOption ->
-                DropdownMenuItem(
-                    text = { Text(selectionOption, fontSize = 16.sp) },
-                    onClick = {
-                        when(selectionOption){
-                            "¿Qué es Regala Navidad?" -> {
-                                selectedOptionText = selectionOption
-                                navController.navigate("QueEsScreen")
-                            }
-                            "Datos y objetivos" -> {
-                                selectedOptionText = selectionOption
-                                navController.navigate("DatosYObjetivosScreen")
-                            }
-                            "¿Cómo puedo ayudar?" -> {
-                                selectedOptionText = selectionOption
-                                navController.navigate("ComoAyudarScreen")
-                            }
-                        }
-                        expanded = false
-                        scope.launch { drawerState.close() }
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                )
-            }
-        }
     }
 }
 @Composable

@@ -17,7 +17,10 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +31,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -45,18 +49,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.modelos.TabBarItem
-import com.example.regalanavidad.sharedScreens.InformacionSubMenu
+import com.example.regalanavidad.organizadorScreens.TrailingIconMio
 import com.example.regalanavidad.sharedScreens.ProfileScreen
 import com.example.regalanavidad.sharedScreens.ScreenContent
 import com.example.regalanavidad.sharedScreens.CierraSesionDialog
 import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.drawerAbierto
-import com.example.regalanavidad.sharedScreens.drawerItems
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otros años")
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -223,5 +227,55 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
             }
         )
         Spacer(modifier = Modifier.weight(0.1f))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, scope: CoroutineScope){
+    val options = listOf("¿Qué es Regala Navidad?", "Datos y objetivos", "¿Cómo puedo ayudar?") // Add your sub-options here
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOptionText by remember { mutableStateOf(options[0]) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        TextField(
+            modifier = Modifier.menuAnchor(),
+            readOnly = true,
+            value = "Información",
+            onValueChange = {},
+            trailingIcon = { TrailingIconMio(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            options.forEach { selectionOption ->
+                DropdownMenuItem(
+                    text = { Text(selectionOption, fontSize = 16.sp) },
+                    onClick = {
+                        when(selectionOption){
+                            "¿Qué es Regala Navidad?" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("QueEsScreen")
+                            }
+                            "Datos y objetivos" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("DatosYObjetivosScreen")
+                            }
+                            "¿Cómo puedo ayudar?" -> {
+                                selectedOptionText = selectionOption
+                                navController.navigate("ComoAyudarScreen")
+                            }
+                        }
+                        expanded = false
+                        scope.launch { drawerState.close() }
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
     }
 }
