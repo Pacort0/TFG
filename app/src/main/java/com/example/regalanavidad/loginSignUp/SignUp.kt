@@ -1,12 +1,12 @@
 package com.example.regalanavidad.loginSignUp
 
 import android.content.Context
+import android.net.ConnectivityManager
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,15 +40,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
-import com.example.regalanavidad.sharedScreens.FirestoreManager
-import com.example.regalanavidad.ui.theme.Purple40
 import com.example.regalanavidad.modelos.Usuario
+import com.example.regalanavidad.sharedScreens.firestore
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.CoroutineScope
@@ -62,8 +61,8 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
     var usuario by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var emailExistente by remember { mutableStateOf(false) }
-    val firestore = FirestoreManager()
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
 
     val scope = rememberCoroutineScope()
     Column(
@@ -177,8 +176,13 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     if(email.isNotEmpty() and password.isNotEmpty() and usuario.isNotEmpty()) {
                         if (isValidEmail(email)) {
                             if(password.length >= 6){
-                                scope.launch {
-                                    signUp(auth, usuario, email, password, context, navController)
+                                hayInternet = hayInternet(connectivityManager)
+                                if (hayInternet){
+                                    scope.launch {
+                                        signUp(auth, usuario, email, password, context, navController)
+                                    }
+                                } else {
+                                    Toast.makeText(context, "No hay internet", Toast.LENGTH_SHORT).show()
                                 }
                             } else {
                                 Toast.makeText(context, "La contraseña debe tener 6 caracteres o más", Toast.LENGTH_SHORT).show()
@@ -228,7 +232,6 @@ fun isValidEmail(inputEmail: CharSequence?): Boolean {
 }
 
 private fun signUp(auth: FirebaseAuth, username: String, email:String, password:String, context: Context, navController: NavController){
-    val firestore = FirestoreManager()
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {task ->
         if(task.isSuccessful){
             val user = auth.currentUser!!

@@ -1,7 +1,11 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -61,10 +65,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.modelos.Usuario
-import com.example.regalanavidad.sharedScreens.firestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.example.regalanavidad.R
+import com.example.regalanavidad.sharedScreens.CompruebaInternetScreen
+import com.example.regalanavidad.sharedScreens.NoInternetScreen
+import com.example.regalanavidad.sharedScreens.firestore
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
@@ -74,6 +81,7 @@ import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 private var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 private var listaUsuarios = mutableStateOf(emptyList<Usuario>())
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun RolesTabScreen(navController: NavController){
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -165,123 +173,147 @@ fun RolesTabScreen(navController: NavController){
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun TabRoles(voluntarios: Boolean){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var usuariosCargados by remember { mutableStateOf(false) }
     var guardarCambios by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var mostrarTodo by remember { mutableStateOf(false) }
+    var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = guardarCambios) {
-        usuariosCargados = false
-        listaUsuariosCambiados.value.forEach { usuario ->
-            firestore.editaUsuario(usuario)
+        hayInternet = hayInternet(connectivityManager)
+        if (hayInternet) {
+            listaUsuariosCambiados.value.forEach { usuario ->
+                firestore.editaUsuario(usuario)
+            }
+            listaUsuariosCambiados.value = emptyList()
+        } else {
+            listaUsuariosCambiados.value = emptyList()
+            Toast.makeText(context, "No hay internet", Toast.LENGTH_SHORT).show()
         }
-        listaUsuariosCambiados.value = emptyList()
-        usuariosCargados = true
         guardarCambios = false
     }
-    LaunchedEffect(key1 = Unit) {
-        val usuarios = firestore.getUsuarios()
-        listaUsuarios.value = usuarios
-        usuariosCargados = true
+
+    LaunchedEffect(key1 = hayInternet, key2 = Unit) {
+        cargando = true
+        hayInternet = hayInternet(connectivityManager)
+        if (hayInternet){
+            val usuarios = firestore.getUsuarios()
+            listaUsuarios.value = usuarios
+        }
+        cargando = false
+        mostrarTodo = hayInternet
     }
 
-    Box (
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoApp)
-            .padding(start = 20.dp, end = 20.dp)
-    ) {
-        Column (
-            Modifier.fillMaxSize()
+    if (cargando){
+        CompruebaInternetScreen()
+    } else if (!mostrarTodo){
+        NoInternetScreen(
+            onRetry = {
+                hayInternet = true
+            }
+        )
+    } else {
+        Box (
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoApp)
+                .padding(start = 20.dp, end = 20.dp)
         ) {
-            Text("Asignar roles",
-                Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(8.dp), fontSize = 24.sp, textAlign = TextAlign.Center, color = Color.Black)
-            if (!usuariosCargados || listaUsuarios.value.isEmpty()){
-                Column (
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = BordeIndvCards
-                    )
-                    Text(
-                        text = "Cargando usuarios...",
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            } else {
-                val usuariosFiltrados by remember { mutableStateOf(listaUsuarios.value.filter { usuario ->
-                    if (voluntarios) {
-                        usuario.nombreRango == "Voluntario"
-                    } else {
-                        usuario.nombreRango != "Voluntario"
-                    }
-                }) }
-                LazyColumn (
+            Column (
+                Modifier.fillMaxSize()
+            ) {
+                Text("Asignar roles",
                     Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                        .padding(8.dp)) {
-                    if (usuariosFiltrados.isEmpty()){
-                        item {
-                            Text("Todos los usuarios son Voluntarios", Modifier.padding(8.dp))
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(8.dp), fontSize = 24.sp, textAlign = TextAlign.Center, color = Color.Black)
+                if (!guardarCambios && listaUsuarios.value.isEmpty()){
+                    Column (
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = BordeIndvCards
+                        )
+                        Text(
+                            text = "Cargando usuarios...",
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                } else {
+                    val usuariosFiltrados by remember { mutableStateOf(listaUsuarios.value.filter { usuario ->
+                        if (voluntarios) {
+                            usuario.nombreRango == "Voluntario"
+                        } else {
+                            usuario.nombreRango != "Voluntario"
                         }
-                    } else {
-                        items(usuariosFiltrados) { usuarioRegistrado ->
-                            if (usuarioRegistrado.nombreRango != "Coordinador"){
-                                Card (
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(4.dp)
-                                        .clip(CircleShape)
-                                        .border(1.dp, BordeIndvCards, CircleShape)
-                                        .wrapContentHeight(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = FondoIndvCards
-                                    )) {
-                                    Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                                        Column (Modifier.weight(0.4f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                            Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
-                                        }
-                                        Column (Modifier.weight(0.6f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                            RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                    }) }
+                    LazyColumn (
+                        Modifier
+                            .fillMaxSize()
+                            .weight(1f)
+                            .padding(8.dp)) {
+                        if (usuariosFiltrados.isEmpty()){
+                            item {
+                                Text("Todos los usuarios son Voluntarios", Modifier.padding(8.dp))
+                            }
+                        } else {
+                            items(usuariosFiltrados) { usuarioRegistrado ->
+                                if (usuarioRegistrado.nombreRango != "Coordinador"){
+                                    Card (
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(4.dp)
+                                            .clip(CircleShape)
+                                            .border(1.dp, BordeIndvCards, CircleShape)
+                                            .wrapContentHeight(),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = FondoIndvCards
+                                        )) {
+                                        Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+                                            Column (Modifier.weight(0.4f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                                Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
+                                            }
+                                            Column (Modifier.weight(0.6f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                                RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
+                    }
                 }
             }
-        }
-        if(usuariosCargados && listaUsuariosCambiados.value.isNotEmpty()){
-            val context = LocalContext.current
-            FloatingActionButton(
-                containerColor = FondoMenus,
-                onClick = {
-                    guardarCambios = true
-                    Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(0.dp, 0.dp, 20.dp, 20.dp)
-                    .height(40.dp)
-                    .width(130.dp)
-            ){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar", Modifier.size(30.dp))
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(text = "Guardar")
+            if(listaUsuariosCambiados.value.isNotEmpty()){
+                FloatingActionButton(
+                    containerColor = FondoMenus,
+                    onClick = {
+                        guardarCambios = true
+                        Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(0.dp, 0.dp, 20.dp, 20.dp)
+                        .height(40.dp)
+                        .width(130.dp)
+                ){
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar", Modifier.size(30.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(text = "Guardar")
+                    }
                 }
             }
         }

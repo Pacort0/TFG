@@ -1,6 +1,5 @@
 package com.example.regalanavidad.sharedScreens
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -162,15 +161,12 @@ import kotlin.system.exitProcess
 
 val auth = Firebase.auth
 var usuario = Usuario()
-val firestore = FirestoreManager()
 private val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
 private val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-
-@RequiresApi(Build.VERSION_CODES.O)
-val eventosVM = EventosVM()
+val firestore = FirestoreManager()
 
 //Para las redes sociales
 val customFontFamily = FontFamily(
@@ -178,8 +174,8 @@ val customFontFamily = FontFamily(
 )
 class Home : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
+
         val correo = intent.getStringExtra("correo")
         Places.initialize(this, MAPS_API_KEY)
         placesClient = Places.createClient(this)
@@ -310,7 +306,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 }
 
 @Composable
-fun CargandoSitiosScreen(){
+fun CompruebaInternetScreen(){
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -322,7 +318,7 @@ fun CargandoSitiosScreen(){
             color = BordeIndvCards
         )
         Text(
-            text = "Cargando sitios...",
+            text = "Comprobando conexión...",
             color = Color.Black,
             modifier = Modifier.padding(top = 8.dp)
         )
@@ -336,8 +332,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
+    val eventosVM = EventosVM()
     var textoBusqueda by remember { mutableStateOf("") }
-    val firestore = FirestoreManager()
     val scope = CoroutineScope(Dispatchers.Main)
     var agregaSitio by remember { mutableStateOf(false) }
     var haySitios by remember { mutableStateOf(false) }
@@ -379,7 +375,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
 
     if (cargando){
-        CargandoSitiosScreen()
+        CompruebaInternetScreen()
     } else if (!mostrarTodo){
         NoInternetScreen(
             onRetry = {
@@ -1707,10 +1703,12 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
     return sitiosRecogida
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
     var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
+    val firestore = FirestoreManager()
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
@@ -1801,11 +1799,14 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
         )
     }
 }
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
     var showDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
     val contexto = LocalContext.current
+    val firestore = FirestoreManager()
+
     if(eventosConfirmados.size > 0) {
         LazyColumn(
             verticalArrangement = Arrangement.Center

@@ -1,5 +1,7 @@
 package com.example.regalanavidad.loginSignUp
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,7 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
-import com.example.regalanavidad.sharedScreens.FirestoreManager
+import com.example.regalanavidad.sharedScreens.firestore
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,7 +56,8 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var emailExistente by remember{ mutableStateOf(false) }
-    val firestore = FirestoreManager()
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
 
     Column (
         modifier = Modifier
@@ -109,16 +113,21 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
             Button(onClick = {
                 if(email.isNotEmpty()){
                     if(isValidEmail(email)){
-                        scope.launch {
-                            emailExistente = withContext(Dispatchers.IO) {
-                                firestore.comprobarCorreo(email)
+                        hayInternet = hayInternet(connectivityManager)
+                        if (hayInternet){
+                            scope.launch {
+                                emailExistente = withContext(Dispatchers.IO) {
+                                    firestore.comprobarCorreo(email)
+                                }
+                                if (emailExistente) {
+                                    Toast.makeText(context, "Correo electrónico no registrado", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    auth.sendPasswordResetEmail(email)
+                                    Toast.makeText(context, "Correo electrónico enviado", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                            if (emailExistente) {
-                                Toast.makeText(context, "Correo electrónico no registrado", Toast.LENGTH_SHORT).show()
-                            } else {
-                                auth.sendPasswordResetEmail(email)
-                                Toast.makeText(context, "Correo electrónico enviado", Toast.LENGTH_SHORT).show()
-                            }
+                        } else {
+                            Toast.makeText(context, "No hay internet", Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         Toast.makeText(context, "Introduzca un correo electrónico válido", Toast.LENGTH_SHORT).show()

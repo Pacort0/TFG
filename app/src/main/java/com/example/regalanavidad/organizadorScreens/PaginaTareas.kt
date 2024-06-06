@@ -1,5 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -78,7 +80,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Tarea
+import com.example.regalanavidad.sharedScreens.CompruebaInternetScreen
+import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.firestore
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
@@ -95,8 +100,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private var listaTareasCambiadas = mutableStateOf(emptyList<Tarea>())
-private var primeraVez = mutableStateOf(true)
-private var navigate = mutableStateOf(false)
 private var listaTareas = mutableStateOf(emptyList<Tarea>())
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -202,146 +205,168 @@ fun TareasTabScreen(completadas: Boolean){
         guardarCambios = !guardarCambios
         refresca = !refresca
     })
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var mostrarTodo by remember { mutableStateOf(false) }
+    var cargando by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = guardarCambios) {
-        if (listaTareasCambiadas.value.isNotEmpty() || !navigate.value) {
-            if (!refresca){
-                listaTareasCambiadas.value.forEach { tarea ->
-                    firestore.editaTarea(tarea)
+        cargando = true
+        hayInternet = hayInternet(connectivityManager)
+        if (hayInternet){
+            if (listaTareasCambiadas.value.isNotEmpty()) {
+                if (!refresca){
+                    listaTareasCambiadas.value.forEach { tarea ->
+                        firestore.editaTarea(tarea)
+                    }
                 }
+                listaTareas.value = firestore.getTareas()
+                listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
+                guardarCambios = false
+                refresca = false
+            } else {
+                listaTareas.value = firestore.getTareas()
+                listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
+                guardarCambios = false
+                refresca = false
             }
-            listaTareas.value = firestore.getTareas()
+        } else if (listaTareas.value.isNotEmpty()){
             listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
-            listaTareasCambiadas.value = emptyList()
-            guardarCambios = false
-            refresca = false
-            if (primeraVez.value) {
-                navigate.value = true
-                primeraVez.value = false
-            }
-        } else {
-            listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
-            listaTareasCambiadas.value = emptyList()
             guardarCambios = false
             refresca = false
         }
+        listaTareasCambiadas.value = emptyList()
+        mostrarTodo = hayInternet
+        cargando = false
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoApp)
-            .pullRefresh(pullRefreshState)
-    ) {
-        Column (
-            Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Tareas",
-                        color = Color.Black,
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                    IconButton(
-                        onClick = { showTareaDialog = true },
-                        modifier = Modifier
-                            .size(55.dp)
-                            .align(Alignment.CenterEnd)
-                            .wrapContentSize()
-                            .padding(end = 20.dp)
-                            .alpha(completadas.let { if (it) 0f else 1f }))
-                    {
-                        Icon(
-                            Icons.Filled.AddCircle,
-                            "Agregar tarea",
-                            Modifier.fillMaxSize(),
-                            Color.Black
-                        )
-                    }
-                }
+
+    if(cargando){
+        CompruebaInternetScreen()
+    } else if (!mostrarTodo) {
+        NoInternetScreen(
+            onRetry = {
+                guardarCambios = true
+                refresca = true
             }
-            if (guardarCambios){
-                Column (
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Cargando tareas...", fontSize = 18.sp, color = Color.Black)
-                }
-            } else {
-                Column(
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoApp)
+                .pullRefresh(pullRefreshState)
+        ) {
+            Column (
+                Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
                     Modifier
                         .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    if (listaTareasFiltradas.isNotEmpty() && !guardarCambios) {
-                        LazyColumn {
-                            items(listaTareasFiltradas.size) { index ->
-                                TareaCard(listaTareasFiltradas[index])
-                            }
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "No hay tareas pendientes",
-                                modifier = Modifier.padding(top = 8.dp)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Tareas",
+                            color = Color.Black,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                        IconButton(
+                            onClick = { showTareaDialog = true },
+                            modifier = Modifier
+                                .size(55.dp)
+                                .align(Alignment.CenterEnd)
+                                .wrapContentSize()
+                                .padding(end = 20.dp)
+                                .alpha(completadas.let { if (it) 0f else 1f }))
+                        {
+                            Icon(
+                                Icons.Filled.AddCircle,
+                                "Agregar tarea",
+                                Modifier.fillMaxSize(),
+                                Color.Black
                             )
                         }
                     }
                 }
-            }
-        }
-        if(listaTareasCambiadas.value.isNotEmpty()){
-            FloatingActionButton(
-                containerColor = FondoMenus,
-                onClick = {
-                    guardarCambios = true
-                    Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(20.dp, 0.dp, 0.dp, 20.dp)
-                    .height(35.dp)
-                    .width(130.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        modifier = Modifier.size(22.dp),
-                        painter = painterResource(id = R.drawable.save),
-                        contentDescription = "Actualizar tareas"
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        text = "Guardar",
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                    )
+                if (guardarCambios){
+                    Column (
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Cargando tareas...", fontSize = 18.sp, color = Color.Black)
+                    }
+                } else {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                    ) {
+                        if (listaTareasFiltradas.isNotEmpty() && !guardarCambios) {
+                            LazyColumn {
+                                items(listaTareasFiltradas.size) { index ->
+                                    TareaCard(listaTareasFiltradas[index])
+                                }
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "No hay tareas pendientes",
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
+            if(listaTareasCambiadas.value.isNotEmpty()){
+                FloatingActionButton(
+                    containerColor = FondoMenus,
+                    onClick = {
+                        guardarCambios = true
+                        Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(20.dp, 0.dp, 0.dp, 20.dp)
+                        .height(35.dp)
+                        .width(130.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(22.dp),
+                            painter = painterResource(id = R.drawable.save),
+                            contentDescription = "Actualizar tareas"
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Guardar",
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+            PullRefreshIndicator(
+                refreshing = guardarCambios,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
-        PullRefreshIndicator(
-            refreshing = guardarCambios,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
     if (showTareaDialog){
         Dialog(onDismissRequest = {showTareaDialog = false}) {
@@ -501,27 +526,33 @@ fun TareasTabScreen(completadas: Boolean){
                         ) {
                             Button(
                                 onClick = {
-                                    if (descripcion.isNotEmpty()) {
-                                        val tarea =
-                                            Tarea(
-                                                rol = rolSeleccionado,
-                                                descripcion = descripcion,
-                                                fechaLimite = fechaFormateada,
-                                                completada = false
-                                            )
-                                        showTareaDialog = false
-                                        scope.launch(Dispatchers.IO) {
-                                            firestore.insertaTarea(tarea)
-                                            guardarCambios = true
+                                    hayInternet = hayInternet(connectivityManager)
+                                    if (hayInternet) {
+                                        if (descripcion.isNotEmpty()) {
+                                            val tarea =
+                                                Tarea(
+                                                    rol = rolSeleccionado,
+                                                    descripcion = descripcion,
+                                                    fechaLimite = fechaFormateada,
+                                                    completada = false
+                                                )
+                                            showTareaDialog = false
+                                            scope.launch(Dispatchers.IO) {
+                                                firestore.insertaTarea(tarea)
+                                                guardarCambios = true
+                                            }
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Por favor, llena todos los campos",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
                                         }
                                     } else {
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                "Por favor, llena todos los campos",
-                                                Toast.LENGTH_SHORT
-                                            )
-                                            .show() } },
+                                      Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
+                                    } },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = BordeIndvCards
                                 )) {
