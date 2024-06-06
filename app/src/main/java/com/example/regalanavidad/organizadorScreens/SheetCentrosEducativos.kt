@@ -131,9 +131,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
         hayInternet = hayInternet(connectivityManager)
         if (hayInternet) {
             listaCentrosEducativos.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
-        } else {
-            mostrarTodo = false
         }
+        mostrarTodo = hayInternet
         centrosLoading = false
     }
 
@@ -142,7 +141,8 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
     } else if (!mostrarTodo){
         NoInternetScreen(
             onRetry = {
-                hayInternet = true
+                centrosLoading = true
+                listaCentrosCambiados.value = emptyList()
             }
         )
     } else {

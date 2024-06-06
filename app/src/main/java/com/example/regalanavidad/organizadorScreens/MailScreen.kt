@@ -62,7 +62,6 @@ fun MailScreen(navController: NavController){
     var showAlertDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
 
     Column (
         modifier = Modifier

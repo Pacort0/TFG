@@ -1,5 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
@@ -77,6 +79,9 @@ import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.DetallesProducto
 import com.example.regalanavidad.modelos.Producto
 import com.example.regalanavidad.modelos.ProductoResponse
+import com.example.regalanavidad.sharedScreens.NoInternetScreen
+import com.example.regalanavidad.sharedScreens.PantallaCarga
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
@@ -102,260 +107,253 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
     var opcionSeleccionada by remember {mutableStateOf("")}
     val context = LocalContext.current
     val pullRefreshState = rememberPullRefreshState(refreshing = productosLoading, onRefresh = {productosLoading = !productosLoading})
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var mostrarTodo by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = productosLoading) {
         onMapaCambiado(true)
-        productoResponse = getRecaudacionesFromSheet(spreadsheetId, cambiaNombreProducto(productoSeleccionado))
-        listaProductos = productoResponse.productos
+        hayInternet = hayInternet(connectivityManager)
+        if (hayInternet){
+            productoResponse = getRecaudacionesFromSheet(spreadsheetId, cambiaNombreProducto(productoSeleccionado))
+            listaProductos = productoResponse.productos
+        }
+        mostrarTodo = hayInternet
         productosLoading = false
     }
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(FondoApp)
-        .pullRefresh(pullRefreshState)) {
-        Column (
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Productos Recaudados",
-                    fontSize = 24.sp,
-                    color = Color.Black
-                )
+
+    if(productosLoading){
+        PantallaCarga(textoCargando = "Cargando recaudaciones...")
+    } else if (!mostrarTodo){
+        NoInternetScreen(
+            onRetry = {
+                productosLoading = true
+                listaProductosCambiados = emptyList<Producto>().toMutableList()
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row (
-                Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+        )
+    } else {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(FondoApp)
+            .pullRefresh(pullRefreshState)) {
+            Column (
+                modifier = Modifier.padding(8.dp)
             ) {
-                Column(
+                Row(
                     Modifier
                         .fillMaxWidth()
-                        .weight(0.5f)
+                        .wrapContentHeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .border(0.dp, Color.Black, CircleShape)
-                            .background(FondoMenus)
+                    Text(
+                        text = "Productos Recaudados",
+                        fontSize = 24.sp,
+                        color = Color.Black
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row (
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(0.5f)
                     ) {
-                        TextField(
-                            modifier = Modifier
-                                .menuAnchor()
-                                .clip(CircleShape)
-                                .border(0.dp, Color.Black, CircleShape),
-                            readOnly = true,
-                            value = productoSeleccionado,
-                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
-                            onValueChange = {},
-                            trailingIcon = { TrailingIconMio(expanded = expanded) },
-                            colors = TextFieldDefaults.colors(
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedContainerColor = FondoMenus,
-                                focusedContainerColor = FondoMenus
-                            )
-                        )
-                        ExposedDropdownMenu(
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false },
+                            onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
+                                .clip(CircleShape)
+                                .border(0.dp, Color.Black, CircleShape)
                                 .background(FondoMenus)
                         ) {
-                            opcionesDistritos.forEach { selectionOption ->
-                                DropdownMenuItem(
-                                    text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
-                                    onClick = {
-                                        if (listaProductosCambiados.isNotEmpty()) {
-                                            showAlertDialog = true
-                                            opcionSeleccionada = selectionOption
-                                        } else {
-                                            productoSeleccionado = selectionOption
-                                            expanded = false
-                                            productosLoading = true
-                                        }
-                                    },
-                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                    modifier = Modifier
-                                        .background(FondoMenus)
-                                        .padding(5.dp),
-                                    )
-                            }
-                        }
-                    }
-                }
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(0.5f)
-                ) {
-                    if (listaProductosCambiados.isNotEmpty()) {
-                        ElevatedButton(onClick = {
-                            Toast.makeText(context, "Actualizando productos...", Toast.LENGTH_SHORT).show()
-                            scope.launch(Dispatchers.IO) {
-                                updateProdDataInGoogleSheet(
-                                    spreadsheetId,
-                                    cambiaNombreProducto(productoSeleccionado),
-                                    listaProductosCambiados
-                                )
-                                listaProductosCambiados = emptyList()
-                                productosLoading = true
-                            }
-                        }, modifier = Modifier.width(160.dp),
-                            colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = FondoMenus
-                            ),
-                            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    painterResource(id = R.drawable.save),
-                                    contentDescription = "Guardar cambios",
-                                    Modifier.size(32.dp),
-                                    tint = Color.Black
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Guardar", fontSize = 18.sp, color = Color.Black)
-                            }
-                        }
-                    }
-                }
-            }
-            if (listaProductos.isNotEmpty() && !productosLoading){
-                LazyColumn {
-                    items(listaProductos.size) { index ->
-                        var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
-                        Card (
-                            modifier = Modifier
-                                .padding(5.dp)
-                                .fillParentMaxWidth()
-                                .heightIn(min = 45.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .border(1.dp, BordeIndvCards, RectangleShape)
-                                .animateContentSize(
-                                    animationSpec = tween(
-                                        durationMillis = 300,
-                                        easing = LinearOutSlowInEasing
-                                    )
-                                ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = FondoIndvCards
-                            )
-                        ) {
-                            Row (
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
+                            TextField(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable { isExpanded = !isExpanded }
-                                    .padding(8.dp)){
-                                Column(
-                                    Modifier
-                                        .weight(0.1f),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)
-                                {
-                                    Icon(imageVector = isExpanded.let { if (!isExpanded) {
-                                        Icons.Default.KeyboardArrowDown
-                                    } else {
-                                        Icons.Default.KeyboardArrowUp
-                                    } }, contentDescription = "Contraer", Modifier.size(30.dp), tint = Color.Black)
-                                }
-                                Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                                    Text(
-                                        text = listaProductos[index].nombre,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black)
-                                }
-                                Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                    Text(
-                                        text = "Cantidad total: ${listaProductos[index].cantidadTotal}",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black)
+                                    .menuAnchor()
+                                    .clip(CircleShape)
+                                    .border(0.dp, Color.Black, CircleShape),
+                                readOnly = true,
+                                value = productoSeleccionado,
+                                textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
+                                onValueChange = {},
+                                trailingIcon = { TrailingIconMio(expanded = expanded) },
+                                colors = TextFieldDefaults.colors(
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedContainerColor = FondoMenus,
+                                    focusedContainerColor = FondoMenus
+                                )
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier
+                                    .background(FondoMenus)
+                            ) {
+                                opcionesDistritos.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
+                                        onClick = {
+                                            if (listaProductosCambiados.isNotEmpty()) {
+                                                showAlertDialog = true
+                                                opcionSeleccionada = selectionOption
+                                            } else {
+                                                productoSeleccionado = selectionOption
+                                                expanded = false
+                                                productosLoading = true
+                                            }
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier
+                                            .background(FondoMenus)
+                                            .padding(5.dp),
+                                    )
                                 }
                             }
-                            if (isExpanded) {
-                                Column (
-                                    modifier = Modifier.padding(10.dp)
+                        }
+                    }
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(0.5f)
+                    ) {
+                        if (listaProductosCambiados.isNotEmpty()) {
+                            ElevatedButton(onClick = {
+                                if (hayInternet){
+                                    Toast.makeText(context, "Actualizando productos...", Toast.LENGTH_SHORT).show()
+                                    scope.launch(Dispatchers.IO) {
+                                        updateProdDataInGoogleSheet(
+                                            spreadsheetId,
+                                            cambiaNombreProducto(productoSeleccionado),
+                                            listaProductosCambiados
+                                        )
+                                        listaProductosCambiados = emptyList()
+                                        productosLoading = true
+                                    }
+                                } else {
+                                    Toast.makeText(context, "No hay conexión a internet", Toast.LENGTH_SHORT).show()
+                                }
+                            }, modifier = Modifier.width(160.dp),
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = FondoMenus
+                                ),
+                                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
-                                    listaProductos[index].tipos.forEach { tipo ->
-                                        val cantidadOriginalProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
-                                        var cantidadProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
-                                        Row (
-                                            horizontalArrangement = Arrangement.Center,
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .border(1.dp, BordeIndvCards, CircleShape)
-                                                .clip(CircleShape)
-                                                .background(FondoTarjetaInception)
-                                                .padding(8.dp)){
-                                            Column (Modifier.weight(0.35f),
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Center)
-                                            {
-                                                Text(
-                                                    text = tipo.tipo,
-                                                    fontSize = 20.sp,
-                                                    color = Color.Black)
-                                            }
-                                            Column (Modifier
-                                                .weight(0.65f),
-                                                horizontalAlignment = Alignment.End,
-                                                verticalArrangement = Arrangement.Center)
-                                            {
-                                                Row (
-                                                    modifier = Modifier.fillMaxSize().padding(end = 12.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.End
-                                                ) {
-                                                    IconButton(onClick = {
-                                                        cantidadProd--
-                                                        tipo.cantidad = cantidadProd.toString()
-
-                                                        val producto = listaProductos[index]
-                                                        val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
-
-                                                        listaProductosCambiados = gestionaLista(
-                                                            cantidadProd,
-                                                            cantidadOriginalProd,
-                                                            productoExistente,
-                                                            listaProductosCambiados,
-                                                            listaProductos,
-                                                            index,
-                                                            tipo.tipo
-                                                        )
-                                                    }) {
-                                                        Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(31.dp), tint = Color.Black)
-                                                    }
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    TextField(
-                                                        value = "$cantidadProd",
-                                                        textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 20.sp, color = Color.Black),
-                                                        onValueChange = { cantidad ->
-                                                            val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
-                                                            if (trimmedCantidad.isEmpty()) {
-                                                                cantidadProd = 0 // O cualquier valor predeterminado
-                                                            } else {
-                                                                val nuevaCantidad = trimmedCantidad.toInt()
-                                                                cantidadProd = nuevaCantidad
-                                                            }
+                                    Icon(
+                                        painterResource(id = R.drawable.save),
+                                        contentDescription = "Guardar cambios",
+                                        Modifier.size(32.dp),
+                                        tint = Color.Black
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "Guardar", fontSize = 18.sp, color = Color.Black)
+                                }
+                            }
+                        }
+                    }
+                }
+                if (listaProductos.isNotEmpty() && !productosLoading){
+                    LazyColumn {
+                        items(listaProductos.size) { index ->
+                            var isExpanded by remember { mutableStateOf(false) }  // Añadir estado para controlar la expansión
+                            Card (
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .fillParentMaxWidth()
+                                    .heightIn(min = 45.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .border(1.dp, BordeIndvCards, RectangleShape)
+                                    .animateContentSize(
+                                        animationSpec = tween(
+                                            durationMillis = 300,
+                                            easing = LinearOutSlowInEasing
+                                        )
+                                    ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = FondoIndvCards
+                                )
+                            ) {
+                                Row (
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable { isExpanded = !isExpanded }
+                                        .padding(8.dp)){
+                                    Column(
+                                        Modifier
+                                            .weight(0.1f),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center)
+                                    {
+                                        Icon(imageVector = isExpanded.let { if (!isExpanded) {
+                                            Icons.Default.KeyboardArrowDown
+                                        } else {
+                                            Icons.Default.KeyboardArrowUp
+                                        } }, contentDescription = "Contraer", Modifier.size(30.dp), tint = Color.Black)
+                                    }
+                                    Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
+                                        Text(
+                                            text = listaProductos[index].nombre,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black)
+                                    }
+                                    Column (Modifier.weight(0.45f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                        Text(
+                                            text = "Cantidad total: ${listaProductos[index].cantidadTotal}",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black)
+                                    }
+                                }
+                                if (isExpanded) {
+                                    Column (
+                                        modifier = Modifier.padding(10.dp)
+                                    ) {
+                                        listaProductos[index].tipos.forEach { tipo ->
+                                            val cantidadOriginalProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
+                                            var cantidadProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
+                                            Row (
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .border(1.dp, BordeIndvCards, CircleShape)
+                                                    .clip(CircleShape)
+                                                    .background(FondoTarjetaInception)
+                                                    .padding(8.dp)){
+                                                Column (Modifier.weight(0.35f),
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    verticalArrangement = Arrangement.Center)
+                                                {
+                                                    Text(
+                                                        text = tipo.tipo,
+                                                        fontSize = 20.sp,
+                                                        color = Color.Black)
+                                                }
+                                                Column (Modifier
+                                                    .weight(0.65f),
+                                                    horizontalAlignment = Alignment.End,
+                                                    verticalArrangement = Arrangement.Center)
+                                                {
+                                                    Row (
+                                                        modifier = Modifier.fillMaxSize().padding(end = 12.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.End
+                                                    ) {
+                                                        IconButton(onClick = {
+                                                            cantidadProd--
                                                             tipo.cantidad = cantidadProd.toString()
 
                                                             val producto = listaProductos[index]
@@ -370,39 +368,69 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                 index,
                                                                 tipo.tipo
                                                             )
-                                                        },
-                                                        colors = TextFieldDefaults.colors(
-                                                            unfocusedIndicatorColor = Color.Transparent,
-                                                            focusedIndicatorColor = Color.Transparent,
-                                                            focusedContainerColor = Color.Transparent,
-                                                            unfocusedContainerColor = Color.Transparent,
-                                                        ),
-                                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                        modifier = Modifier
-                                                            .width(70.dp)
-                                                            .wrapContentHeight()
-                                                            .background(Color.Transparent)
-                                                            .align(Alignment.CenterVertically),
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    IconButton(onClick = {
-                                                        cantidadProd++
-                                                        tipo.cantidad = cantidadProd.toString()
+                                                        }) {
+                                                            Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(31.dp), tint = Color.Black)
+                                                        }
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        TextField(
+                                                            value = "$cantidadProd",
+                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 20.sp, color = Color.Black),
+                                                            onValueChange = { cantidad ->
+                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
+                                                                if (trimmedCantidad.isEmpty()) {
+                                                                    cantidadProd = 0 // O cualquier valor predeterminado
+                                                                } else {
+                                                                    val nuevaCantidad = trimmedCantidad.toInt()
+                                                                    cantidadProd = nuevaCantidad
+                                                                }
+                                                                tipo.cantidad = cantidadProd.toString()
 
-                                                        val producto = listaProductos[index]
-                                                        val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
+                                                                val producto = listaProductos[index]
+                                                                val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
 
-                                                        listaProductosCambiados = gestionaLista(
-                                                            cantidadProd,
-                                                            cantidadOriginalProd,
-                                                            productoExistente,
-                                                            listaProductosCambiados,
-                                                            listaProductos,
-                                                            index,
-                                                            tipo.tipo
+                                                                listaProductosCambiados = gestionaLista(
+                                                                    cantidadProd,
+                                                                    cantidadOriginalProd,
+                                                                    productoExistente,
+                                                                    listaProductosCambiados,
+                                                                    listaProductos,
+                                                                    index,
+                                                                    tipo.tipo
+                                                                )
+                                                            },
+                                                            colors = TextFieldDefaults.colors(
+                                                                unfocusedIndicatorColor = Color.Transparent,
+                                                                focusedIndicatorColor = Color.Transparent,
+                                                                focusedContainerColor = Color.Transparent,
+                                                                unfocusedContainerColor = Color.Transparent,
+                                                            ),
+                                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                            modifier = Modifier
+                                                                .width(70.dp)
+                                                                .wrapContentHeight()
+                                                                .background(Color.Transparent)
+                                                                .align(Alignment.CenterVertically),
                                                         )
-                                                    }) {
-                                                        Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(31.dp), tint = Color.Black)
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        IconButton(onClick = {
+                                                            cantidadProd++
+                                                            tipo.cantidad = cantidadProd.toString()
+
+                                                            val producto = listaProductos[index]
+                                                            val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
+
+                                                            listaProductosCambiados = gestionaLista(
+                                                                cantidadProd,
+                                                                cantidadOriginalProd,
+                                                                productoExistente,
+                                                                listaProductosCambiados,
+                                                                listaProductos,
+                                                                index,
+                                                                tipo.tipo
+                                                            )
+                                                        }) {
+                                                            Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(31.dp), tint = Color.Black)
+                                                        }
                                                     }
                                                 }
                                             }
@@ -412,30 +440,30 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             }
                         }
                     }
-                }
-            } else {
-                Column (
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.googlesheetslogo),
-                        contentDescription = "GoogleSheetsLogo",
-                        modifier = Modifier.size(60.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Cargando productos...",
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                } else {
+                    Column (
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.googlesheetslogo),
+                            contentDescription = "GoogleSheetsLogo",
+                            modifier = Modifier.size(60.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Cargando productos...",
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
+            PullRefreshIndicator(
+                refreshing = productosLoading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
-        PullRefreshIndicator(
-            refreshing = productosLoading,
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
     if(showAlertDialog){
         AlertDialog(

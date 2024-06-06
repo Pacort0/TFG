@@ -91,7 +91,7 @@ const val gastosSpreadsheetId = "1zffZhulQGscbwVZrEapV_DIt57aVyWDTauQqYJCVVuE"
 @Composable
 fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     var listaGastos by remember { mutableStateOf(emptyList<Gasto>()) }
-    var recargarGastos by remember { mutableStateOf(true) }
+    var gastosLoading by remember { mutableStateOf(true) }
     var showGastoDialog by remember { mutableStateOf(false) }
     var motivoGasto by remember { mutableStateOf("") }
     var cantidadGasto by remember { mutableStateOf("") }
@@ -102,7 +102,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     var gastoResponse: GastoResponse
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val pullRefreshState = rememberPullRefreshState(refreshing = recargarGastos, onRefresh = {recargarGastos = !recargarGastos})
+    val pullRefreshState = rememberPullRefreshState(refreshing = gastosLoading, onRefresh = {gastosLoading = !gastosLoading})
     var totalGastado by remember { mutableDoubleStateOf(0.0) }
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
@@ -116,25 +116,24 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
         )
         dineroRecaudado.value = donacionResponse.donaciones
     }
-    LaunchedEffect(key1 = recargarGastos) {
+    LaunchedEffect(key1 = gastosLoading) {
         onMapaCambiado(true)
         hayInternet = hayInternet(connectivityManager)
         if (hayInternet){
             gastoResponse = getGastosFromSheet()
             listaGastos = gastoResponse.gastos
             totalGastado = calculaTotalGastado(listaGastos)
-        } else {
-            mostrarTodo = false
         }
-        recargarGastos = false
+        mostrarTodo = hayInternet
+        gastosLoading = false
     }
 
-    if (recargarGastos){
+    if (gastosLoading){
         PantallaCarga(textoCargando = "Cargando gastos...")
     } else if (!mostrarTodo){
         NoInternetScreen(
             onRetry = {
-                hayInternet = true
+                gastosLoading = true
             }
         )
     } else {
@@ -147,7 +146,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             PullRefreshIndicator(
-                refreshing = recargarGastos,
+                refreshing = gastosLoading,
                 state = pullRefreshState,
             )
             Row(
@@ -167,7 +166,19 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     )
                     if (usuario.nombreRango != "Voluntario") {
                         IconButton(
-                            onClick = { showGastoDialog = true },
+                            onClick = {
+                                hayInternet = hayInternet(connectivityManager)
+                                if (hayInternet) {
+                                    showGastoDialog = true
+                                } else {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "No hay conexión a internet",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }},
                             modifier = Modifier
                                 .size(65.dp)
                                 .align(Alignment.CenterEnd)
@@ -182,7 +193,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     }
                 }
             }
-            if (listaGastos.isNotEmpty() && !recargarGastos && dineroRecaudado.value.isNotEmpty()) {
+            if (listaGastos.isNotEmpty() && !gastosLoading && dineroRecaudado.value.isNotEmpty()) {
                 val donacionesTotales = dineroRecaudado.value[3].cantidad.split(" ")[0]
                 val donacionesTotalesLimpio = donacionesTotales.replace(".", "")
                 val dineroRecaudado = donacionesTotalesLimpio.replace(",", ".").toDoubleOrNull() ?: 0.0
@@ -434,19 +445,17 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                             showGastoDialog = false
                                             scope.launch(Dispatchers.IO) {
                                                 updateGastosDataInGoogleSheet(gasto)
-                                                recargarGastos = true
+                                                gastosLoading = true
                                             }
-                                        } else {
-                                            Toast
-                                                .makeText(
-                                                    context,
-                                                    "Por favor, llena todos los campos",
-                                                    Toast.LENGTH_SHORT
-                                                )
-                                                .show() }
+                                        }
                                     } else {
-                                        mostrarTodo = false
-                                    }},
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "Por favor, llena todos los campos",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show() } },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = BordeIndvCards
                                 )) {

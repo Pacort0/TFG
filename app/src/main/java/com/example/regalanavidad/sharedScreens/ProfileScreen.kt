@@ -1,6 +1,8 @@
 package com.example.regalanavidad.sharedScreens
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -51,6 +53,8 @@ fun ProfileScreen() {
     val context = LocalContext.current
     var settingsForm by remember { mutableStateOf(TextFieldValue(usuario.nombre)) }
     var isNameChanged by remember { mutableStateOf(false) }
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
 
     Column(
         modifier = Modifier
@@ -116,11 +120,16 @@ fun ProfileScreen() {
                     containerColor = BordeIndvCards
                 ),
                 onClick = {
-                    usuario.nombre = settingsForm.text
-                    Toast.makeText(context, "Cambiando nombre", Toast.LENGTH_SHORT).show()
-                    CoroutineScope(Dispatchers.IO).launch {
-                        firestore.editaUsuario(usuario)
-                        isNameChanged = false
+                    hayInternet = hayInternet(connectivityManager)
+                    if(hayInternet){
+                        usuario.nombre = settingsForm.text
+                        Toast.makeText(context, "Cambiando nombre", Toast.LENGTH_SHORT).show()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            firestore.editaUsuario(usuario)
+                            isNameChanged = false
+                        }
+                    } else {
+                        Toast.makeText(context, "No hay conexión a internet", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

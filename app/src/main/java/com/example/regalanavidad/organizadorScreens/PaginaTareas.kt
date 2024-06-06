@@ -80,8 +80,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Tarea
-import com.example.regalanavidad.sharedScreens.CompruebaInternetScreen
 import com.example.regalanavidad.sharedScreens.NoInternetScreen
+import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
@@ -241,7 +241,7 @@ fun TareasTabScreen(completadas: Boolean){
     }
 
     if(cargando){
-        CompruebaInternetScreen()
+        PantallaCarga("Cargando tareas...")
     } else if (!mostrarTodo) {
         NoInternetScreen(
             onRetry = {

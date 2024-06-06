@@ -384,7 +384,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(alturaDialogo.let { if (prediccionesNuevoSitioRecogida.isNotEmpty()) 480.dp else it })
+                            .height(alturaDialogo.let {
+                                if (prediccionesNuevoSitioRecogida.isNotEmpty()) 480.dp
+                                else if (textoBusqueda != "") 230.dp
+                                else it
+                            })
                             .background(FondoApp)
                             .padding(35.dp)
                     ) {
@@ -405,7 +409,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     textoBusqueda = nuevaBusqueda
                                     buscarSitio = true
                                     scope.launch {
-                                        prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda)
+                                        prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     } },
                                 label = { Text("Buscar sitio", color = Color.Black) },
                                 leadingIcon = {
@@ -429,7 +433,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
                                 prediccionesNuevoSitioRecogida = emptyList()
                             }
-                            if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty()){
+                            if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty() && textoBusqueda.isNotBlank()){
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioRecogida.take(4)
                                     items(topSitios.size) { index ->
@@ -442,7 +446,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 .border(1.dp, BordeIndvCards, CircleShape)
                                                 .background(FondoIndvCards)
                                                 .clickable {
-                                                    if (hayInternet){
+                                                    if (hayInternet) {
                                                         scope.launch(Dispatchers.IO) {
                                                             firestore.insertaSitioRecogida(topSitios[index])
                                                             textoBusqueda = ""
@@ -452,7 +456,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             agregaSitio = false
                                                         }
                                                     } else {
-                                                        Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                "No tienes Internet",
+                                                                Toast.LENGTH_SHORT
+                                                            )
+                                                            .show()
                                                     }
                                                 }
                                                 .padding(0.dp, 5.dp),
@@ -474,6 +484,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             }
                                         }
                                     }
+                                }
+                            } else {
+                                Column {
+                                    Text(text = "No tienes conexión")
                                 }
                             }
                         }
@@ -499,7 +513,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(alturaDialogo.let { if (prediccionesNuevoSitioEvento.isNotEmpty()) 610.dp else it })
+                            .height(alturaDialogo.let {
+                                if (prediccionesNuevoSitioEvento.isNotEmpty()) 610.dp
+                                else if (textoBusqueda != "") 470.dp
+                                else it
+                            })
                             .background(FondoApp)
                             .padding(top = 15.dp, start = 30.dp, end = 30.dp, bottom = 15.dp)
                             .clip(RoundedCornerShape(20.dp))
@@ -547,7 +565,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     textoBusqueda = nuevaBusqueda
                                     buscarSitio = true
                                     scope.launch {
-                                        prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda)
+                                        prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     }
                                 },
                                 label = { Text("Lugar del evento", color = Color.Black) },
@@ -827,6 +845,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             ListaSitiosConfirmados(sitiosRecogidaConfirmados,
                                                 false,
                                                 canEditSitios,
+                                                connectivityManager,
+                                                context,
                                                 onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
                                                 onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
                                                     navegaSitio = true
@@ -941,6 +961,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     eventosConfirmados,
                                                     false,
                                                     canEditSitios,
+                                                    connectivityManager,
+                                                    context,
                                                     onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
                                                     onEventoEscogido = {
                                                             evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
@@ -1641,13 +1663,12 @@ fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
     return drawerValue == DrawerValue.Open || (!mapaAbierto)
 }
 
-suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogida> {
+suspend fun obtenerPredicciones(textoBusqueda: String, connectivityManager: ConnectivityManager): MutableList<SitioRecogida> {
     val sitiosRecogida = mutableListOf<SitioRecogida>()
     val sevillaBounds = RectangularBounds.newInstance(
         LatLng(37.0, -6.1), // Suroeste de Sevilla
         LatLng(37.6, -5.5)  // Noreste de Sevilla
     )
-
 
     val request = FindAutocompletePredictionsRequest.builder()
         .setCountries(listOf("ES"))
@@ -1655,48 +1676,61 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
         .setQuery(textoBusqueda)
         .build()
 
-    val response = withContext(Dispatchers.IO) {
-        Tasks.await(placesClient.findAutocompletePredictions(request))
-    }
+    val hayInternet:Boolean = hayInternet(connectivityManager)
 
-    val fetchPlaceRequests = response.autocompletePredictions.map { prediction ->
-        FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS))
-    }
+    if(hayInternet){
+        val response = withContext(Dispatchers.IO) {
+            Tasks.await(placesClient.findAutocompletePredictions(request))
+        }
 
-    val deferreds = fetchPlaceRequests.map { fetchPlaceRequest ->
-        CoroutineScope(Dispatchers.IO).async {
-            try {
-                val fetchPlaceResponse = Tasks.await(placesClient.fetchPlace(fetchPlaceRequest))
-                val place = fetchPlaceResponse.place
-                SitioRecogida(
-                    nombreSitio = place.name!!,
-                    latitudSitio = place.latLng!!.latitude,
-                    longitudSitio = place.latLng!!.longitude,
-                    direccionSitio = place.address!!
-                )
-            } catch (exception: ApiException) {
-                Log.e("Error", "Place not found: " + exception.statusCode)
-                null
+        val fetchPlaceRequests = response.autocompletePredictions.map { prediction ->
+            FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS))
+        }
+
+        val deferreds = fetchPlaceRequests.map { fetchPlaceRequest ->
+            CoroutineScope(Dispatchers.IO).async {
+                try {
+                    val fetchPlaceResponse = Tasks.await(placesClient.fetchPlace(fetchPlaceRequest))
+                    val place = fetchPlaceResponse.place
+                    SitioRecogida(
+                        nombreSitio = place.name!!,
+                        latitudSitio = place.latLng!!.latitude,
+                        longitudSitio = place.latLng!!.longitude,
+                        direccionSitio = place.address!!
+                    )
+                } catch (exception: ApiException) {
+                    Log.e("Error", "Place not found: " + exception.statusCode)
+                    null
+                }
             }
         }
-    }
 
-    deferreds.forEach { deferred ->
-        val sitioRecogida = deferred.await()
-        if (sitioRecogida != null) {
-            sitiosRecogida.add(sitioRecogida)
+        deferreds.forEach { deferred ->
+            val sitioRecogida = deferred.await()
+            if (sitioRecogida != null) {
+                sitiosRecogida.add(sitioRecogida)
+            }
         }
-    }
 
-    return sitiosRecogida
+        return sitiosRecogida
+    } else {
+        return emptyList<SitioRecogida>().toMutableList()
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
+fun ListaSitiosConfirmados(
+    sitiosRecogidaConfirmados: MutableList<SitioRecogida>,
+    isHomePage: Boolean, canEdit: Boolean,
+    connectivityManager: ConnectivityManager,
+    context: Context,
+    onElementoEliminado: (Boolean) -> Unit,
+    onSitioEscogido: (SitioRecogida) -> Unit){
+
     var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
-    val firestore = FirestoreManagerDAL()
+
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
@@ -1762,10 +1796,15 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
                         containerColor = BordeIndvCards
                     ),
                     onClick = {
-                        showEliminarDialog = false
-                        CoroutineScope(Dispatchers.IO).launch {
-                            firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[indexActual])
-                            onElementoEliminado(true)
+                        val hayInternet:Boolean = hayInternet(connectivityManager)
+                        if (hayInternet){
+                            showEliminarDialog = false
+                            CoroutineScope(Dispatchers.IO).launch {
+                                firestore.eliminaSitioRecogida(sitiosRecogidaConfirmados[indexActual])
+                                onElementoEliminado(true)
+                            }
+                        } else {
+                            Toast.makeText(context, "No hay conexión", Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
@@ -1789,8 +1828,15 @@ fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>
 }
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onEventoEscogido: (Evento) -> Unit){
-    var showDialog by remember { mutableStateOf(false) }
+fun ListaEventosConfirmados(
+    eventosConfirmados: MutableList<Evento>,
+    isHomePage: Boolean, canEdit: Boolean,
+    connectivityManager: ConnectivityManager,
+    context: Context,
+    onElementoEliminado: (Boolean) -> Unit,
+    onEventoEscogido: (Evento) -> Unit){
+
+    var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
     val contexto = LocalContext.current
     val firestore = FirestoreManagerDAL()
@@ -1913,6 +1959,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                             DropdownMenuItem(onClick = {
                                                 expanded = false
                                                 indexActual = index
+                                                showEliminarDialog = true
                                             },
                                                 text = {Text(text = "Eliminar evento", color = Color.Red)},
                                                 leadingIcon = {Icon(
@@ -1928,8 +1975,8 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                                                         1.dp,
                                                         BordeIndvCards,
                                                         RoundedCornerShape(10.dp)
-                                                    )
-                                                    .wrapContentSize())
+                                                    ).wrapContentSize()
+                                            )
                                         }
                                     }
                                 }
@@ -1942,11 +1989,11 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
     } else {
         Text(text = "No hay eventos confirmados", color = Color.Black)
     }
-    if (showDialog) {
+    if (showEliminarDialog) {
         AlertDialog(
             containerColor = FondoApp,
             onDismissRequest = {
-                showDialog = false
+                showEliminarDialog = false
             },
             title = {
                 Text(text = "¿Está seguro?", color = Color.Black)
@@ -1960,10 +2007,15 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         containerColor = BordeIndvCards
                     ),
                     onClick = {
-                        showDialog = false
-                        CoroutineScope(Dispatchers.IO).launch {
-                            firestore.eliminaEvento(eventosConfirmados[indexActual])
-                            onElementoEliminado(true)
+                        val hayInternet:Boolean = hayInternet(connectivityManager)
+                        if (hayInternet){
+                            showEliminarDialog = false
+                            CoroutineScope(Dispatchers.IO).launch {
+                                firestore.eliminaEvento(eventosConfirmados[indexActual])
+                                onElementoEliminado(true)
+                            }
+                        } else {
+                            Toast.makeText(context, "No hay conexión a Internet", Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
@@ -1976,7 +2028,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
                         containerColor = BordeIndvCards
                     ),
                     onClick = {
-                        showDialog = false
+                        showEliminarDialog = false
                     }
                 ) {
                     Text("No", color = Color.Black)
