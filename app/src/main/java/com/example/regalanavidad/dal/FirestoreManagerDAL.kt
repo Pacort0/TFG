@@ -1,4 +1,4 @@
-package com.example.regalanavidad.sharedScreens
+package com.example.regalanavidad.dal
 
 import android.os.Build
 import android.util.Log
@@ -7,13 +7,14 @@ import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.Tarea
 import com.example.regalanavidad.modelos.Usuario
+import com.example.regalanavidad.sharedScreens.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-class FirestoreManager {
+class FirestoreManagerDAL {
     private val firestore = FirebaseFirestore.getInstance()
     private val listaUsuarios = firestore.collection("usuarios")
 

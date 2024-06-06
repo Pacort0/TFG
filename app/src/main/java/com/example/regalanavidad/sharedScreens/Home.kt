@@ -108,6 +108,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
+import com.example.regalanavidad.dal.FirestoreManagerDAL
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.DonacionItem
@@ -166,7 +167,7 @@ private val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
-val firestore = FirestoreManager()
+val firestore = FirestoreManagerDAL()
 
 //Para las redes sociales
 val customFontFamily = FontFamily(
@@ -305,26 +306,6 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
     }
 }
 
-@Composable
-fun CompruebaInternetScreen(){
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoApp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            color = BordeIndvCards
-        )
-        Text(
-            text = "Comprobando conexión...",
-            color = Color.Black,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -375,7 +356,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
 
     if (cargando){
-        CompruebaInternetScreen()
+        PantallaCarga(textoCargando = pagerState.currentPage.let {
+            when (it) {
+                0 -> "Cargando sitios..."
+                1 -> "Cargando eventos..."
+                else -> "Cargando..."
+            }
+        })
     } else if (!mostrarTodo){
         NoInternetScreen(
             onRetry = {
@@ -455,13 +442,17 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 .border(1.dp, BordeIndvCards, CircleShape)
                                                 .background(FondoIndvCards)
                                                 .clickable {
-                                                    scope.launch(Dispatchers.IO) {
-                                                        firestore.insertaSitioRecogida(topSitios[index])
-                                                        textoBusqueda = ""
-                                                        alturaDialogo = 150.dp
-                                                        buscarSitio = false
-                                                        recargarSitios = true
-                                                        agregaSitio = false
+                                                    if (hayInternet){
+                                                        scope.launch(Dispatchers.IO) {
+                                                            firestore.insertaSitioRecogida(topSitios[index])
+                                                            textoBusqueda = ""
+                                                            alturaDialogo = 150.dp
+                                                            buscarSitio = false
+                                                            recargarSitios = true
+                                                            agregaSitio = false
+                                                        }
+                                                    } else {
+                                                        Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                                 .padding(0.dp, 5.dp),
@@ -702,24 +693,28 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         containerColor = BordeIndvCards
                                     ),
                                     onClick = {
-                                        if(sitioEvento.nombreSitio == ""){
-                                            Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
-                                        } else if(nombreEvento == ""){
-                                            Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            val evento = Evento(
-                                                id = generarClaveAleatoria(15),
-                                                titulo = nombreEvento,
-                                                descripcion = descripcionEvento,
-                                                startDate = fechaFormateada,
-                                                horaComienzo = horaFormateada,
-                                                lugar = sitioEvento
-                                            )
-                                            scope.launch {
-                                                firestore.insertaEvento(evento)
-                                                recargarEventos = true
-                                                agregaEvento = false
+                                        if(hayInternet){
+                                            if(sitioEvento.nombreSitio == ""){
+                                                Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
+                                            } else if(nombreEvento == ""){
+                                                Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                val evento = Evento(
+                                                    id = generarClaveAleatoria(15),
+                                                    titulo = nombreEvento,
+                                                    descripcion = descripcionEvento,
+                                                    startDate = fechaFormateada,
+                                                    horaComienzo = horaFormateada,
+                                                    lugar = sitioEvento
+                                                )
+                                                scope.launch {
+                                                    firestore.insertaEvento(evento)
+                                                    recargarEventos = true
+                                                    agregaEvento = false
+                                                }
                                             }
+                                        } else {
+                                            Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     modifier = Modifier.background(Color.Transparent)) {
@@ -785,73 +780,60 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     .fillMaxSize()
                                     .fillMaxSize()
                                     .background(color = Color.Transparent)) {
-                                    if(sitiosLoading){
-                                        Column (
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(Color.Transparent),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center,
+                                    Column(
+                                        Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ){
+                                        Row (
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(5.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
                                         ) {
-                                            CircularProgressIndicator(
-                                                color = BordeIndvCards
-                                            )
-                                            Text(
-                                                text = "Cargando sitios...",
-                                                modifier = Modifier.padding(top = 8.dp),
-                                                color = Color.Black
-                                            )
-                                        }
-                                    } else {
-                                        Column(
-                                            Modifier.fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ){
-                                            Row (
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(5.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
-                                            ) {
-                                                Box(modifier = Modifier.fillMaxWidth()) {
-                                                    Text(
-                                                        text = "Sitios de recogida",
-                                                        color = Color.Black,
-                                                        textAlign = TextAlign.Center,
-                                                        fontSize = 24.sp,
-                                                        modifier = Modifier.align(Alignment.Center),
-                                                    )
-                                                    if (canEditSitios) {
-                                                        IconButton(
-                                                            onClick = { agregaSitio = true },
-                                                            modifier = Modifier
-                                                                .size(58.dp)
-                                                                .align(Alignment.CenterEnd)
-                                                                .padding(end = 20.dp))
-                                                        {
-                                                            Icon(
-                                                                Icons.Filled.AddCircle,
-                                                                "Agregar sitio",
-                                                                Modifier.fillMaxSize(),
-                                                                Color.Black
-                                                            )
-                                                        }
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                Text(
+                                                    text = "Sitios de recogida",
+                                                    color = Color.Black,
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 24.sp,
+                                                    modifier = Modifier.align(Alignment.Center),
+                                                )
+                                                if (canEditSitios) {
+                                                    IconButton(
+                                                        onClick = {
+                                                            hayInternet = hayInternet(connectivityManager)
+                                                            if (hayInternet){
+                                                                agregaSitio = true
+                                                            } else {
+                                                                Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
+                                                            }},
+                                                        modifier = Modifier
+                                                            .size(58.dp)
+                                                            .align(Alignment.CenterEnd)
+                                                            .padding(end = 20.dp))
+                                                    {
+                                                        Icon(
+                                                            Icons.Filled.AddCircle,
+                                                            "Agregar sitio",
+                                                            Modifier.fillMaxSize(),
+                                                            Color.Black
+                                                        )
                                                     }
                                                 }
                                             }
-                                            if(haySitios){
-                                                ListaSitiosConfirmados(sitiosRecogidaConfirmados,
-                                                    false,
-                                                    canEditSitios,
-                                                    onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                                    onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                                        navegaSitio = true
-                                                    }
-                                                )
-                                            } else {
-                                                Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
-                                            }
+                                        }
+                                        if(haySitios){
+                                            ListaSitiosConfirmados(sitiosRecogidaConfirmados,
+                                                false,
+                                                canEditSitios,
+                                                onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
+                                                onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
+                                                    navegaSitio = true
+                                                }
+                                            )
+                                        } else {
+                                            Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
                                         }
                                     }
                                 }
@@ -933,7 +915,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         )
                                                         if (canEditEventos) {
                                                             IconButton(
-                                                                onClick = { agregaEvento = true },
+                                                                onClick = {
+                                                                    hayInternet = hayInternet(connectivityManager)
+                                                                    if (hayInternet){
+                                                                        agregaEvento = true
+                                                                    } else {
+                                                                        Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
+                                                                    }},
                                                                 modifier = Modifier
                                                                     .size(58.dp)
                                                                     .align(Alignment.CenterEnd)
@@ -1708,7 +1696,7 @@ suspend fun obtenerPredicciones(textoBusqueda: String): MutableList<SitioRecogid
 fun ListaSitiosConfirmados(sitiosRecogidaConfirmados: MutableList<SitioRecogida>, isHomePage: Boolean, canEdit: Boolean, onElementoEliminado: (Boolean) -> Unit, onSitioEscogido: (SitioRecogida) -> Unit){
     var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
-    val firestore = FirestoreManager()
+    val firestore = FirestoreManagerDAL()
     if(sitiosRecogidaConfirmados.size > 0) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
@@ -1805,7 +1793,7 @@ fun ListaEventosConfirmados(eventosConfirmados: MutableList<Evento>, isHomePage:
     var showDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
     val contexto = LocalContext.current
-    val firestore = FirestoreManager()
+    val firestore = FirestoreManagerDAL()
 
     if(eventosConfirmados.size > 0) {
         LazyColumn(

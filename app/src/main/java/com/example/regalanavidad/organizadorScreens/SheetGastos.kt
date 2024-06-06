@@ -1,5 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -59,31 +61,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.regalanavidad.dal.getGastosFromSheet
+import com.example.regalanavidad.dal.updateGastosDataInGoogleSheet
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Gasto
 import com.example.regalanavidad.modelos.GastoResponse
-import com.example.regalanavidad.modelos.RequestPostGasto
+import com.example.regalanavidad.sharedScreens.NoInternetScreen
+import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.dineroRecaudado
 import com.example.regalanavidad.sharedScreens.donacionesSheetId
 import com.example.regalanavidad.sharedScreens.getDonationDataFromGoogleSheet
+import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoTarjetaInception
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -107,6 +104,9 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     val context = LocalContext.current
     val pullRefreshState = rememberPullRefreshState(refreshing = recargarGastos, onRefresh = {recargarGastos = !recargarGastos})
     var totalGastado by remember { mutableDoubleStateOf(0.0) }
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var mostrarTodo by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = dineroRecaudado.value.isEmpty()) {
         Log.d("Donaciones", "Cargando donaciones")
@@ -118,23 +118,38 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
     }
     LaunchedEffect(key1 = recargarGastos) {
         onMapaCambiado(true)
-        gastoResponse = getGastosFromSheet()
-        listaGastos = gastoResponse.gastos
-        totalGastado = calculaTotalGastado(listaGastos)
+        hayInternet = hayInternet(connectivityManager)
+        if (hayInternet){
+            gastoResponse = getGastosFromSheet()
+            listaGastos = gastoResponse.gastos
+            totalGastado = calculaTotalGastado(listaGastos)
+        } else {
+            mostrarTodo = false
+        }
         recargarGastos = false
     }
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoApp)
-            .pullRefresh(pullRefreshState),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        PullRefreshIndicator(
-            refreshing = recargarGastos,
-            state = pullRefreshState,
+
+    if (recargarGastos){
+        PantallaCarga(textoCargando = "Cargando gastos...")
+    } else if (!mostrarTodo){
+        NoInternetScreen(
+            onRetry = {
+                hayInternet = true
+            }
         )
+    } else {
+        Column (
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoApp)
+                .pullRefresh(pullRefreshState),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            PullRefreshIndicator(
+                refreshing = recargarGastos,
+                state = pullRefreshState,
+            )
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -167,117 +182,118 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                     }
                 }
             }
-        if (listaGastos.isNotEmpty() && !recargarGastos && dineroRecaudado.value.isNotEmpty()) {
-            val donacionesTotales = dineroRecaudado.value[3].cantidad.split(" ")[0]
-            val donacionesTotalesLimpio = donacionesTotales.replace(".", "")
-            val dineroRecaudado = donacionesTotalesLimpio.replace(",", ".").toDoubleOrNull() ?: 0.0
-            val dineroRestante = dineroRecaudado - totalGastado
+            if (listaGastos.isNotEmpty() && !recargarGastos && dineroRecaudado.value.isNotEmpty()) {
+                val donacionesTotales = dineroRecaudado.value[3].cantidad.split(" ")[0]
+                val donacionesTotalesLimpio = donacionesTotales.replace(".", "")
+                val dineroRecaudado = donacionesTotalesLimpio.replace(",", ".").toDoubleOrNull() ?: 0.0
+                val dineroRestante = dineroRecaudado - totalGastado
 
-            Column(
-                modifier = Modifier
-                    .weight(0.9f)
-                    .background(Color.Transparent),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ){
-                LazyColumn (
+                Column(
                     modifier = Modifier
-                        .weight(0.8f)
-                        .padding(12.dp),
+                        .weight(0.9f)
+                        .background(Color.Transparent),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ){
+                    LazyColumn (
+                        modifier = Modifier
+                            .weight(0.8f)
+                            .padding(12.dp),
                     ) {
-                    items(listaGastos.size) { index ->
-                        GastoCard(gasto = listaGastos[index])
+                        items(listaGastos.size) { index ->
+                            GastoCard(gasto = listaGastos[index])
+                        }
+                    }
+                    Column (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .weight(0.15f)
+                            .clip(CircleShape)
+                            .background(Color(semaforoDineroRestante(dineroRestante, dineroRecaudado)))
+                            .border(2.dp, BordeIndvCards, CircleShape)
+                            .wrapContentHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row (
+                            modifier = Modifier
+                                .weight(0.45f)
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = "Recaudado: $dineroRecaudado€",
+                                fontSize = 17.sp,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .weight(0.53f)
+                                    .padding(start = 8.dp),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = "Gastado: $totalGastado€",
+                                fontSize = 17.sp,
+                                modifier = Modifier
+                                    .weight(0.47f)
+                                    .padding(end = 8.dp),
+                                textAlign = TextAlign.Center,
+                                color = Color.Black
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row (
+                            modifier = Modifier
+                                .weight(0.55f)
+                                .fillMaxSize(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val formatoDecimal = DecimalFormat("#.##")
+                            val resultadoRedondeado = formatoDecimal.format(dineroRestante).replace(",", ".").toDouble()
+                            Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp, color = Color.Black)
+                        }
                     }
                 }
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .weight(0.15f)
-                        .clip(CircleShape)
-                        .background(Color(semaforoDineroRestante(dineroRestante, dineroRecaudado)))
-                        .border(2.dp, BordeIndvCards, CircleShape)
-                        .wrapContentHeight(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Row (
-                        modifier = Modifier
-                            .weight(0.45f)
-                            .fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = "Recaudado: $dineroRecaudado€",
-                            fontSize = 17.sp,
-                            color = Color.Black,
-                            modifier = Modifier
-                                .weight(0.53f)
-                                .padding(start = 8.dp),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = "Gastado: $totalGastado€",
-                            fontSize = 17.sp,
-                            modifier = Modifier
-                                .weight(0.47f)
-                                .padding(end = 8.dp),
-                            textAlign = TextAlign.Center,
-                            color = Color.Black
-                        )
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.googlesheetslogo),
+                        contentDescription = "GoogleSheetsLogo",
+                        modifier = Modifier.size(60.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row (
-                        modifier = Modifier
-                            .weight(0.55f)
-                            .fillMaxSize(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val formatoDecimal = DecimalFormat("#.##")
-                        val resultadoRedondeado = formatoDecimal.format(dineroRestante).replace(",", ".").toDouble()
-                        Text(text = "Restante: $resultadoRedondeado€", fontSize = 24.sp, color = Color.Black)
-                    }
+                    Text(
+                        text = "Cargando gastos...",
+                        modifier = Modifier.padding(top = 8.dp),
+                        color = Color.Black
+                    )
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            MaterialDialog(
+                dialogState = fechaDialogState,
+                buttons = {
+                    positiveButton("Guardar") {
+                        fechaDialogState.hide()
+                    }
+                    negativeButton("Cancelar") {
+                        fechaDialogState.hide()
+                    }
+                }
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.googlesheetslogo),
-                    contentDescription = "GoogleSheetsLogo",
-                    modifier = Modifier.size(60.dp))
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Cargando gastos...",
-                    modifier = Modifier.padding(top = 8.dp),
-                    color = Color.Black
+                datepicker(
+                    initialDate = LocalDate.now(),
+                    title = "Selecciona la fecha del evento",
+                    onDateChange = { fechaEscogida = it },
+                    allowedDateValidator = { fecha ->
+                        // Permitir solo fechas iguales o posteriores a la fecha actual
+                        !fecha.isBefore(LocalDate.now())
+                    }
                 )
             }
-        }
-        MaterialDialog(
-            dialogState = fechaDialogState,
-            buttons = {
-                positiveButton("Guardar") {
-                    fechaDialogState.hide()
-                }
-                negativeButton("Cancelar") {
-                    fechaDialogState.hide()
-                }
-            }
-        ) {
-            datepicker(
-                initialDate = LocalDate.now(),
-                title = "Selecciona la fecha del evento",
-                onDateChange = { fechaEscogida = it },
-                allowedDateValidator = { fecha ->
-                    // Permitir solo fechas iguales o posteriores a la fecha actual
-                    !fecha.isBefore(LocalDate.now())
-                }
-            )
         }
     }
     if (showGastoDialog) {
@@ -405,27 +421,32 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         ) {
                             Button(
                                 onClick = {
-                                if (motivoGasto.isNotEmpty() && cantidadGasto.isNotEmpty() && pagadoPor.isNotEmpty()) {
-                                val gasto =
-                                    Gasto(
-                                        motivoGasto,
-                                        fechaFormateada,
-                                        cantidadGasto,
-                                        pagadoPor
-                                    )
-                                showGastoDialog = false
-                                scope.launch(Dispatchers.IO) {
-                                    updateGastosDataInGoogleSheet(gasto)
-                                    recargarGastos = true
-                                }
-                            } else {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Por favor, llena todos los campos",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show() } },
+                                    hayInternet = hayInternet(connectivityManager)
+                                    if (hayInternet){
+                                        if (motivoGasto.isNotEmpty() && cantidadGasto.isNotEmpty() && pagadoPor.isNotEmpty()) {
+                                            val gasto =
+                                                Gasto(
+                                                    motivoGasto,
+                                                    fechaFormateada,
+                                                    cantidadGasto,
+                                                    pagadoPor
+                                                )
+                                            showGastoDialog = false
+                                            scope.launch(Dispatchers.IO) {
+                                                updateGastosDataInGoogleSheet(gasto)
+                                                recargarGastos = true
+                                            }
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Por favor, llena todos los campos",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show() }
+                                    } else {
+                                        mostrarTodo = false
+                                    }},
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = BordeIndvCards
                                 )) {
@@ -442,26 +463,6 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
             }
         }
     }
-}
-
-fun semaforoDineroRestante(dineroRestante: Double, dineroRecaudado: Double): Long {
-    return when {
-        dineroRestante < 0.0 -> 0xFFffabab
-        dineroRestante > 0.0 && dineroRestante < dineroRecaudado * 0.15 -> 0xFFffabab
-        dineroRestante >= dineroRecaudado * 0.15 && dineroRestante < dineroRecaudado * 0.5 -> 0xFFfeffab
-        else -> 0xFFb6ffab
-    }
-}
-
-fun calculaTotalGastado(gastos: List<Gasto>): Double {
-    var total = 0.0
-    for (gasto in gastos) {
-        val cantidad = gasto.cantidadGasto.split(" ")[0]
-                .replace(".", "")
-                .trim().toDoubleOrNull() ?: 0.0
-        total += cantidad
-    }
-    return total
 }
 
 @Composable
@@ -508,50 +509,22 @@ fun GastoCard(gasto: Gasto){
     }
 }
 
-suspend fun getGastosFromSheet(): GastoResponse {
-    return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbz1Iog-YaDAVO9BigW6OxVqZ5bsG9EmCSX4mqfJmT719IRh0MMtUOz7xNQeVjbhyXr4/exec?spreadsheetId=$gastosSpreadsheetId&sheet=Gastos"
-        val request = Request.Builder().url(url).build()
-        val client = OkHttpClient()
-
-        try {
-            val response = client.newCall(request).execute()
-            val responseData = response.body?.string()
-            if (responseData != null) {
-                Log.d("JSON", responseData)
-            }
-            val gastos: GastoResponse = Gson().fromJson(responseData, GastoResponse::class.java)
-            gastos
-        } catch (e: JsonSyntaxException) {
-            e.printStackTrace()
-            e.message?.let { Log.e("JSON", it) }
-            GastoResponse("", emptyList())
-        }
+fun semaforoDineroRestante(dineroRestante: Double, dineroRecaudado: Double): Long {
+    return when {
+        dineroRestante < 0.0 -> 0xFFffabab
+        dineroRestante > 0.0 && dineroRestante < dineroRecaudado * 0.15 -> 0xFFffabab
+        dineroRestante >= dineroRecaudado * 0.15 && dineroRestante < dineroRecaudado * 0.5 -> 0xFFfeffab
+        else -> 0xFFb6ffab
     }
 }
 
-suspend fun updateGastosDataInGoogleSheet(gasto: Gasto): Response {
-    return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbw7dh0NQDsWf9ptmeiTtFJc4hhatCI06bboCCfCYPuK2537l5LdUf3He2o7cQDNEV69/exec"
-        val requestPost = RequestPostGasto(gastosSpreadsheetId, "Gastos", gasto)
-        val json = Gson().toJson(requestPost)
-        Log.d("postGastos", json)
-        val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        val client = OkHttpClient()
-
-        try {
-            val response = client.newCall(request).execute()
-            response
-        } catch (e: Exception) {
-            e.printStackTrace()
-            e.message?.let { Log.e("JSON", it) }
-            Response.Builder().code(500).message("Error al actualizar los datos").build()
-        }
+fun calculaTotalGastado(gastos: List<Gasto>): Double {
+    var total = 0.0
+    for (gasto in gastos) {
+        val cantidad = gasto.cantidadGasto.split(" ")[0]
+            .replace(".", "")
+            .trim().toDoubleOrNull() ?: 0.0
+        total += cantidad
     }
+    return total
 }
