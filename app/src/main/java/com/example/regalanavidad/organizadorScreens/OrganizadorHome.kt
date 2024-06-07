@@ -72,9 +72,9 @@ import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.checkIfCanManageEmails
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.sharedScreens.usuario
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -149,7 +149,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                         topBar = {
                             TopAppBar(
                                 colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = FondoMenus
+                                    containerColor = ColorLogo
                                 ),
                                 title = { Text(text = currentTabTitle, fontSize = 25.sp, color = Color.Black) },
                                 navigationIcon = {
@@ -159,7 +159,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
                                         }
                                         mapaOrganizadorVM.searchSitioRecogida.value = false
                                     }) {
-                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description", tint = Color.Black)
+                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description", tint = Color.Black )
                                     }
                                 },
                                 actions = {
@@ -275,15 +275,13 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
                 .height(250.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.regala_navidad_blanco),
+                painter = painterResource(id = R.drawable.regala_navidad_fondo),
                 contentDescription = "FondoRN",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }
-        HorizontalDivider(
-            color = BordeIndvCards
-        )
+        HorizontalDivider()
         drawerItems.forEach { item ->
             if (item == "Información") {
                 InformacionSubMenu(navController = navController, drawerState = drawerState, scope = scope)
@@ -294,18 +292,18 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
                             painter = painterResource(id = asignaLogoSegunOpcion(item)),
                             contentDescription = "Icono opción",
                             tint = Color.Black,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     colors = NavigationDrawerItemDefaults.colors(
-                        selectedContainerColor = Color.Transparent,
-                        unselectedContainerColor = Color.Transparent,
+                        selectedContainerColor = FondoApp,
+                        unselectedContainerColor = FondoApp,
                         selectedIconColor = Color.Black,
                         unselectedIconColor = Color.Black,
                         selectedTextColor = Color.Black,
                         unselectedTextColor = Color.Black
                     ),
-                    modifier = Modifier.background(Color.Transparent),
+                    modifier = Modifier.background(FondoApp),
                     label = { Text(text = item, fontSize = 18.sp, color = Color.Black) },
                     selected = false, // Set the selected state as needed
                     onClick = {
@@ -326,14 +324,12 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
             }
         }
         Spacer(modifier = Modifier.weight(1f)) // Para poner la opción de Cerrar sesión abajo de drawer
-        HorizontalDivider(
-            color = BordeIndvCards
-        )
+        HorizontalDivider()
         NavigationDrawerItem(
             modifier = Modifier.background(Color.Transparent),
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = Color.Transparent,
-                unselectedContainerColor = Color.Transparent,
+                selectedContainerColor = FondoApp,
+                unselectedContainerColor = FondoApp,
                 selectedIconColor = Color.Black,
                 unselectedIconColor = Color.Black,
                 selectedTextColor = Color.Black,
@@ -372,7 +368,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
                     painter = painterResource(id = R.drawable.information),
                     contentDescription = "Icono información",
                     tint = Color.Black,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             },
             trailingIcon = { TrailingIconMio(expanded = expanded) },

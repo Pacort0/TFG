@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.regalanavidad.R
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -117,7 +117,7 @@ fun ProfileScreen() {
         if (isNameChanged && settingsForm.text.isNotBlank()) {
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = BordeIndvCards
+                    containerColor = FondoTarjetaInception
                 ),
                 onClick = {
                     hayInternet = hayInternet(connectivityManager)

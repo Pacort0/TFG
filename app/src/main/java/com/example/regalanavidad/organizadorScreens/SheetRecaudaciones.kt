@@ -82,7 +82,7 @@ import com.example.regalanavidad.modelos.ProductoResponse
 import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.hayInternet
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
@@ -170,14 +170,14 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .background(FondoMenus)
+                                .border(0.dp, Color.Transparent, CircleShape)
+                                .background(FondoTarjetaInception)
                         ) {
                             TextField(
                                 modifier = Modifier
                                     .menuAnchor()
                                     .clip(CircleShape)
-                                    .border(0.dp, Color.Black, CircleShape),
+                                    .border(0.dp, Color.Transparent, CircleShape),
                                 readOnly = true,
                                 value = productoSeleccionado,
                                 textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
@@ -186,15 +186,15 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 colors = TextFieldDefaults.colors(
                                     unfocusedIndicatorColor = Color.Transparent,
                                     focusedIndicatorColor = Color.Transparent,
-                                    unfocusedContainerColor = FondoMenus,
-                                    focusedContainerColor = FondoMenus
+                                    unfocusedContainerColor = FondoTarjetaInception,
+                                    focusedContainerColor = FondoTarjetaInception
                                 )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
                                 modifier = Modifier
-                                    .background(FondoMenus)
+                                    .background(FondoTarjetaInception)
                             ) {
                                 opcionesDistritos.forEach { selectionOption ->
                                     DropdownMenuItem(
@@ -211,7 +211,8 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                         modifier = Modifier
-                                            .background(FondoMenus)
+                                            .background(FondoTarjetaInception)
+                                            .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                                             .padding(5.dp),
                                     )
                                 }
@@ -272,7 +273,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                     .fillParentMaxWidth()
                                     .heightIn(min = 45.dp)
                                     .clip(RoundedCornerShape(20.dp))
-                                    .border(1.dp, BordeIndvCards, RectangleShape)
+                                    .border(0.dp, Color.Transparent, RectangleShape)
                                     .animateContentSize(
                                         animationSpec = tween(
                                             durationMillis = 300,
@@ -318,9 +319,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                     }
                                 }
                                 if (isExpanded) {
-                                    Column (
-                                        modifier = Modifier.padding(10.dp)
-                                    ) {
+                                    Column {
                                         listaProductos[index].tipos.forEach { tipo ->
                                             val cantidadOriginalProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
                                             var cantidadProd by remember { mutableIntStateOf(tipo.cantidad.toInt()) }
@@ -329,7 +328,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .border(1.dp, BordeIndvCards, CircleShape)
+                                                    .border(0.dp, Color.Transparent, CircleShape)
                                                     .clip(CircleShape)
                                                     .background(FondoTarjetaInception)
                                                     .padding(8.dp)){
@@ -348,7 +347,9 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                     verticalArrangement = Arrangement.Center)
                                                 {
                                                     Row (
-                                                        modifier = Modifier.fillMaxSize().padding(end = 12.dp),
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .padding(end = 12.dp),
                                                         verticalAlignment = Alignment.CenterVertically,
                                                         horizontalArrangement = Arrangement.End
                                                     ) {
@@ -376,7 +377,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             value = "$cantidadProd",
                                                             textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 20.sp, color = Color.Black),
                                                             onValueChange = { cantidad ->
-                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
+                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en Color.Black
                                                                 if (trimmedCantidad.isEmpty()) {
                                                                     cantidadProd = 0 // O cualquier valor predeterminado
                                                                 } else {
@@ -434,6 +435,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                     }
                                                 }
                                             }
+                                            Spacer(modifier = Modifier.height(8.dp))
                                         }
                                     }
                                 }
@@ -482,7 +484,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                 if(llamadaBackHandler){
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = FondoTarjetaInception
                         ),
                         onClick = {
                             showAlertDialog = false
@@ -494,7 +496,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                 } else {
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = FondoTarjetaInception
                         ),
                         onClick = {
                             showAlertDialog = false
@@ -512,7 +514,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                 if (llamadaBackHandler){
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = FondoTarjetaInception
                         ),
                         onClick = {
                             showAlertDialog = false
@@ -524,7 +526,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                 } else {
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = FondoTarjetaInception
                         ),
                         onClick = {
                             showAlertDialog = false

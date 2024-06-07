@@ -70,12 +70,12 @@ import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.dineroRecaudado
 import com.example.regalanavidad.sharedScreens.donacionesSheetId
-import com.example.regalanavidad.sharedScreens.getDonationDataFromGoogleSheet
+import com.example.regalanavidad.dal.getDonationDataFromGoogleSheet
 import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
-import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -222,7 +222,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             .weight(0.15f)
                             .clip(CircleShape)
                             .background(Color(semaforoDineroRestante(dineroRestante, dineroRecaudado)))
-                            .border(2.dp, BordeIndvCards, CircleShape)
+                            .border(0.dp, Color.Transparent, CircleShape)
                             .wrapContentHeight(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -336,8 +336,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = FondoIndvCards,
                             unfocusedContainerColor = FondoIndvCards,
-                            focusedBorderColor = BordeIndvCards,
-                            unfocusedBorderColor = BordeIndvCards
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
                         ),
                         textStyle = TextStyle(color = Color.Black)
                     )
@@ -355,8 +355,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = FondoIndvCards,
                             unfocusedContainerColor = FondoIndvCards,
-                            focusedBorderColor = BordeIndvCards,
-                            unfocusedBorderColor = BordeIndvCards
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
                         ))
                     Spacer(modifier = Modifier.height(8.dp))
                     Column (
@@ -391,8 +391,8 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = FondoIndvCards,
                             unfocusedContainerColor = FondoIndvCards,
-                            focusedBorderColor = BordeIndvCards,
-                            unfocusedBorderColor = BordeIndvCards
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
                         ))
                     Row(
                         Modifier
@@ -412,7 +412,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                             Button(
                                 onClick = { showGastoDialog = false },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = FondoTarjetaInception
                                 )
                             ) {
                                 Text(
@@ -457,7 +457,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                             )
                                             .show() } },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = FondoTarjetaInception
                                 )) {
                                 Text(
                                     text = "Guardar",
@@ -482,7 +482,7 @@ fun GastoCard(gasto: Gasto){
             .padding(5.dp)
             .clip(CircleShape)
             .height(60.dp)
-            .border(1.dp, BordeIndvCards, CircleShape),
+            .border(0.dp, Color.Transparent, CircleShape),
         colors = CardDefaults.cardColors(
             containerColor = FondoIndvCards
         )
@@ -505,7 +505,7 @@ fun GastoCard(gasto: Gasto){
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = gasto.fechaGasto, fontSize = 16.sp, color = Color.Black)
+                Text(text = gasto.fechaGasto, fontSize = 14.sp, color = Color.Black)
             }
             Column (
                 Modifier.weight(0.2f),

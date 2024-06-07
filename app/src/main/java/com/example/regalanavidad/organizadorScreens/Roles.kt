@@ -72,10 +72,9 @@ import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 
 private var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
@@ -94,7 +93,8 @@ fun RolesTabScreen(navController: NavController){
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = FondoIndvCards,
-            contentColor = Color.Black )
+            contentColor = Color.Black
+        )
         {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -128,7 +128,7 @@ fun RolesTabScreen(navController: NavController){
                 confirmButton = {
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = ColorLogo
                         ),
                         onClick = {
                             showAlertDialog = false
@@ -147,7 +147,7 @@ fun RolesTabScreen(navController: NavController){
                 dismissButton = {
                     Button(
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BordeIndvCards
+                            containerColor = ColorLogo
                         ),
                         onClick = {
                             showAlertDialog = false
@@ -240,7 +240,7 @@ fun TabRoles(voluntarios: Boolean){
                         verticalArrangement = Arrangement.Center
                     ) {
                         CircularProgressIndicator(
-                            color = BordeIndvCards
+                            color = ColorLogo
                         )
                         Text(
                             text = "Cargando usuarios...",
@@ -272,7 +272,7 @@ fun TabRoles(voluntarios: Boolean){
                                             .fillMaxWidth()
                                             .padding(4.dp)
                                             .clip(CircleShape)
-                                            .border(1.dp, BordeIndvCards, CircleShape)
+                                            .border(0.dp, Color.Transparent, CircleShape)
                                             .wrapContentHeight(),
                                         colors = CardDefaults.cardColors(
                                             containerColor = FondoIndvCards
@@ -295,7 +295,7 @@ fun TabRoles(voluntarios: Boolean){
             }
             if(listaUsuariosCambiados.value.isNotEmpty()){
                 FloatingActionButton(
-                    containerColor = FondoMenus,
+                    containerColor = ColorLogo,
                     onClick = {
                         guardarCambios = true
                         Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
@@ -405,7 +405,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                         .background(Color.Transparent)
                         .clip(RoundedCornerShape(10.dp))
                         .padding(3.dp)
-                        .border(1.dp, BordeIndvCards, RoundedCornerShape(10.dp))
+                        .border(0.dp, Color.Transparent, RoundedCornerShape(10.dp))
                         .wrapContentSize()
                 )
             }

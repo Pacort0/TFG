@@ -51,6 +51,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -85,7 +87,7 @@ import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
@@ -114,7 +116,15 @@ fun TareasScreen(navController: NavController) {
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = FondoIndvCards,
-            contentColor = Color.Black
+            contentColor = Color.Black,
+            indicator = { tabPositions ->
+                if (selectedTabIndex < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]) ,
+                        color = ColorLogo
+                    )
+                }
+            },
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -140,10 +150,13 @@ fun TareasScreen(navController: NavController) {
         if (showAlertDialog) {
             AlertDialog(
                 onDismissRequest = { showAlertDialog = false },
-                title = { Text(text = "Tiene cambios sin guardar") },
-                text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?") },
+                title = { Text(text = "Tiene cambios sin guardar", color = Color.Black) },
+                text = { Text("Perderá la información modificada.\n¿Está seguro de querer continuar?", color = Color.Black) },
                 confirmButton = {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FondoTarjetaInception
+                        ),
                         onClick = {
                             showAlertDialog = false
                             listaTareasCambiadas.value = emptyList()
@@ -154,17 +167,20 @@ fun TareasScreen(navController: NavController) {
                             }
                         }
                     ) {
-                        Text("Sí, estoy seguro")
+                        Text("Sí, estoy seguro", color = Color.Black)
                     }
                 },
                 dismissButton = {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FondoTarjetaInception
+                        ),
                         onClick = {
                             showAlertDialog = false
                             llamadaBackHandler = false
                         }
                     ) {
-                        Text("No")
+                        Text("No", color = Color.Black)
                     }
                 }
             )
@@ -332,7 +348,7 @@ fun TareasTabScreen(completadas: Boolean){
             }
             if(listaTareasCambiadas.value.isNotEmpty()){
                 FloatingActionButton(
-                    containerColor = FondoMenus,
+                    containerColor = ColorLogo,
                     onClick = {
                         guardarCambios = true
                         Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
@@ -386,33 +402,33 @@ fun TareasTabScreen(completadas: Boolean){
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
-                                .background(FondoTarjetaInception)
+                                .background(Color.Transparent)
                                 .clip(CircleShape)
-                                .border(0.dp, Color.Black, CircleShape)
+                                .border(0.dp, Color.Transparent, CircleShape)
                         ) {
                             TextField(
                                 modifier = Modifier
                                     .menuAnchor()
                                     .clip(CircleShape)
-                                    .border(0.dp, Color.Black, CircleShape),
+                                    .border(0.dp, Color.Transparent, CircleShape),
                                 readOnly = true,
                                 value = rolSeleccionado,
                                 textStyle = TextStyle(color = Color.Black),
                                 onValueChange = {},
                                 trailingIcon = { TrailingIconMio(expanded = expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = FondoIndvCards,
-                                    unfocusedContainerColor = FondoIndvCards,
+                                    focusedContainerColor = FondoTarjetaInception,
+                                    unfocusedContainerColor = FondoTarjetaInception,
                                     cursorColor = Color.Black,
-                                    focusedBorderColor = BordeIndvCards,
-                                    unfocusedBorderColor = BordeIndvCards
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
                                 )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
                                 modifier = Modifier
-                                    .background(FondoMenus)
+                                    .background(FondoTarjetaInception)
                             ) {
                                 options.forEach { selectionOption ->
                                     DropdownMenuItem(
@@ -424,8 +440,15 @@ fun TareasTabScreen(completadas: Boolean){
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                         modifier = Modifier
-                                            .background(FondoMenus)
-                                            .padding(5.dp),
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                FondoTarjetaInception,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .wrapContentSize()
                                     )
                                 }
                             }
@@ -440,15 +463,15 @@ fun TareasTabScreen(completadas: Boolean){
                                 Text(
                                     text = "Cargo de la tarea",
                                     fontSize = 14.sp,
-                                    color = Color.Black
+                                    color = ColorLogo
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = FondoIndvCards,
                                 unfocusedContainerColor = FondoIndvCards,
                                 cursorColor = Color.Black,
-                                focusedBorderColor = BordeIndvCards,
-                                unfocusedBorderColor = BordeIndvCards
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent
                             )
                         )
                     }
@@ -460,15 +483,16 @@ fun TareasTabScreen(completadas: Boolean){
                         label = {
                             Text(
                                 text = "Descripción de la tarea",
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                color = Color.Black
                             )
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = FondoIndvCards,
                             unfocusedContainerColor = FondoIndvCards,
                             cursorColor = Color.Black,
-                            focusedBorderColor = BordeIndvCards,
-                            unfocusedBorderColor = BordeIndvCards
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
                         )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -478,7 +502,7 @@ fun TareasTabScreen(completadas: Boolean){
                         Text(
                             text = "Fecha límite de la tarea",
                             color = Color.Black,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             modifier = Modifier.align(Alignment.Start)
                         )
                         Text(
@@ -506,7 +530,7 @@ fun TareasTabScreen(completadas: Boolean){
                             Button(
                                 onClick = { showTareaDialog = false },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = FondoTarjetaInception
                                 )
                             ) {
                                 Text(
@@ -517,6 +541,7 @@ fun TareasTabScreen(completadas: Boolean){
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column(
                             Modifier
                                 .weight(0.5f)
@@ -554,7 +579,7 @@ fun TareasTabScreen(completadas: Boolean){
                                       Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
                                     } },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = FondoTarjetaInception
                                 )) {
                                 Text(
                                     text = "Guardar",
@@ -601,7 +626,7 @@ fun TareaCard(tarea: Tarea){
             .padding(8.dp)
             .fillMaxWidth()
             .clip(CircleShape)
-            .border(1.dp, BordeIndvCards, CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
             .heightIn(min = 60.dp),
         colors = CardDefaults.cardColors(
             containerColor = FondoIndvCards
@@ -642,7 +667,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
         modifier = Modifier
             .padding(5.dp)
             .clip(CircleShape)
-            .border(1.dp, BordeIndvCards, CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
             .background(FondoTarjetaInception)
     ) {
         TextField(
@@ -691,7 +716,7 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                         .background(Color.Transparent)
                         .clip(RoundedCornerShape(10.dp))
                         .padding(3.dp)
-                        .border(1.dp, BordeIndvCards, RoundedCornerShape(10.dp))
+                        .border(0.dp, Color.Transparent, RoundedCornerShape(10.dp))
                         .wrapContentSize()
                 )
             }

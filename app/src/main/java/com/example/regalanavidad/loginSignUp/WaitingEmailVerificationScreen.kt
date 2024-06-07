@@ -37,6 +37,8 @@ import coil.size.Size
 import com.example.regalanavidad.sharedScreens.Home
 import com.example.regalanavidad.sharedScreens.MainActivity.Companion.email
 import com.example.regalanavidad.R
+import com.example.regalanavidad.ui.theme.ColorLogo
+import com.example.regalanavidad.ui.theme.FondoApp
 
 @Composable
 fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
@@ -49,7 +51,7 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(246, 246, 244))
+            .background(FondoApp)
             .padding(start = 25.dp, top = 25.dp, end = 25.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -82,7 +84,7 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
                     .padding(horizontal = 40.dp)
                     .clip(RoundedCornerShape(50.dp)),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(227, 162, 58)
+                    containerColor = ColorLogo
                 )
             ) {
                 Text(text = "Reenviar enlace")

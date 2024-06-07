@@ -110,6 +110,7 @@ import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.dal.FirestoreManagerDAL
 import com.example.regalanavidad.R
+import com.example.regalanavidad.dal.getDonationDataFromGoogleSheet
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.DonacionItem
 import com.example.regalanavidad.modelos.Evento
@@ -122,10 +123,9 @@ import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.viewmodels.EventosVM
 import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
@@ -216,7 +216,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
 
     NavigationBar (
         modifier = Modifier.height(80.dp),
-        containerColor = FondoMenus
+        containerColor = ColorLogo
     ) {
         // looping over each tab to generate the views and navigation for each item
         tabBarItems.forEachIndexed { index, tabBarItem ->
@@ -229,7 +229,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrg
                     mapaOrganizadorVM.searchSitioRecogida.value = false
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = FondoApp
+                    indicatorColor = FondoIndvCards
                 ),
                 icon = {
                     TabBarIconView(
@@ -318,7 +318,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     val scope = CoroutineScope(Dispatchers.Main)
     var agregaSitio by remember { mutableStateOf(false) }
     var haySitios by remember { mutableStateOf(false) }
-    var recargarSitios by remember { mutableStateOf(true) }
+    var recargarSitios by remember { mutableStateOf(false) }
     var sitiosLoading by remember { mutableStateOf(true) }
     var recaudacionsLoading by remember { mutableStateOf(true) }
     val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
@@ -348,6 +348,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         prediccionesNuevoSitioRecogida = emptyList()
     }
 
+    if (textoBusqueda == "" && prediccionesNuevoSitioEvento.isNotEmpty()){
+        prediccionesNuevoSitioEvento = emptyList()
+    }
+
     LaunchedEffect(key1 = hayInternet, key2 = Unit) {
         cargando = true
         hayInternet = hayInternet(connectivityManager)
@@ -355,7 +359,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         mostrarTodo = hayInternet
     }
 
-    if (cargando){
+    if (cargando || recargarSitios){
         PantallaCarga(textoCargando = pagerState.currentPage.let {
             when (it) {
                 0 -> "Cargando sitios..."
@@ -411,7 +415,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     scope.launch {
                                         prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     } },
-                                label = { Text("Buscar sitio", color = Color.Black) },
+                                label = { Text("Buscar sitio", color = ColorLogo) },
                                 leadingIcon = {
                                     Icon(
                                         painter = painterResource(id = R.drawable.lupa),
@@ -427,12 +431,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
-                                    focusedBorderColor = BordeIndvCards,
-                                    unfocusedBorderColor = BordeIndvCards
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
                                 ))
-                            if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
-                                prediccionesNuevoSitioRecogida = emptyList()
-                            }
                             if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty() && textoBusqueda.isNotBlank()){
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioRecogida.take(4)
@@ -443,7 +444,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 .height(70.dp)
                                                 .fillMaxWidth()
                                                 .clip(CircleShape)
-                                                .border(1.dp, BordeIndvCards, CircleShape)
+                                                .border(0.dp, Color.Transparent, CircleShape)
                                                 .background(FondoIndvCards)
                                                 .clickable {
                                                     if (hayInternet) {
@@ -487,7 +488,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             } else {
                                 Column {
-                                    Text(text = "No tienes conexión")
+                                    if (hayInternet(connectivityManager)){
+                                        Text(text = "No tienes conexión")
+                                    } else {
+                                        Text(text = "Cargando...")
+                                    }
                                 }
                             }
                         }
@@ -514,8 +519,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(alturaDialogo.let {
-                                if (prediccionesNuevoSitioEvento.isNotEmpty()) 610.dp
-                                else if (textoBusqueda != "") 470.dp
+                                if (prediccionesNuevoSitioEvento.isNotEmpty()) 520.dp
+                                else if (textoBusqueda != "") 445.dp
                                 else it
                             })
                             .background(FondoApp)
@@ -536,26 +541,26 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 value = nombreEvento,
                                 onValueChange = { nombreEvento = it },
                                 textStyle = TextStyle(color = Color.Black),
-                                label = { Text("Nombre del evento", color = Color.Black) },
+                                label = { Text("Nombre del evento", color = ColorLogo) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
                                     cursorColor = Color.Black,
-                                    focusedBorderColor = BordeIndvCards,
-                                    unfocusedBorderColor = BordeIndvCards
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
                                 ))
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = descripcionEvento,
                                 onValueChange = {descripcionEvento = it},
                                 textStyle = TextStyle(color = Color.Black),
-                                label = {Text("Descripción del evento", color = Color.Black)},
+                                label = {Text(text = "Descripción del evento", color = ColorLogo)},
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
                                     cursorColor = Color.Black,
-                                    focusedBorderColor = BordeIndvCards,
-                                    unfocusedBorderColor = BordeIndvCards
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
                                 ))
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
@@ -568,7 +573,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     }
                                 },
-                                label = { Text("Lugar del evento", color = Color.Black) },
+                                label = { Text("Lugar del evento", color = ColorLogo) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onFocusChanged { focusState ->
@@ -581,14 +586,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
                                     cursorColor = Color.Black,
-                                    focusedBorderColor = BordeIndvCards,
-                                    unfocusedBorderColor = BordeIndvCards
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
                                 )
                             )
-                            if (textoBusqueda == "" && prediccionesNuevoSitioEvento.isNotEmpty()){
-                                prediccionesNuevoSitioEvento = emptyList()
-                            }
-                            if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty()){
+                            if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty() && textoBusqueda.isNotBlank()){
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioEvento.take(4)
                                     items(topSitios.size) { index ->
@@ -598,7 +600,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 .height(70.dp)
                                                 .fillMaxWidth()
                                                 .clip(CircleShape)
-                                                .border(1.dp, BordeIndvCards, CircleShape)
+                                                .border(0.dp, Color.Transparent, CircleShape)
                                                 .background(FondoIndvCards)
                                                 .clickable {
                                                     sitioEvento =
@@ -625,6 +627,14 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                            } else if (textoBusqueda.isNotBlank() && prediccionesNuevoSitioEvento.isEmpty()){
+                                Column {
+                                    if (!hayInternet(connectivityManager)){
+                                        Text(text = "No tienes conexión")
+                                    } else {
+                                        Text(text = "Cargando...")
                                     }
                                 }
                             }
@@ -697,7 +707,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 .padding(0.dp, 0.dp, 0.dp, 14.dp)) {
                                 Button(
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = BordeIndvCards
+                                        containerColor = FondoTarjetaInception
                                     ),
                                     onClick = {
                                         textoBusqueda = ""
@@ -706,9 +716,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 {
                                     Text(text = "Cancelar", color = Color.Black)
                                 }
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Button(
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = BordeIndvCards
+                                        containerColor = FondoTarjetaInception
                                     ),
                                     onClick = {
                                         if(hayInternet){
@@ -904,7 +915,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             verticalArrangement = Arrangement.Center
                                         ) {
                                             CircularProgressIndicator(
-                                                color = BordeIndvCards
+                                                color = FondoTarjetaInception
                                             )
                                             Text(
                                                 text = "Cargando eventos...",
@@ -1413,7 +1424,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
                 FloatingActionButton(
                     onClick = { redactaEmail = true },
-                    containerColor = FondoMenus,
+                    containerColor = FondoTarjetaInception,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(12.dp, 0.dp, 0.dp, 35.dp)
@@ -1454,7 +1465,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         ActivityCompat.finishAffinity(context as Activity)
@@ -1467,7 +1478,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         showCloseAppDialog = false
@@ -1521,7 +1532,13 @@ fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
 @Composable
 private fun CartaRSS(idLogo: Int, nombreRRSS: String) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .border(
+                0.dp,
+                Color.Transparent,
+                RoundedCornerShape(20.dp)
+            )
     ) {
         when (idLogo){
             R.drawable.logo_ig -> {
@@ -1630,7 +1647,7 @@ fun CierraSesionDialog(showDialog: MutableState<Boolean>, navController: NavCont
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         showDialog.value = false
@@ -1646,7 +1663,7 @@ fun CierraSesionDialog(showDialog: MutableState<Boolean>, navController: NavCont
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         showDialog.value = false
@@ -1739,7 +1756,7 @@ fun ListaSitiosConfirmados(
                         .fillMaxWidth()
                         .padding(5.dp)
                         .clip(CircleShape)
-                        .border(1.dp, BordeIndvCards, CircleShape)
+                        .border(0.dp, Color.Transparent, CircleShape)
                         .let {
                             if (!isHomePage) {
                                 it.clickable {
@@ -1793,7 +1810,7 @@ fun ListaSitiosConfirmados(
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         val hayInternet:Boolean = hayInternet(connectivityManager)
@@ -1814,7 +1831,7 @@ fun ListaSitiosConfirmados(
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         showEliminarDialog = false
@@ -1851,7 +1868,7 @@ fun ListaEventosConfirmados(
                         .fillMaxWidth()
                         .padding(5.dp)
                         .clip(CircleShape)
-                        .border(1.dp, BordeIndvCards, CircleShape),
+                        .border(0.dp, Color.Transparent, CircleShape),
                     colors = CardDefaults.cardColors(
                         containerColor = FondoIndvCards
                     )
@@ -1887,7 +1904,7 @@ fun ListaEventosConfirmados(
                                     DropdownMenu(
                                         expanded = expanded,
                                         onDismissRequest = { expanded = false },
-                                        modifier = Modifier.background(FondoTarjetaInception)
+                                        modifier = Modifier.background(ColorLogo)
                                     ) {
                                         DropdownMenuItem(onClick = {
                                             expanded = false
@@ -1931,7 +1948,7 @@ fun ListaEventosConfirmados(
                                                 .padding(3.dp)
                                                 .border(
                                                     1.dp,
-                                                    BordeIndvCards,
+                                                    FondoTarjetaInception,
                                                     RoundedCornerShape(10.dp)
                                                 )
                                                 .wrapContentSize())
@@ -1951,7 +1968,7 @@ fun ListaEventosConfirmados(
                                                 .padding(3.dp)
                                                 .border(
                                                     1.dp,
-                                                    BordeIndvCards,
+                                                    FondoTarjetaInception,
                                                     RoundedCornerShape(10.dp)
                                                 )
                                                 .wrapContentSize())
@@ -1973,9 +1990,10 @@ fun ListaEventosConfirmados(
                                                     .padding(3.dp)
                                                     .border(
                                                         1.dp,
-                                                        BordeIndvCards,
+                                                        FondoTarjetaInception,
                                                         RoundedCornerShape(10.dp)
-                                                    ).wrapContentSize()
+                                                    )
+                                                    .wrapContentSize()
                                             )
                                         }
                                     }
@@ -2004,7 +2022,7 @@ fun ListaEventosConfirmados(
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         val hayInternet:Boolean = hayInternet(connectivityManager)
@@ -2025,7 +2043,7 @@ fun ListaEventosConfirmados(
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BordeIndvCards
+                        containerColor = FondoTarjetaInception
                     ),
                     onClick = {
                         showEliminarDialog = false

@@ -24,9 +24,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.regalanavidad.R
-import com.example.regalanavidad.ui.theme.BordeIndvCards
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 
 @Composable
 fun PantallaCarga(textoCargando:String){
@@ -38,7 +38,7 @@ fun PantallaCarga(textoCargando:String){
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = BordeIndvCards
+            color = FondoTarjetaInception
         )
         Text(
             text = textoCargando,

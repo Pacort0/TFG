@@ -1,9 +1,7 @@
 package com.example.regalanavidad.organizadorScreens
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -48,8 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.CentroEducativo
-import com.example.regalanavidad.sharedScreens.hayInternet
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 
@@ -60,8 +57,6 @@ fun MailScreen(navController: NavController){
     var mensajeCorreo by remember { mutableStateOf("") }
     val contexto = LocalContext.current
     var showAlertDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     Column (
         modifier = Modifier
@@ -123,7 +118,7 @@ fun MailScreen(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(15.dp))
-                    .border(1.dp, BordeIndvCards, RoundedCornerShape(15.dp))
+                    .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                     .weight(0.1f),
                 label = { Text(text = "Correo", color = Color.Black) },
                 value = correoContacto,
@@ -145,7 +140,7 @@ fun MailScreen(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(15.dp))
-                    .border(1.dp, BordeIndvCards, RoundedCornerShape(15.dp))
+                    .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                     .weight(0.1f),
                 label = { Text(text = "Asunto", color = Color.Black) },
                 value = asuntoCorreo,
@@ -167,7 +162,7 @@ fun MailScreen(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(15.dp))
-                    .border(1.dp, BordeIndvCards, RoundedCornerShape(15.dp))
+                    .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                     .weight(0.7f),
                 label = { Text(text = "Mensaje", color = Color.Black) },
                 textStyle = TextStyle(color = Color.Black),
@@ -188,7 +183,7 @@ fun MailScreen(navController: NavController){
         ) {
             Button(
                 modifier = Modifier.wrapContentSize(),
-                colors = ButtonDefaults.buttonColors(containerColor = BordeIndvCards),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorLogo),
                 onClick = {
                 correoContacto = ""
                 asuntoCorreo = ""
@@ -199,7 +194,7 @@ fun MailScreen(navController: NavController){
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 modifier = Modifier.wrapContentSize(),
-                colors = ButtonDefaults.buttonColors(containerColor = BordeIndvCards),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorLogo),
                 onClick = {
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "message/rfc822"

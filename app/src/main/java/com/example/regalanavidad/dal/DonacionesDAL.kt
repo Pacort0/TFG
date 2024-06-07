@@ -1,4 +1,4 @@
-package com.example.regalanavidad.sharedScreens
+package com.example.regalanavidad.dal
 
 import android.util.Log
 import com.example.regalanavidad.modelos.DonacionResponse

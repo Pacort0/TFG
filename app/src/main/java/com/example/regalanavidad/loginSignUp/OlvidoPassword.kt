@@ -45,6 +45,9 @@ import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
+import com.example.regalanavidad.ui.theme.ColorLogo
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,7 +65,7 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(246, 246, 244))
+            .background(FondoApp)
             .padding(start = 25.dp, top = 25.dp, end = 25.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -88,21 +91,21 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
             Text(text = "Restablecer la contraseña",
                 style = TextStyle(
                     fontSize = 25.sp,
-                    color = Color(227, 162, 58)
+                    color = ColorLogo
                 )
             )
             Spacer(modifier = Modifier.height(50.dp))
             TextField(label = {
                 Text(text = "Correo electrónico",
-                    color = Color(227, 162, 58),
+                    color = ColorLogo,
                     fontSize = 14.sp) },
                 value = email,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 onValueChange = {email = it},
                 textStyle = TextStyle(color = Color.Black),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(247, 228, 198),
-                    unfocusedContainerColor = Color(247, 228, 198),
+                    focusedContainerColor = FondoIndvCards,
+                    unfocusedContainerColor = FondoIndvCards,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent
                 ),
@@ -143,7 +146,7 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
                     .padding(horizontal = 40.dp)
                     .clip(RoundedCornerShape(50.dp)),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(227, 162, 58)
+                    containerColor = ColorLogo
                 )
             ) { Text(text = "Recuperar contraseña", fontSize = 16.sp) }
 
@@ -158,7 +161,7 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
                     fontSize = 14.sp,
                     fontFamily = FontFamily.Default,
                     textDecoration = TextDecoration.Underline,
-                    color = Color(209, 154, 90),
+                    color = ColorLogo,
                     textAlign = TextAlign.End
                 )
             )

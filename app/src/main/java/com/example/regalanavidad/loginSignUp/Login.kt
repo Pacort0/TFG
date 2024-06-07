@@ -52,6 +52,10 @@ import com.example.regalanavidad.R
 import com.example.regalanavidad.sharedScreens.Home
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
+import com.example.regalanavidad.ui.theme.Blanco
+import com.example.regalanavidad.ui.theme.ColorLogo
+import com.example.regalanavidad.ui.theme.FondoApp
+import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -80,7 +84,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(246, 246, 244))
+                .background(FondoApp)
                 .padding(start = 25.dp, top = 25.dp, end = 25.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -107,7 +111,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     label = {
                         Text(
                             text = "Correo",
-                            color = Color(227, 162, 58),
+                            color = ColorLogo,
                             fontSize = 14.sp
                         )
                     },
@@ -119,8 +123,8 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     ),
                     onValueChange = { email = it },
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(247, 228, 198),
-                        unfocusedContainerColor = Color(247, 228, 198),
+                        focusedContainerColor = FondoIndvCards,
+                        unfocusedContainerColor = FondoIndvCards,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     ),
@@ -133,7 +137,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     label = {
                         Text(
                             text = "Contraseña",
-                            color = Color(227, 162, 58),
+                            color = ColorLogo,
                             fontSize = 14.sp
                         )
                     },
@@ -146,8 +150,8 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     ),
                     onValueChange = { password = it },
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(247, 228, 198),
-                        unfocusedContainerColor = Color(247, 228, 198),
+                        focusedContainerColor = FondoIndvCards,
+                        unfocusedContainerColor = FondoIndvCards,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                         ),
@@ -165,7 +169,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                         fontSize = 14.sp,
                         fontFamily = FontFamily.Default,
                         textDecoration = TextDecoration.Underline,
-                        color = Color(209, 154, 90),
+                        color = ColorLogo,
                         textAlign = TextAlign.End
                     )
                 )
@@ -214,10 +218,10 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                         .padding(horizontal = 40.dp)
                         .clip(RoundedCornerShape(50.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(227, 162, 58)
+                        containerColor = ColorLogo
                     )
                 ) {
-                    Text(text = "Iniciar sesión", fontSize = 16.sp)
+                    Text(text = "Iniciar sesión", fontSize = 16.sp, color = Blanco)
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -230,7 +234,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                         fontSize = 14.sp,
                         fontFamily = FontFamily.Default,
                         textDecoration = TextDecoration.Underline,
-                        color = Color(209, 154, 90)
+                        color = ColorLogo
                     )
                 )
             }

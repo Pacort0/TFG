@@ -95,10 +95,11 @@ import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.hayInternet
-import com.example.regalanavidad.ui.theme.BordeIndvCards
+import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -184,8 +185,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .border(0.dp, Color.Black, CircleShape)
-                                .background(FondoMenus)
+                                .background(FondoTarjetaInception)
                         ) {
                             TextField(
                                 modifier = Modifier
@@ -200,15 +200,15 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 colors = TextFieldDefaults.colors(
                                     unfocusedIndicatorColor = Color.Transparent,
                                     focusedIndicatorColor = Color.Transparent,
-                                    focusedContainerColor = FondoMenus,
-                                    unfocusedContainerColor = FondoMenus
+                                    focusedContainerColor = FondoTarjetaInception,
+                                    unfocusedContainerColor = FondoTarjetaInception
                                 )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
                                 modifier = Modifier
-                                    .background(FondoMenus)
+                                    .background(FondoTarjetaInception)
                             ) {
                                 opcionesDistritos.forEach { selectionOption ->
                                     DropdownMenuItem(
@@ -225,13 +225,15 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                         modifier = Modifier
-                                            .background(FondoMenus)
-                                            .padding(5.dp),
+                                            .background(FondoTarjetaInception)
+                                            .padding(5.dp)
+                                            .border(1.dp, ColorLogo, CircleShape),
                                     )
                                 }
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.width(3.dp))
                     Column(
                         Modifier
                             .fillMaxWidth()
@@ -261,7 +263,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                     },
                                 modifier = Modifier.width(160.dp),
                                 colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = FondoMenus
+                                    containerColor = FondoTarjetaInception
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp))
                             {
@@ -293,7 +295,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                     .heightIn(min = 80.dp)
                                     .wrapContentHeight()
                                     .clip(RoundedCornerShape(20.dp))
-                                    .border(1.dp, BordeIndvCards, RectangleShape)
+                                    .border(0.dp, Color.Transparent, RectangleShape)
                                     .animateContentSize(
                                         animationSpec = tween(
                                             durationMillis = 300,
@@ -386,7 +388,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 }
 
                                                 TextField(
-                                                    placeholder = { Text(text = tareaOriginal) },
+                                                    placeholder = { Text(text = "Previa: $tareaOriginal", color = Color.Black) },
                                                     value = nuevaTarea,
                                                     textStyle = TextStyle(color = Color.Black),
                                                     onValueChange = { nuevaTarea = it },
@@ -401,8 +403,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                     colors = TextFieldDefaults.colors(
                                                         unfocusedIndicatorColor = Color.Transparent,
                                                         focusedIndicatorColor = Color.Transparent,
-                                                        focusedContainerColor = BordeIndvCards,
-                                                        unfocusedContainerColor = BordeIndvCards,
+                                                        focusedContainerColor = FondoTarjetaInception,
+                                                        unfocusedContainerColor = FondoTarjetaInception,
+                                                        cursorColor = Color.Black
                                                     ),
                                                     keyboardActions = KeyboardActions(
                                                         onDone = {
@@ -568,7 +571,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         if(llamadaBackHandler){
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = ColorLogo
                                 ),
                                 onClick = {
                                     showAlertDialog = false
@@ -581,7 +584,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         else {
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = ColorLogo
                                 ),
                                 onClick = {
                                     showAlertDialog = false
@@ -599,7 +602,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         if (llamadaBackHandler){
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = ColorLogo
                                 ),
                                 onClick = {
                                     showAlertDialog = false
@@ -611,7 +614,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                         } else {
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = BordeIndvCards
+                                    containerColor = ColorLogo
                                 ),
                                 onClick = {
                                     showAlertDialog = false
@@ -694,7 +697,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
             .clip(CircleShape)
-            .border(1.dp, Color.Black, CircleShape)
+            .border(0.dp, Color.Transparent, CircleShape)
             .background(cambiaColorEstado(nuevoEstado))
     ) {
         TextField(
@@ -716,8 +719,6 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             onDismissRequest = { expanded = false },
             modifier = Modifier
                 .background(Color.Transparent)
-                .clip(RoundedCornerShape(50.dp))
-                .border(0.dp, Color.Transparent, CircleShape)
         ) {
             opcionesEstados.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -747,8 +748,6 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     modifier = Modifier
                         .background(cambiaColorEstado(selectionOption))
-                        .clip(CircleShape)
-                        .border(0.dp, Color.Transparent, CircleShape)
                         .padding(3.dp),
                 )
             }
