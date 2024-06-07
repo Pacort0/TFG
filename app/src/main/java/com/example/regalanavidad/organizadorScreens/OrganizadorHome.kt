@@ -77,7 +77,7 @@ import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
-import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
+import com.example.regalanavidad.viewmodels.MapaVM
 import com.example.regalanavidad.voluntarioScreens.ComoAyudar
 import com.example.regalanavidad.voluntarioScreens.ContactanosScreen
 import com.example.regalanavidad.voluntarioScreens.DatosYObjetivos
@@ -92,7 +92,7 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit) {
+fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
     val homeTab = TabBarItem(
         title = "Home",
@@ -194,7 +194,7 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizad
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, rolesTab: TabBarItem, sheetsTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
+fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, alertsTab: TabBarItem, mapsTab: TabBarItem, rolesTab: TabBarItem, sheetsTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: MapaVM){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,

@@ -171,6 +171,23 @@ class FirestoreManagerDAL {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getListaSitiosYEventosUnicos(): MutableList<SitioRecogida> {
+        val listaSitiosYEventos = mutableListOf<SitioRecogida>()
+        val listaSitios = getSitiosRecogida()
+        val listaEventos = getEventos()
+
+        for (sitio in listaSitios) {
+            listaSitiosYEventos.add(sitio)
+        }
+
+        for (evento in listaEventos) {
+            listaSitiosYEventos.add(evento.lugar)
+        }
+
+        return listaSitiosYEventos.distinct().toMutableList()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     fun String.toLocalDate(): LocalDate? {
         return try {
             val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

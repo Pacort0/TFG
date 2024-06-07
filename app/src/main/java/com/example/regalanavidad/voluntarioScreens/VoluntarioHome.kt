@@ -56,7 +56,7 @@ import com.example.regalanavidad.sharedScreens.CierraSesionDialog
 import com.example.regalanavidad.sharedScreens.TabView
 import com.example.regalanavidad.sharedScreens.drawerAbierto
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
-import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
+import com.example.regalanavidad.viewmodels.MapaVM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -64,7 +64,7 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit) {
+fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
 
     // setting up the individual tabs
@@ -139,7 +139,7 @@ fun VoluntarioHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: mapaOrganizado
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, mapsTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM){
+fun VoluntarioNavHost(innerPadding : PaddingValues, navController: NavHostController, homeTab: TabBarItem, mapsTab: TabBarItem, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: MapaVM){
     Box(modifier = Modifier.padding(innerPadding)) {
         NavHost(
             navController = navController,

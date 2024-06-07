@@ -3,37 +3,38 @@ package com.example.regalanavidad.sharedScreens
 import android.Manifest
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,20 +43,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.apiRouteService.ApiRouteService
 import com.example.regalanavidad.apiRouteService.RouteResponse
+import com.example.regalanavidad.modelos.SitioRecogida
+import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
-import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
+import com.example.regalanavidad.viewmodels.MapaVM
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationCallback
@@ -78,17 +80,18 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-private var cargaRuta = mutableStateOf(false)
+private var rutaCargada = mutableStateOf(false)
 private var route = mutableListOf<LatLng>()
 private var muestraRuta = mutableStateOf(false)
 private var calcularAPie = mutableStateOf(true)
 private var calcularCoche = mutableStateOf(false)
 private var duracionTrayecto = 0
+private var listaSitios = mutableStateOf(emptyList<SitioRecogida>())
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM) {
+fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     val context = LocalContext.current
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -97,6 +100,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var ubicacionDenegada by remember { mutableStateOf(!locationPermissionState.hasPermission) }
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var cargarSitios by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = locationPermissionState.hasPermission, key2 = hayInternet) {
         if (locationPermissionState.hasPermission) {
@@ -138,6 +142,24 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
         }
     }
 
+    LaunchedEffect(key1 = cargarSitios) {
+        if (hayInternet(connectivityManager)){
+            if(currentLocation != null ) {
+                    listaSitios.value +=
+                        SitioRecogida(
+                        "Ubicación actual",
+                        currentLocation!!.latitude,
+                        currentLocation!!.longitude,
+                        "Calle de la piruleta"
+                        )
+                }
+            listaSitios.value = firestore.getListaSitiosYEventosUnicos()
+            cargarSitios = false
+        } else {
+            hayInternet = false
+        }
+    }
+
     if (ubicacionDenegada) {
         DeniedLocationScreen(
             onRequestPermissionAgain = {
@@ -154,13 +176,14 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: mapaOrganizadorV
         PantallaCarga("Cargando mapa...")
     } else {
         Mapa(mapaOrganizadorVM, navController, currentLocation)
+        cargarSitios = true
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun Mapa(
-    mapaOrganizadorVM: mapaOrganizadorVM,
+    mapaOrganizadorVM: MapaVM,
     navController: NavController,
     currentLocation: LatLng?
 ) {
@@ -172,14 +195,19 @@ fun Mapa(
     var rutaLoading by remember { mutableStateOf(false) }
     var start by remember { mutableStateOf("0,0") }
     var end by remember { mutableStateOf("0,0") }
+    var mostrarBarraDestino by remember { mutableStateOf(false) }
+    var sitioDestino by remember { mutableStateOf("") }
+    var sitioPartida by remember { mutableStateOf("Ubicación actual") }
+    var barraPartidaHasFocus by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FondoApp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoApp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             if(searchSitioRecogida.value == true){
                 Row (
                     modifier = Modifier
@@ -290,7 +318,7 @@ fun Mapa(
                     }
                 }
             ) {
-                if (cargaRuta.value && muestraRuta.value && mapaOrganizadorVM.searchSitioRecogida.value == true) {
+                if (rutaCargada.value && muestraRuta.value && mapaOrganizadorVM.searchSitioRecogida.value == true) {
                     rutaLoading = false
                     Polyline(points = route)
                 }
@@ -328,7 +356,7 @@ fun Mapa(
                     }
                 }
             }
-            if (searchSitioRecogida.value == true && muestraRuta.value && cargaRuta.value) {
+            if (searchSitioRecogida.value == true && muestraRuta.value && rutaCargada.value) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.weight(0.33f),
@@ -336,8 +364,8 @@ fun Mapa(
                         horizontalAlignment = Alignment.Start
                     ) {
                         Column {
-                            Text(text = "Salida:")
-                            Text(text = "Posición actual")
+                            Text(text = "Salida:", color = Color.Black)
+                            Text(text = "Posición actual", color = Color.Black)
                         }
                     }
                     Column(
@@ -347,12 +375,12 @@ fun Mapa(
                     ) {
                         Column {
                             if (calcularAPie.value) {
-                                Text(text = "A pie")
+                                Text(text = "A pie", color = Color.Black)
                             } else {
-                                Text(text = "En coche")
+                                Text(text = "En coche", color = Color.Black)
                             }
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Flecha", Modifier.size(24.dp))
-                            Text(text = "$duracionTrayecto minutos")
+                            Text(text = "$duracionTrayecto minutos", color = Color.Black)
                         }
                     }
                     Column(
@@ -361,14 +389,90 @@ fun Mapa(
                         horizontalAlignment = Alignment.End
                     ) {
                         Column {
-                            Text(text = "Destino:")
-                            Text(text = "${sitioRecogida.value?.nombreSitio}")
+                            Text(text = "Destino:", color = Color.Black)
+                            Text(text = "${sitioRecogida.value?.nombreSitio}", color = Color.Black)
                         }
                     }
                 }
             }
+        }
+        Column (
+            modifier = Modifier
+                .background(Color.Transparent)
+                .wrapContentHeight()
+                .align(Alignment.TopCenter)
+        ) {
+            TextField(
+                value = sitioPartida,
+                onValueChange = { nuevoSitioPartida ->
+                    sitioPartida = nuevoSitioPartida
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = FondoIndvCards,
+                    unfocusedContainerColor = FondoIndvCards,
+                    focusedIndicatorColor = Color.Black,
+                    unfocusedIndicatorColor = Color.Black
+                ),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = "Salida",
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    ) },
+                modifier = Modifier
+                    .padding(10.dp)
+                    .background(Blanco)
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        barraPartidaHasFocus = focusState.isFocused
+                    }
+                    .border(1.dp, Color.Black, RoundedCornerShape(15))
+            )
+            if (barraPartidaHasFocus){
+                sitioPartida = ""
+            } else {
+                sitioPartida = "Ubicación actual"
+            }
+            if (mostrarBarraDestino){
+                TextField(
+                    value = sitioDestino,
+                    onValueChange = {},
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = FondoIndvCards,
+                        unfocusedContainerColor = FondoIndvCards,
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.LocationOn,
+                            contentDescription = "Salida",
+                            tint = Color.Black,
+                            modifier = Modifier.size(24.dp)
+                        ) },
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .background(Blanco)
+                        .fillMaxWidth()
+                        .border(1.dp, Color.Black, RoundedCornerShape(15))
+                )
+            }
+        }
+        FloatingActionButton(
+            onClick = {
+                if (!mostrarBarraDestino){
+                    mostrarBarraDestino = true
+                } },
+            containerColor = FondoTarjetaInception,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+                .size(60.dp))
+        {
+            Icon(painter = painterResource(id = R.drawable.distance), contentDescription = "Cómo llegar")
+        }
     }
-
     BackHandler {
         navController.popBackStack()
         mapaOrganizadorVM.searchSitioRecogida.value = false
@@ -407,7 +511,7 @@ fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
     routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
         listaCoordenadas.add(LatLng(it[1], it[0]))
     }
-    cargaRuta.value = true
+    rutaCargada.value = true
     muestraRuta.value = true
     return listaCoordenadas
 }

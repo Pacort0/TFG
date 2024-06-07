@@ -128,7 +128,7 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.viewmodels.EventosVM
-import com.example.regalanavidad.viewmodels.mapaOrganizadorVM
+import com.example.regalanavidad.viewmodels.MapaVM
 import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.maps.model.LatLng
@@ -162,7 +162,7 @@ import kotlin.system.exitProcess
 
 val auth = Firebase.auth
 var usuario = Usuario()
-private val sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
+private var sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
 private val eventosConfirmados = mutableListOf<Evento>()
 var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
@@ -188,7 +188,7 @@ class Home : ComponentActivity() {
             task.join()
         }
         val esVoluntario = usuario.nombreRango == "Voluntario"
-        val mapaOrganizadorVM = mapaOrganizadorVM()
+        val mapaOrganizadorVM = MapaVM()
 
         super.onCreate(savedInstanceState)
 
@@ -209,7 +209,7 @@ class Home : ComponentActivity() {
 }
 
 @Composable
-fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM, onTabSelected: (String) -> Unit) {
+fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrganizadorVM: MapaVM, onTabSelected: (String) -> Unit) {
     var selectedTabIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -277,19 +277,22 @@ fun TabBarBadgeView(count: Int? = null) {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: mapaOrganizadorVM) {
+fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navController: NavController, onMapaCambiado: (Boolean) -> Unit, mapaOrganizadorVM: MapaVM) {
     when (screenTitle){
         "Home" -> {
             HomeScreen(modifier, navController, mapaOrganizadorVM, onMapaCambiado)
             onMapaCambiado(false)
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Tareas" -> {
             TareasScreen(navController)
             onMapaCambiado(true)
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Mail" -> {
             MailScreen(navController)
             onMapaCambiado(false)
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Mapa" -> {
             MapsScreen(navController, mapaOrganizadorVM)
@@ -298,10 +301,12 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
         "Roles" -> {
             RolesTabScreen(navController)
             onMapaCambiado(false)
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Excel" -> {
             ExcelScreen(navController, onMapaCambiado)
             onMapaCambiado(false)
+            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
     }
 }
@@ -309,7 +314,7 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: mapaOrganizadorVM, onMapaCambiado: (Boolean) -> Unit){
+fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizadorVM: MapaVM, onMapaCambiado: (Boolean) -> Unit){
     auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
 
     val context = LocalContext.current
@@ -318,15 +323,15 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     val scope = CoroutineScope(Dispatchers.Main)
     var agregaSitio by remember { mutableStateOf(false) }
     var haySitios by remember { mutableStateOf(false) }
-    var recargarSitios by remember { mutableStateOf(false) }
-    var sitiosLoading by remember { mutableStateOf(true) }
-    var recaudacionsLoading by remember { mutableStateOf(true) }
+    var recargarSitios by remember { mutableStateOf(true) }
+    var sitiosLoading by remember { mutableStateOf(false) }
+    var recaudacionsLoading by remember { mutableStateOf(false) }
     val canEditSitios = checkIfCanEditSitios(usuario.nombreRango)
     var navegaSitio by remember { mutableStateOf(false) }
     var agregaEvento by remember{ mutableStateOf(false) }
     var hayEventos by remember { mutableStateOf(false) }
     var recargarEventos by remember { mutableStateOf(true) }
-    var eventosLoading by remember { mutableStateOf(true) }
+    var eventosLoading by remember { mutableStateOf(false) }
     val canEditEventos = checkIfCanEditEventos(usuario.nombreRango)
     var redactaEmail by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(
@@ -341,8 +346,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     val coroutineScope = rememberCoroutineScope()
     var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf())}
     var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
-    var mostrarTodo by remember { mutableStateOf(false) }
-    var cargando by remember { mutableStateOf(true) }
 
     if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
         prediccionesNuevoSitioRecogida = emptyList()
@@ -352,35 +355,19 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
         prediccionesNuevoSitioEvento = emptyList()
     }
 
-    LaunchedEffect(key1 = hayInternet, key2 = Unit) {
-        cargando = true
-        hayInternet = hayInternet(connectivityManager)
-        cargando = false
-        mostrarTodo = hayInternet
-    }
-
-    if (cargando || recargarSitios){
-        PantallaCarga(textoCargando = pagerState.currentPage.let {
-            when (it) {
-                0 -> "Cargando sitios..."
-                1 -> "Cargando eventos..."
-                else -> "Cargando..."
-            }
+    if (!hayInternet){
+        NoInternetScreen (onRetry = {
+            hayInternet = hayInternet(connectivityManager)
         })
-    } else if (!mostrarTodo){
-        NoInternetScreen(
-            onRetry = {
-                hayInternet = true
-            }
-        )
-    } else{
-        Box(modifier = modifier
-            .fillMaxSize()
-            .background(FondoApp)
-        ){
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(FondoApp)
+        ) {
             if (agregaSitio) {
                 var alturaDialogo by remember { mutableStateOf(180.dp) }
-                var buscarSitio by remember{mutableStateOf(false)}
+                var buscarSitio by remember { mutableStateOf(false) }
                 Dialog(onDismissRequest = {
                     textoBusqueda = ""
                     agregaSitio = false
@@ -396,7 +383,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             .background(FondoApp)
                             .padding(35.dp)
                     ) {
-                        Column (
+                        Column(
                             Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
@@ -404,7 +391,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(text = "Nuevo sitio", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = "Nuevo sitio",
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
                                 value = textoBusqueda,
@@ -413,8 +405,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     textoBusqueda = nuevaBusqueda
                                     buscarSitio = true
                                     scope.launch {
-                                        prediccionesNuevoSitioRecogida = obtenerPredicciones(nuevaBusqueda, connectivityManager)
-                                    } },
+                                        prediccionesNuevoSitioRecogida =
+                                            obtenerPredicciones(nuevaBusqueda, connectivityManager)
+                                    }
+                                },
                                 label = { Text("Buscar sitio", color = ColorLogo) },
                                 leadingIcon = {
                                     Icon(
@@ -422,7 +416,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         contentDescription = "Lupa",
                                         modifier = Modifier.size(24.dp),
                                         tint = Color.Black
-                                    ) },
+                                    )
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onFocusChanged { focusState ->
@@ -433,8 +428,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     unfocusedContainerColor = FondoIndvCards,
                                     focusedBorderColor = Color.Transparent,
                                     unfocusedBorderColor = Color.Transparent
-                                ))
-                            if(buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty() && textoBusqueda.isNotBlank()){
+                                )
+                            )
+                            if (buscarSitio && prediccionesNuevoSitioRecogida.isNotEmpty() && textoBusqueda.isNotBlank()) {
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioRecogida.take(4)
                                     items(topSitios.size) { index ->
@@ -474,12 +470,24 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             Column(
                                                 modifier = Modifier.padding(8.dp)
                                             ) {
-                                                if(topSitios[index].nombreSitio != ""){
+                                                if (topSitios[index].nombreSitio != "") {
                                                     LazyRow {
-                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp, color = Color.Black) }
+                                                        item {
+                                                            Text(
+                                                                topSitios[index].nombreSitio,
+                                                                fontSize = 16.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
                                                     }
                                                     LazyRow {
-                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
+                                                        item {
+                                                            Text(
+                                                                text = topSitios[index].direccionSitio,
+                                                                fontSize = 13.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
@@ -488,7 +496,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             } else {
                                 Column {
-                                    if (hayInternet(connectivityManager)){
+                                    if (hayInternet(connectivityManager)) {
                                         Text(text = "No tienes conexión")
                                     } else {
                                         Text(text = "Cargando...")
@@ -503,15 +511,23 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             if (agregaEvento) {
                 var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
                 var nombreEvento by remember { mutableStateOf("") }
-                var descripcionEvento by remember {mutableStateOf("")}
-                var fechaEscogida by remember{mutableStateOf(LocalDate.now()) }
-                var horaEscogida by remember{ mutableStateOf(LocalTime.NOON) }
-                val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
-                val horaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida) } }
+                var descripcionEvento by remember { mutableStateOf("") }
+                var fechaEscogida by remember { mutableStateOf(LocalDate.now()) }
+                var horaEscogida by remember { mutableStateOf(LocalTime.NOON) }
+                val fechaFormateada by remember {
+                    derivedStateOf {
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida)
+                    }
+                }
+                val horaFormateada by remember {
+                    derivedStateOf {
+                        DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida)
+                    }
+                }
                 val fechaDialogState = rememberMaterialDialogState()
                 val horaDialogState = rememberMaterialDialogState()
                 val alturaDialogo by remember { mutableStateOf(420.dp) }
-                var buscarSitio by remember{mutableStateOf(false)}
+                var buscarSitio by remember { mutableStateOf(false) }
 
 
                 Dialog(onDismissRequest = { agregaEvento = false }) {
@@ -527,7 +543,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             .padding(top = 15.dp, start = 30.dp, end = 30.dp, bottom = 15.dp)
                             .clip(RoundedCornerShape(20.dp))
                     ) {
-                        Column (
+                        Column(
                             Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
@@ -535,7 +551,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text(text = "Nuevo evento", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(
+                                text = "Nuevo evento",
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
                                 value = nombreEvento,
@@ -548,20 +569,27 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     cursorColor = Color.Black,
                                     focusedBorderColor = Color.Transparent,
                                     unfocusedBorderColor = Color.Transparent
-                                ))
+                                )
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = descripcionEvento,
-                                onValueChange = {descripcionEvento = it},
+                                onValueChange = { descripcionEvento = it },
                                 textStyle = TextStyle(color = Color.Black),
-                                label = {Text(text = "Descripción del evento", color = ColorLogo)},
+                                label = {
+                                    Text(
+                                        text = "Descripción del evento",
+                                        color = ColorLogo
+                                    )
+                                },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
                                     cursorColor = Color.Black,
                                     focusedBorderColor = Color.Transparent,
                                     unfocusedBorderColor = Color.Transparent
-                                ))
+                                )
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = textoBusqueda,
@@ -570,7 +598,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     textoBusqueda = nuevaBusqueda
                                     buscarSitio = true
                                     scope.launch {
-                                        prediccionesNuevoSitioEvento = obtenerPredicciones(nuevaBusqueda, connectivityManager)
+                                        prediccionesNuevoSitioEvento =
+                                            obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     }
                                 },
                                 label = { Text("Lugar del evento", color = ColorLogo) },
@@ -590,7 +619,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     unfocusedBorderColor = Color.Transparent
                                 )
                             )
-                            if(buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty() && textoBusqueda.isNotBlank()){
+                            if (buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty() && textoBusqueda.isNotBlank()) {
                                 LazyColumn {
                                     val topSitios = prediccionesNuevoSitioEvento.take(4)
                                     items(topSitios.size) { index ->
@@ -617,36 +646,52 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             Column(
                                                 modifier = Modifier.padding(8.dp)
                                             ) {
-                                                if(topSitios[index].nombreSitio != ""){
+                                                if (topSitios[index].nombreSitio != "") {
                                                     LazyRow {
-                                                        item{ Text(topSitios[index].nombreSitio, fontSize = 16.sp, color = Color.Black) }
+                                                        item {
+                                                            Text(
+                                                                topSitios[index].nombreSitio,
+                                                                fontSize = 16.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
                                                     }
                                                     LazyRow {
-                                                        item { Text(text = topSitios[index].direccionSitio, fontSize = 13.sp, color = Color.Black) }
+                                                        item {
+                                                            Text(
+                                                                text = topSitios[index].direccionSitio,
+                                                                fontSize = 13.sp,
+                                                                color = Color.Black
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            } else if (textoBusqueda.isNotBlank() && prediccionesNuevoSitioEvento.isEmpty()){
+                            } else if (textoBusqueda.isNotBlank() && prediccionesNuevoSitioEvento.isEmpty()) {
                                 Column {
-                                    if (!hayInternet(connectivityManager)){
+                                    if (!hayInternet(connectivityManager)) {
                                         Text(text = "No tienes conexión")
                                     } else {
                                         Text(text = "Cargando...")
                                     }
                                 }
                             }
-                            if (prediccionesNuevoSitioEvento.isEmpty()){
+                            if (prediccionesNuevoSitioEvento.isEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = fechaFormateada,
+                                Text(
+                                    text = fechaFormateada,
                                     Modifier.clickable { fechaDialogState.show() },
-                                    color = Color.Black)
+                                    color = Color.Black
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = horaFormateada,
+                                Text(
+                                    text = horaFormateada,
                                     Modifier.clickable { horaDialogState.show() },
-                                    color = Color.Black)
+                                    color = Color.Black
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -678,7 +723,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 positiveButton("Guardar") {
                                     fechaDialogState.hide()
                                 }
-                                negativeButton("Cancelar"){
+                                negativeButton("Cancelar") {
                                     fechaDialogState.hide()
                                 }
                             }
@@ -701,18 +746,22 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 is24HourClock = true
                             )
                         }
-                        if (prediccionesNuevoSitioEvento.isEmpty()){
-                            Row (modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(0.dp, 0.dp, 0.dp, 14.dp)) {
+                        if (prediccionesNuevoSitioEvento.isEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(0.dp, 0.dp, 0.dp, 14.dp)
+                            ) {
                                 Button(
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = FondoTarjetaInception
                                     ),
                                     onClick = {
                                         textoBusqueda = ""
-                                        agregaEvento = false },
-                                    modifier = Modifier.background(Color.Transparent))
+                                        agregaEvento = false
+                                    },
+                                    modifier = Modifier.background(Color.Transparent)
+                                )
                                 {
                                     Text(text = "Cancelar", color = Color.Black)
                                 }
@@ -722,11 +771,19 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         containerColor = FondoTarjetaInception
                                     ),
                                     onClick = {
-                                        if(hayInternet){
-                                            if(sitioEvento.nombreSitio == ""){
-                                                Toast.makeText(context, "Selecciona un sitio", Toast.LENGTH_SHORT).show()
-                                            } else if(nombreEvento == ""){
-                                                Toast.makeText(context, "Introduce un nombre del evento", Toast.LENGTH_SHORT).show()
+                                        if (hayInternet) {
+                                            if (sitioEvento.nombreSitio == "") {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Selecciona un sitio",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else if (nombreEvento == "") {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Introduce un nombre del evento",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             } else {
                                                 val evento = Evento(
                                                     id = generarClaveAleatoria(15),
@@ -743,10 +800,15 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 }
                                             }
                                         } else {
-                                            Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "No tienes Internet",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                     },
-                                    modifier = Modifier.background(Color.Transparent)) {
+                                    modifier = Modifier.background(Color.Transparent)
+                                ) {
                                     Text(text = "Guardar", color = Color.Black)
                                 }
                             }
@@ -797,79 +859,115 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 LaunchedEffect(key1 = recargarSitios) {
                                     sitiosLoading = true
                                     sitiosRecogidaConfirmados.clear()
-                                    val sitiosRecogida = firestore.getSitiosRecogida()
-                                    sitiosRecogida.forEach { sitioRecogida ->
-                                        sitiosRecogidaConfirmados.add(sitioRecogida)
+                                    if (hayInternet(connectivityManager)) {
+                                        val sitiosRecogida = firestore.getSitiosRecogida()
+                                        sitiosRecogida.forEach { sitioRecogida ->
+                                            sitiosRecogidaConfirmados.add(sitioRecogida)
+                                        }
                                     }
                                     haySitios = sitiosRecogidaConfirmados.size != 0
                                     recargarSitios = false
                                     sitiosLoading = false
                                 }
-                                Box(modifier = Modifier
-                                    .fillMaxSize()
-                                    .fillMaxSize()
-                                    .background(color = Color.Transparent)) {
+                                if (eventosLoading) {
                                     Column(
-                                        Modifier.fillMaxSize(),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ){
-                                        Row (
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .padding(5.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = FondoTarjetaInception
+                                        )
+                                        Text(
+                                            text = "Cargando sitios...",
+                                            modifier = Modifier.padding(top = 8.dp),
+                                            color = Color.Black
+                                        )
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .fillMaxSize()
+                                            .background(color = Color.Transparent)
+                                    ) {
+                                        Column(
+                                            Modifier.fillMaxSize(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            Box(modifier = Modifier.fillMaxWidth()) {
-                                                Text(
-                                                    text = "Sitios de recogida",
-                                                    color = Color.Black,
-                                                    textAlign = TextAlign.Center,
-                                                    fontSize = 24.sp,
-                                                    modifier = Modifier.align(Alignment.Center),
-                                                )
-                                                if (canEditSitios) {
-                                                    IconButton(
-                                                        onClick = {
-                                                            hayInternet = hayInternet(connectivityManager)
-                                                            if (hayInternet){
-                                                                agregaSitio = true
-                                                            } else {
-                                                                Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
-                                                            }},
-                                                        modifier = Modifier
-                                                            .size(58.dp)
-                                                            .align(Alignment.CenterEnd)
-                                                            .padding(end = 20.dp))
-                                                    {
-                                                        Icon(
-                                                            Icons.Filled.AddCircle,
-                                                            "Agregar sitio",
-                                                            Modifier.fillMaxSize(),
-                                                            Color.Black
+                                            Row(
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(5.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
+                                                    Text(
+                                                        text = "Sitios de recogida",
+                                                        color = Color.Black,
+                                                        textAlign = TextAlign.Center,
+                                                        fontSize = 24.sp,
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                    )
+                                                    if (canEditSitios) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                hayInternet =
+                                                                    hayInternet(connectivityManager)
+                                                                if (hayInternet) {
+                                                                    agregaSitio = true
+                                                                } else {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "No tienes Internet",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                            },
+                                                            modifier = Modifier
+                                                                .size(58.dp)
+                                                                .align(Alignment.CenterEnd)
+                                                                .padding(end = 20.dp)
                                                         )
+                                                        {
+                                                            Icon(
+                                                                Icons.Filled.AddCircle,
+                                                                "Agregar sitio",
+                                                                Modifier.fillMaxSize(),
+                                                                Color.Black
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
-                                        if(haySitios){
-                                            ListaSitiosConfirmados(sitiosRecogidaConfirmados,
-                                                false,
-                                                canEditSitios,
-                                                connectivityManager,
-                                                context,
-                                                onElementoEliminado = {elementoEliminado -> recargarSitios = elementoEliminado},
-                                                onSitioEscogido = { sitioRecogida -> mapaOrganizadorVM.sitioRecogida.value = sitioRecogida
-                                                    navegaSitio = true
-                                                }
-                                            )
-                                        } else {
-                                            Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
+                                            if (haySitios) {
+                                                ListaSitiosConfirmados(sitiosRecogidaConfirmados,
+                                                    false,
+                                                    canEditSitios,
+                                                    connectivityManager,
+                                                    context,
+                                                    onElementoEliminado = { elementoEliminado ->
+                                                        recargarSitios = elementoEliminado
+                                                    },
+                                                    onSitioEscogido = { sitioRecogida ->
+                                                        mapaOrganizadorVM.sitioRecogida.value =
+                                                            sitioRecogida
+                                                        navegaSitio = true
+                                                    }
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "No hay sitios de recogida confirmados",
+                                                    color = Color.Black
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+
                         1 -> {
                             Card(
                                 modifier = Modifier
@@ -892,7 +990,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     containerColor = Color.Transparent
                                 )
                             ) {
-                                Box (
+                                Box(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .background(color = Color.Transparent)
@@ -909,7 +1007,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         eventosLoading = false
                                     }
                                     if (eventosLoading) {
-                                        Column (
+                                        Column(
                                             modifier = Modifier.fillMaxSize(),
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.Center
@@ -925,11 +1023,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         }
                                     } else {
                                         if (hayEventos) {
-                                            Column (
+                                            Column(
                                                 Modifier.fillMaxSize(),
                                                 horizontalAlignment = Alignment.CenterHorizontally
-                                            ){
-                                                Row (
+                                            ) {
+                                                Row(
                                                     Modifier
                                                         .fillMaxWidth()
                                                         .padding(5.dp),
@@ -947,16 +1045,24 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         if (canEditEventos) {
                                                             IconButton(
                                                                 onClick = {
-                                                                    hayInternet = hayInternet(connectivityManager)
-                                                                    if (hayInternet){
+                                                                    hayInternet = hayInternet(
+                                                                        connectivityManager
+                                                                    )
+                                                                    if (hayInternet) {
                                                                         agregaEvento = true
                                                                     } else {
-                                                                        Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
-                                                                    }},
+                                                                        Toast.makeText(
+                                                                            context,
+                                                                            "No tienes Internet",
+                                                                            Toast.LENGTH_SHORT
+                                                                        ).show()
+                                                                    }
+                                                                },
                                                                 modifier = Modifier
                                                                     .size(58.dp)
                                                                     .align(Alignment.CenterEnd)
-                                                                    .padding(end = 20.dp)                                                            )
+                                                                    .padding(end = 20.dp)
+                                                            )
                                                             {
                                                                 Icon(
                                                                     Icons.Filled.AddCircle,
@@ -974,21 +1080,27 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     canEditSitios,
                                                     connectivityManager,
                                                     context,
-                                                    onElementoEliminado = {elementoEliminado -> recargarEventos = elementoEliminado},
-                                                    onEventoEscogido = {
-                                                            evento -> mapaOrganizadorVM.sitioRecogida.value = evento.lugar
+                                                    onElementoEliminado = { elementoEliminado ->
+                                                        recargarEventos = elementoEliminado
+                                                    },
+                                                    onEventoEscogido = { evento ->
+                                                        mapaOrganizadorVM.sitioRecogida.value =
+                                                            evento.lugar
                                                         navegaSitio = true
                                                     }
                                                 )
                                             }
-                                        }
-                                        else {
-                                            Text(text = "No hay eventos confirmados", color = Color.Black)
+                                        } else {
+                                            Text(
+                                                text = "No hay eventos confirmados",
+                                                color = Color.Black
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
+
                         2 -> {
                             Card(
                                 modifier = Modifier
@@ -1011,13 +1123,14 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     containerColor = Color.Transparent
                                 )
                             ) {
-                                Column (
+                                Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
                                     modifier = Modifier
-                                        .background(Color.Transparent))
+                                        .background(Color.Transparent)
+                                )
                                 {
-                                    Row (
+                                    Row(
                                         Modifier
                                             .weight(0.5f)
                                             .padding(10.dp),
@@ -1028,7 +1141,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             onClick = {},
                                             modifier = Modifier.fillMaxSize()
                                         ) {
-                                            Box (
+                                            Box(
                                                 modifier = Modifier.fillMaxSize()
                                             ) {
                                                 Image(
@@ -1044,34 +1157,38 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.Center
                                                 ) {
-                                                    Column (
+                                                    Column(
                                                         Modifier.fillMaxSize()
                                                     ) {
                                                         LaunchedEffect(key1 = Unit) {
                                                             recaudacionsLoading = true
-                                                            val donacionResponse = getDonationDataFromGoogleSheet(
-                                                                donacionesSheetId,
-                                                                "donaciones"
-                                                            )
-                                                            dineroRecaudado.value = donacionResponse.donaciones
+                                                            val donacionResponse =
+                                                                getDonationDataFromGoogleSheet(
+                                                                    donacionesSheetId,
+                                                                    "donaciones"
+                                                                )
+                                                            dineroRecaudado.value =
+                                                                donacionResponse.donaciones
                                                             recaudacionsLoading = false
                                                         }
                                                         if (recaudacionsLoading) {
                                                             Text(text = "Cargando...")
                                                         } else {
-                                                            Row (
+                                                            Row(
                                                                 Modifier
                                                                     .fillMaxWidth()
                                                                     .weight(0.1f),
                                                                 horizontalArrangement = Arrangement.Center
                                                             ) {
-                                                                Text(text = "Dinero recaudado:",
+                                                                Text(
+                                                                    text = "Dinero recaudado:",
                                                                     fontWeight = FontWeight.Bold,
                                                                     fontSize = 24.sp,
-                                                                    color = Color.White)
+                                                                    color = Color.White
+                                                                )
                                                             }
                                                             dineroRecaudado.value.forEach { donacion ->
-                                                                Row (
+                                                                Row(
                                                                     modifier
                                                                         .fillMaxSize()
                                                                         .weight(
@@ -1117,13 +1234,28 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                                         }
                                                                                     }
                                                                                 }
-                                                                        ){
-                                                                            Box (modifier = Modifier.fillMaxSize()){
-                                                                                when(donacion.tipo) {
-                                                                                    "BIZUM" -> DonacionRow(donacion, R.drawable.bizum)
-                                                                                    "EFECTIVO" -> DonacionRow(donacion, R.drawable.dinero_efectivo)
-                                                                                    "TRANSFERENCIA" -> DonacionRow(donacion, R.drawable.transferencia)
-                                                                                    "TOTAL" -> DonacionRow(donacion, R.drawable.total)
+                                                                        ) {
+                                                                            Box(modifier = Modifier.fillMaxSize()) {
+                                                                                when (donacion.tipo) {
+                                                                                    "BIZUM" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.bizum
+                                                                                    )
+
+                                                                                    "EFECTIVO" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.dinero_efectivo
+                                                                                    )
+
+                                                                                    "TRANSFERENCIA" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.transferencia
+                                                                                    )
+
+                                                                                    "TOTAL" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.total
+                                                                                    )
                                                                                 }
                                                                             }
                                                                         }
@@ -1136,7 +1268,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             }
                                         }
                                     }
-                                    Row (
+                                    Row(
                                         Modifier
                                             .weight(0.5f),
                                         horizontalArrangement = Arrangement.Center,
@@ -1163,7 +1295,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     contentScale = ContentScale.Crop,
                                                     modifier = Modifier.fillMaxSize()
                                                 )
-                                                Column (
+                                                Column(
                                                     Modifier
                                                         .fillMaxSize()
                                                         .padding(
@@ -1174,7 +1306,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         )
                                                 ) {
                                                     if (eventoVM.value.titulo != "") {
-                                                        Row (
+                                                        Row(
                                                             modifier = Modifier
                                                                 .fillMaxWidth()
                                                                 .wrapContentHeight()
@@ -1182,11 +1314,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             verticalAlignment = Alignment.CenterVertically,
                                                             horizontalArrangement = Arrangement.Center
                                                         ) {
-                                                            Column (
+                                                            Column(
                                                                 Modifier.fillMaxSize(),
                                                                 verticalArrangement = Arrangement.Center,
                                                                 horizontalAlignment = Alignment.CenterHorizontally
-                                                            ){
+                                                            ) {
                                                                 Text(
                                                                     text = "Próximo evento:",
                                                                     fontWeight = FontWeight.Bold,
@@ -1211,8 +1343,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             horizontalArrangement = Arrangement.Center
                                                         ) {
                                                             eventoVM.value.startDate.let {
-                                                                val valoresFecha = eventoVM.value.startDate.split("/")
-                                                                Column (
+                                                                val valoresFecha =
+                                                                    eventoVM.value.startDate.split("/")
+                                                                Column(
                                                                     Modifier.fillMaxSize(),
                                                                     verticalArrangement = Arrangement.Center,
                                                                     horizontalAlignment = Alignment.CenterHorizontally
@@ -1223,7 +1356,11 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                         fontSize = 60.sp,
                                                                         color = Color.Black
                                                                     )
-                                                                    Spacer(modifier = Modifier.height(5.dp))
+                                                                    Spacer(
+                                                                        modifier = Modifier.height(
+                                                                            5.dp
+                                                                        )
+                                                                    )
                                                                     Text(
                                                                         text = cambiaNumeroPorMes(
                                                                             valoresFecha[1]
@@ -1252,7 +1389,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                             }
                                                         }
                                                     } else {
-                                                        Row (
+                                                        Row(
                                                             modifier = Modifier.fillMaxSize(),
                                                             verticalAlignment = Alignment.CenterVertically,
                                                             horizontalArrangement = Arrangement.Center
@@ -1272,6 +1409,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             }
                         }
+
                         3 -> {
                             Card(
                                 modifier = Modifier
@@ -1294,13 +1432,14 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     containerColor = Color.Transparent
                                 )
                             ) {
-                                Column (
+                                Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
                                     modifier = Modifier
-                                        .background(Color.Transparent))
+                                        .background(Color.Transparent)
+                                )
                                 {
-                                    Row (
+                                    Row(
                                         Modifier
                                             .weight(0.5f)
                                             .padding(10.dp),
@@ -1309,14 +1448,22 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     ) {
                                         OutlinedCard(
                                             onClick = {
-                                                val uri = Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
+                                                val uri =
+                                                    Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
                                                 val intent = Intent(Intent.ACTION_VIEW, uri)
                                                 intent.setPackage("com.instagram.android")
                                                 try {
                                                     startActivity(context, intent, null)
                                                 } catch (e: ActivityNotFoundException) {
                                                     Log.e("Error", "Instagram no está instalado")
-                                                    startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")), null)
+                                                    startActivity(
+                                                        context,
+                                                        Intent(
+                                                            Intent.ACTION_VIEW,
+                                                            Uri.parse("https://www.instagram.com/_u/proyectoregalanavidad")
+                                                        ),
+                                                        null
+                                                    )
                                                 }
                                             },
                                             modifier = Modifier
@@ -1330,23 +1477,33 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             CartaRSS(R.drawable.logo_ig, "Instagram")
                                         }
                                     }
-                                    Row (
+                                    Row(
                                         Modifier
                                             .weight(0.5f)
                                             .padding(10.dp),
                                         horizontalArrangement = Arrangement.Center,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        OutlinedCard(onClick = {
-                                            val uri = Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
-                                            val intent = Intent(Intent.ACTION_VIEW, uri)
-                                            intent.setPackage("com.tiktok.android")
-                                            try {
-                                                startActivity(context, intent, null)
-                                            } catch (e: ActivityNotFoundException) {
-                                                Log.e("Error", "Tiktok no está instalado")
-                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")), null)
-                                            } },
+                                        OutlinedCard(
+                                            onClick = {
+                                                val uri =
+                                                    Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
+                                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                                intent.setPackage("com.tiktok.android")
+                                                try {
+                                                    startActivity(context, intent, null)
+                                                } catch (e: ActivityNotFoundException) {
+                                                    Log.e("Error", "Tiktok no está instalado")
+                                                    startActivity(
+                                                        context,
+                                                        Intent(
+                                                            Intent.ACTION_VIEW,
+                                                            Uri.parse("https://www.tiktok.com/@agrupacionrutadehercules")
+                                                        ),
+                                                        null
+                                                    )
+                                                }
+                                            },
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .border(
@@ -1358,23 +1515,33 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             CartaRSS(R.drawable.logo_tiktok, "TikTok")
                                         }
                                     }
-                                    Row (
+                                    Row(
                                         Modifier
                                             .weight(0.5f)
                                             .padding(10.dp),
                                         horizontalArrangement = Arrangement.Center,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        OutlinedCard(onClick = {
-                                            val uri = Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
-                                            val intent = Intent(Intent.ACTION_VIEW, uri)
-                                            intent.setPackage("com.whatsapp.android")
-                                            try {
-                                                startActivity(context, intent, null)
-                                            } catch (e: ActivityNotFoundException) {
-                                                Log.e("Error", "Whatsapp no está instalado")
-                                                startActivity(context, Intent(Intent.ACTION_VIEW, Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")), null)
-                                            } },
+                                        OutlinedCard(
+                                            onClick = {
+                                                val uri =
+                                                    Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
+                                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                                intent.setPackage("com.whatsapp.android")
+                                                try {
+                                                    startActivity(context, intent, null)
+                                                } catch (e: ActivityNotFoundException) {
+                                                    Log.e("Error", "Whatsapp no está instalado")
+                                                    startActivity(
+                                                        context,
+                                                        Intent(
+                                                            Intent.ACTION_VIEW,
+                                                            Uri.parse("https://chat.whatsapp.com/KCDMPKRZTlA3XaaMnbdrXa")
+                                                        ),
+                                                        null
+                                                    )
+                                                }
+                                            },
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .border(
@@ -1401,7 +1568,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 horizontalArrangement = Arrangement.Center
             ) {
                 repeat(pagerState.pageCount) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                    val color =
+                        if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
                     Box(
                         modifier = Modifier
                             .padding(3.dp)
@@ -1411,7 +1579,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                     )
                 }
             }
-            if(navegaSitio){
+            if (navegaSitio) {
                 mapaOrganizadorVM.searchSitioRecogida.value = true
                 agregaSitio = false
                 agregaEvento = false
@@ -1421,7 +1589,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 navController.navigate("Mapa")
                 navegaSitio = false
             }
-            if(usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II."){
+            if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II.") {
                 FloatingActionButton(
                     onClick = { redactaEmail = true },
                     containerColor = FondoTarjetaInception,
@@ -1435,59 +1603,64 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(painterResource(id = R.drawable.lapiz), contentDescription = "Enviar correo", Modifier.size(25.dp), tint = Color.Black)
-                        if (pagerState.currentPage == 0 || pagerState.currentPage == 1){
+                        Icon(
+                            painterResource(id = R.drawable.lapiz),
+                            contentDescription = "Enviar correo",
+                            Modifier.size(25.dp),
+                            tint = Color.Black
+                        )
+                        if (pagerState.currentPage == 0 || pagerState.currentPage == 1) {
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(text = "Redactar correo", color = Color.Black)
                         }
                     }
                 }
             }
-            if(redactaEmail){
+            if (redactaEmail) {
                 centroEducativoElegido = CentroEducativo()
                 navController.navigate("Mail")
                 redactaEmail = false
             }
         }
-    }
-    if (showCloseAppDialog){
-        AlertDialog(
-            containerColor = FondoApp,
-            onDismissRequest = {
-                showCloseAppDialog = false
-            },
-            title = {
-                Text(text = "¿Cerrar la aplicación?", color = Color.Black)
-            },
-            text = {
-                Text("¿Desea cerrar la aplicación?", color = Color.Black)
-            },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = FondoTarjetaInception
-                    ),
-                    onClick = {
-                        ActivityCompat.finishAffinity(context as Activity)
-                        exitProcess(0)
+        if (showCloseAppDialog) {
+            AlertDialog(
+                containerColor = FondoApp,
+                onDismissRequest = {
+                    showCloseAppDialog = false
+                },
+                title = {
+                    Text(text = "¿Cerrar la aplicación?", color = Color.Black)
+                },
+                text = {
+                    Text("¿Desea cerrar la aplicación?", color = Color.Black)
+                },
+                confirmButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FondoTarjetaInception
+                        ),
+                        onClick = {
+                            ActivityCompat.finishAffinity(context as Activity)
+                            exitProcess(0)
+                        }
+                    ) {
+                        Text("Sí, estoy seguro", color = Color.Black)
                     }
-                ) {
-                    Text("Sí, estoy seguro", color = Color.Black)
-                }
-            },
-            dismissButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = FondoTarjetaInception
-                    ),
-                    onClick = {
-                        showCloseAppDialog = false
+                },
+                dismissButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = FondoTarjetaInception
+                        ),
+                        onClick = {
+                            showCloseAppDialog = false
+                        }
+                    ) {
+                        Text("No", color = Color.Black)
                     }
-                ) {
-                    Text("No", color = Color.Black)
                 }
-            }
-        )
+            )
+        }
     }
     BackHandler {
         val paginaPreviaPila = navController.previousBackStackEntry
