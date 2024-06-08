@@ -11,27 +11,24 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -46,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -101,6 +99,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     var ubicacionDenegada by remember { mutableStateOf(!locationPermissionState.hasPermission) }
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var cargarSitios by remember { mutableStateOf(false) }
+    var ubicacionAdded by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = locationPermissionState.hasPermission, key2 = hayInternet) {
         if (locationPermissionState.hasPermission) {
@@ -144,7 +143,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
 
     LaunchedEffect(key1 = cargarSitios) {
         if (hayInternet(connectivityManager)){
-            if(currentLocation != null ) {
+            if(currentLocation != null && !ubicacionAdded) {
                     listaSitios.value +=
                         SitioRecogida(
                         "Ubicación actual",
@@ -152,6 +151,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
                         currentLocation!!.longitude,
                         "Calle de la piruleta"
                         )
+                ubicacionAdded = true
                 }
             listaSitios.value = firestore.getListaSitiosYEventosUnicos()
             cargarSitios = false
@@ -196,9 +196,15 @@ fun Mapa(
     var start by remember { mutableStateOf("0,0") }
     var end by remember { mutableStateOf("0,0") }
     var mostrarBarraDestino by remember { mutableStateOf(false) }
-    var sitioDestino by remember { mutableStateOf("") }
-    var sitioPartida by remember { mutableStateOf("Ubicación actual") }
-    var barraPartidaHasFocus by remember { mutableStateOf(false) }
+    var sitioDestino by remember { mutableStateOf(SitioRecogida()) }
+    var sitioPartida by remember { mutableStateOf(SitioRecogida()) }
+    var mostrarListaSitios by remember { mutableStateOf(false) }
+    var focusBarraPartida by remember {mutableStateOf(false)}
+    var focusBarraDestino by remember { mutableStateOf(false) }
+    var nombreSitioPartida by remember { mutableStateOf("") }
+    var nombreSitioDestino by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    var listaFiltrada by remember { mutableStateOf(listaSitios.value) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -208,84 +214,6 @@ fun Mapa(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if(searchSitioRecogida.value == true){
-                Row (
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
-                        .background(Color.Transparent),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = FondoTarjetaInception,
-                            disabledContainerColor = FondoTarjetaInception
-                        ),
-                        onClick = {
-                            calcularAPie.value = true
-                            calcularCoche.value = false
-                            rutaLoading = true
-                            muestraRuta.value = true
-                            if(muestraRuta.value){
-                                muestraRuta.value = false
-                                createRoute(start, end)
-                            } },
-                        modifier = Modifier
-                            .border(1.dp, Color.Black, RoundedCornerShape(15))
-                    ) {
-                        Icon(painterResource(id = R.drawable.apie), "A pie", tint = Color.Black)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent
-                        ),
-                        onClick = {
-                            calcularAPie.value = false
-                            calcularCoche.value = true
-                            rutaLoading = true
-                            muestraRuta.value = true
-                            if(muestraRuta.value){
-                                muestraRuta.value = false
-                                createRoute(start, end)
-                            } },
-                        modifier = Modifier
-                            .background(Color.LightGray)
-                            .border(1.dp, Color.Black, RoundedCornerShape(15))
-                    ) {
-                        Icon(painterResource(id = R.drawable.coche_icon), "En coche", tint = Color.Black)
-                    }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    if(rutaLoading){
-                        CircularProgressIndicator(
-                            color = FondoIndvCards
-                        )
-                        Text(
-                            text = "Cargando ruta...",
-                            modifier = Modifier.padding(top = 8.dp),
-                            color = Color.Black
-                        )
-                    } else if(muestraRuta.value){
-                        if(calcularAPie.value){
-                            Text(text = "Borrar ruta a pie", Modifier.padding(end = 2.dp), color = Color.Black)
-                        } else {
-                            Text(text = "Borrar ruta en coche", Modifier.padding(end = 2.dp), color = Color.Black)
-                        }
-                        IconButton(
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { muestraRuta.value = false }
-                        ) {
-                            Icon(Icons.Filled.Clear, contentDescription = "Borrar ruta", tint = Color.Black)
-                        }
-                    }
-                }
-            }
             GoogleMap(
                 modifier = Modifier
                     .weight(0.8f)
@@ -308,21 +236,21 @@ fun Mapa(
                         if (sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && posicionActual?.latitude != 37.4219983 && posicionActual?.longitude != -122.084) {
                             start = "${posicionActual!!.longitude},${posicionActual!!.latitude}"
                             end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                            createRoute(start, end)
                         } else {
                             start = "-5.986495,37.391524"
                             end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                            createRoute(start, end)
                         }
+                        createRoute(start, end)
                         rutaLoading = true
                     }
                 }
             ) {
-                if (rutaCargada.value && muestraRuta.value && mapaOrganizadorVM.searchSitioRecogida.value == true) {
+                if (rutaCargada.value && muestraRuta.value) {
                     rutaLoading = false
                     Polyline(points = route)
                 }
-                if (searchSitioRecogida.value == false) {
+
+                if (searchSitioRecogida.value == false && start == "0,0" && end == "0,0") {
                     posicionActual?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -333,6 +261,23 @@ fun Mapa(
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
                             entraMapa = false
                         }
+                    }
+                } else if (muestraRuta.value) {
+                    start.let {
+                        val startLatLng = LatLng(start.split(",")[1].toDouble(), start.split(",")[0].toDouble())
+                        Marker(
+                            state = MarkerState(position = startLatLng),
+                            title = "Sitio de recogida",
+                            snippet = "Usted se encuentra aquí"
+                        )
+                    }
+                    end.let {
+                        val endLatLng = LatLng(end.split(",")[1].toDouble(), end.split(",")[0].toDouble())
+                        Marker(
+                            state = MarkerState(position = endLatLng),
+                            title = "Sitio de recogida",
+                            snippet = "Usted se encuentra aquí"
+                        )
                     }
                 } else {
                     posicionActual?.let {
@@ -356,45 +301,6 @@ fun Mapa(
                     }
                 }
             }
-            if (searchSitioRecogida.value == true && muestraRuta.value && rutaCargada.value) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.weight(0.33f),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Column {
-                            Text(text = "Salida:", color = Color.Black)
-                            Text(text = "Posición actual", color = Color.Black)
-                        }
-                    }
-                    Column(
-                        modifier = Modifier.weight(0.33f),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Column {
-                            if (calcularAPie.value) {
-                                Text(text = "A pie", color = Color.Black)
-                            } else {
-                                Text(text = "En coche", color = Color.Black)
-                            }
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Flecha", Modifier.size(24.dp))
-                            Text(text = "$duracionTrayecto minutos", color = Color.Black)
-                        }
-                    }
-                    Column(
-                        modifier = Modifier.weight(0.33f),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Column {
-                            Text(text = "Destino:", color = Color.Black)
-                            Text(text = "${sitioRecogida.value?.nombreSitio}", color = Color.Black)
-                        }
-                    }
-                }
-            }
         }
         Column (
             modifier = Modifier
@@ -403,10 +309,12 @@ fun Mapa(
                 .align(Alignment.TopCenter)
         ) {
             TextField(
-                value = sitioPartida,
+                value = nombreSitioPartida,
                 onValueChange = { nuevoSitioPartida ->
-                    sitioPartida = nuevoSitioPartida
+                    nombreSitioPartida = nuevoSitioPartida
+                    listaFiltrada = filtrarSitios(nuevoSitioPartida, listaSitios.value, sitioDestino)
                 },
+                placeholder = { Text(text = if (mostrarBarraDestino) {"Lugar de partida"} else "Buscar un sitio", color = Color.LightGray)},
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = FondoIndvCards,
                     unfocusedContainerColor = FondoIndvCards,
@@ -425,19 +333,24 @@ fun Mapa(
                     .background(Blanco)
                     .fillMaxWidth()
                     .onFocusChanged { focusState ->
-                        barraPartidaHasFocus = focusState.isFocused
+                        if (focusState.isFocused) {
+                            sitioPartida = SitioRecogida()
+                            mostrarListaSitios = true
+                            focusBarraPartida = true
+                        } else {
+                            focusBarraPartida = false
+                            mostrarListaSitios = false
+                        }
                     }
                     .border(1.dp, Color.Black, RoundedCornerShape(15))
             )
-            if (barraPartidaHasFocus){
-                sitioPartida = ""
-            } else {
-                sitioPartida = "Ubicación actual"
-            }
             if (mostrarBarraDestino){
                 TextField(
-                    value = sitioDestino,
-                    onValueChange = {},
+                    value = nombreSitioDestino,
+                    onValueChange = { nuevoSitioDestino ->
+                        nombreSitioDestino = nuevoSitioDestino
+                        listaFiltrada = filtrarSitios(nuevoSitioDestino, listaSitios.value, sitioPartida)},
+                    placeholder = { Text(text = "Lugar de destino", color = Color.LightGray)},
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = FondoIndvCards,
                         unfocusedContainerColor = FondoIndvCards,
@@ -455,8 +368,88 @@ fun Mapa(
                         .padding(10.dp)
                         .background(Blanco)
                         .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                sitioDestino.nombreSitio = ""
+                                mostrarListaSitios = true
+                                focusBarraPartida = false
+                                focusBarraDestino = true
+                            } else {
+                                focusBarraDestino = false
+                                mostrarListaSitios = false
+                            }
+                        }
                         .border(1.dp, Color.Black, RoundedCornerShape(15))
                 )
+            }
+            if (mostrarListaSitios) {
+                if (listaFiltrada.isNotEmpty()) {
+                    LazyColumn (
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(8.dp)
+                            .background(FondoApp)
+                    ) {
+                        items(listaFiltrada.size) { index ->
+                            Card (
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .border(1.dp, Color.Gray, RoundedCornerShape(15)),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .background(Color.Transparent)
+                                        .clickable {
+                                            if (focusBarraPartida) {
+                                                sitioPartida = listaFiltrada[index]
+                                                if (!mostrarBarraDestino) {
+                                                    start = currentLocation!!.longitude.toString() + "," + currentLocation.latitude.toString()
+                                                    end = sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
+                                                    mostrarListaSitios = false
+                                                    mostrarBarraDestino = true
+                                                    nombreSitioDestino = sitioPartida.nombreSitio
+                                                    nombreSitioPartida = "Ubicación actual"
+                                                    createRoute(start, end)
+                                                    rutaLoading = true
+                                                } else {
+                                                    start = sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
+                                                }
+                                                mostrarListaSitios = false
+                                            } else {
+                                                sitioDestino = listaFiltrada[index]
+                                                end = sitioDestino.longitudSitio.toString() + "," + sitioDestino.latitudSitio.toString()
+                                                mostrarListaSitios = false
+                                            }
+                                            if (sitioDestino.nombreSitio != ""){
+                                                if (sitioPartida.nombreSitio == "") {
+                                                    sitioPartida.nombreSitio = "Ubicación actual"
+                                                    if (currentLocation != null) {
+                                                        start = currentLocation.longitude.toString() + "," + currentLocation.latitude.toString()
+                                                    }
+                                                }
+                                                mostrarListaSitios = false
+                                                createRoute(start, end)
+                                                rutaLoading = true
+                                            }
+                                            focusManager.clearFocus()
+                                        },
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = listaFiltrada[index].nombreSitio,
+                                        color = Color.Black,
+                                        modifier = Modifier.align(Alignment.CenterVertically)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         FloatingActionButton(
@@ -466,20 +459,44 @@ fun Mapa(
                 } },
             containerColor = FondoTarjetaInception,
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 16.dp)
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = 16.dp)
                 .size(60.dp))
         {
             Icon(painter = painterResource(id = R.drawable.distance), contentDescription = "Cómo llegar")
         }
     }
     BackHandler {
-        navController.popBackStack()
-        mapaOrganizadorVM.searchSitioRecogida.value = false
+        if (muestraRuta.value){
+            muestraRuta.value = false
+            start = "0,0"
+            end = "0,0"
+        } else if (focusBarraDestino){
+            focusBarraDestino = false
+            mostrarListaSitios = false
+            sitioDestino.nombreSitio = ""
+        } else  if (focusBarraPartida) {
+            focusBarraPartida = false
+            mostrarListaSitios = false
+            sitioPartida.nombreSitio = ""
+        } else if (mostrarBarraDestino){
+            mostrarBarraDestino = false
+        } else if(sitioPartida.nombreSitio != ""){
+            sitioPartida.nombreSitio = ""
+        } else {
+            navController.popBackStack()
+            mapaOrganizadorVM.searchSitioRecogida.value = false
+        }
+        focusManager.clearFocus()
     }
 }
 
-
+// Define la función fuera del composable
+fun filtrarSitios(query: String, sitios: List<SitioRecogida>, sitioExcluido: SitioRecogida?): List<SitioRecogida> {
+    return sitios.filter {
+        it.nombreSitio.contains(query, ignoreCase = true) && it != sitioExcluido
+    }
+}
 
 fun getRetrofit():Retrofit{
     return Retrofit.Builder()
