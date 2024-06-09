@@ -282,17 +282,14 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
         "Home" -> {
             HomeScreen(modifier, navController, mapaOrganizadorVM, onMapaCambiado)
             onMapaCambiado(false)
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Tareas" -> {
             TareasScreen(navController)
             onMapaCambiado(true)
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Mail" -> {
             MailScreen(navController)
             onMapaCambiado(false)
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Mapa" -> {
             MapsScreen(navController, mapaOrganizadorVM)
@@ -301,12 +298,10 @@ fun ScreenContent(modifier: Modifier = Modifier, screenTitle: String, navControl
         "Roles" -> {
             RolesTabScreen(navController)
             onMapaCambiado(false)
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         "Excel" -> {
             ExcelScreen(navController, onMapaCambiado)
             onMapaCambiado(false)
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
     }
 }
@@ -496,7 +491,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 }
                             } else {
                                 Column {
-                                    if (hayInternet(connectivityManager)) {
+                                    if (!hayInternet(connectivityManager)) {
                                         Text(text = "No tienes conexión")
                                     } else {
                                         Text(text = "Cargando...")
@@ -953,6 +948,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     onSitioEscogido = { sitioRecogida ->
                                                         mapaOrganizadorVM.sitioRecogida.value =
                                                             sitioRecogida
+                                                        mapaOrganizadorVM.searchSitioRecogida.value = true
                                                         navegaSitio = true
                                                     }
                                                 )
@@ -1580,7 +1576,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 }
             }
             if (navegaSitio) {
-                mapaOrganizadorVM.searchSitioRecogida.value = true
                 agregaSitio = false
                 agregaEvento = false
 
@@ -1856,13 +1851,13 @@ fun drawerAbierto(drawerValue: DrawerValue, mapaAbierto: Boolean): Boolean {
 suspend fun obtenerPredicciones(textoBusqueda: String, connectivityManager: ConnectivityManager): MutableList<SitioRecogida> {
     val sitiosRecogida = mutableListOf<SitioRecogida>()
     val sevillaBounds = RectangularBounds.newInstance(
-        LatLng(37.0, -6.1), // Suroeste de Sevilla
-        LatLng(37.6, -5.5)  // Noreste de Sevilla
+        LatLng(37.277451, -6.323907), // Suroeste de Sevilla
+        LatLng(37.558299, -5.49291)  // Noreste de Sevilla
     )
 
     val request = FindAutocompletePredictionsRequest.builder()
         .setCountries(listOf("ES"))
-        .setLocationBias(sevillaBounds)
+        .setLocationRestriction(sevillaBounds)
         .setQuery(textoBusqueda)
         .build()
 

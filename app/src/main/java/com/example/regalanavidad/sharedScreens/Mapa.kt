@@ -199,8 +199,8 @@ fun Mapa(
     val cameraPositionState = rememberCameraPositionState()
     val posicionActual by remember { mutableStateOf(currentLocation) }
     var mueveCamara by remember { mutableStateOf(true) }
-    val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
-    val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
+    var searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida.value) }
+    val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida.value) }
     var rutaLoading by remember { mutableStateOf(false) }
     var start by remember { mutableStateOf("0,0") }
     var end by remember { mutableStateOf("0,0") }
@@ -239,28 +239,14 @@ fun Mapa(
                 ),
                 onMapClick = { latLng: LatLng ->
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
-                },
-                onMapLoaded = {
-                    if (searchSitioRecogida.value == true) {
-                        if (sitioRecogida.value?.latitudSitio != null && sitioRecogida.value?.longitudSitio != null && posicionActual?.latitude != 37.4219983 && posicionActual?.longitude != -122.084) {
-                            start = "${posicionActual!!.longitude},${posicionActual!!.latitude}"
-                            end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                        } else {
-                            start = "-5.986495,37.391524"
-                            end = "${sitioRecogida.value!!.longitudSitio},${sitioRecogida.value!!.latitudSitio}"
-                        }
-                        createRoute(start, end)
-                        rutaLoading = true
-                    }
                 }
             ) {
                 if (muestraRuta.value) {
                     rutaLoading = false
-                    mueveCamara = true
                     Polyline(points = route)
                 }
 
-                if (searchSitioRecogida.value == false && start == "0,0" && end == "0,0") {
+                if (searchSitioRecogida == false && start == "0,0" && end == "0,0") {
                     posicionActual?.let {
                         Marker(
                             state = MarkerState(position = it),
@@ -272,9 +258,30 @@ fun Mapa(
                             mueveCamara = false
                         }
                     }
-                } else if (muestraRuta.value) {
-                    val startLatLng = LatLng(start.split(",")[1].toDouble(), start.split(",")[0].toDouble())
-                    val endLatLng = LatLng(end.split(",")[1].toDouble(), end.split(",")[0].toDouble())
+                } else if (muestraRuta.value || searchSitioRecogida == true) {
+                    val startLatLng: LatLng
+                    val endLatLng: LatLng
+
+                    if (searchSitioRecogida == true) {
+                        mostrarBarraDestino = true
+                        nombreSitioPartida = "Ubicación actual"
+                        nombreSitioDestino = sitioRecogida?.nombreSitio ?: ""
+
+                        if (posicionActual?.latitude != 37.4219983 && posicionActual?.longitude != -122.084) {
+                            start = "${posicionActual!!.longitude},${posicionActual!!.latitude}"
+                            end = "${sitioRecogida!!.longitudSitio},${sitioRecogida!!.latitudSitio}"
+                        } else {
+                            start = "-5.986495,37.391524"
+                            end = "${sitioRecogida!!.longitudSitio},${sitioRecogida!!.latitudSitio}"
+                        }
+                        createRoute(start, end)
+
+                        startLatLng = LatLng(posicionActual!!.latitude, posicionActual!!.longitude)
+                        endLatLng = LatLng(sitioRecogida!!.latitudSitio, sitioRecogida!!.longitudSitio)
+                    } else {
+                        startLatLng = LatLng(start.split(",")[1].toDouble(), start.split(",")[0].toDouble())
+                        endLatLng = LatLng(end.split(",")[1].toDouble(), end.split(",")[0].toDouble())
+                    }
 
                     val midLat = (startLatLng.latitude + endLatLng.latitude) / 2
                     val midLng = (startLatLng.longitude + endLatLng.longitude) / 2
@@ -282,37 +289,17 @@ fun Mapa(
 
                     Marker(
                         state = MarkerState(position = startLatLng),
-                        title = "Sitio de recogida",
-                        snippet = "Usted se encuentra aquí"
+                        title = nombreSitioPartida,
+                        snippet = "Punto de partida"
                     )
                     Marker(
                         state = MarkerState(position = endLatLng),
-                        title = "Sitio de recogida",
-                        snippet = "Usted se encuentra aquí"
+                        title = nombreSitioDestino,
+                        snippet = "Punto de destino"
                     )
                     if (mueveCamara){
                         cameraPositionState.position = CameraPosition.fromLatLngZoom(midLatLng, 13f)
                         mueveCamara = false
-                    }
-                } else {
-                    posicionActual?.let {
-                        Marker(
-                            state = MarkerState(position = it),
-                            title = "Posición actual",
-                            snippet = "Usted se encuentra aquí"
-                        )
-                    }
-                    sitioRecogida.value?.let { sitio ->
-                        val sitioLatLng = LatLng(sitio.latitudSitio, sitio.longitudSitio)
-                        Marker(
-                            state = MarkerState(position = sitioLatLng),
-                            title = "Sitio de recogida ${sitio.nombreSitio}",
-                            snippet = sitio.direccionSitio
-                        )
-                        if (mueveCamara) {
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(sitioLatLng, 15f)
-                            mueveCamara = false
-                        }
                     }
                 }
             }
@@ -542,6 +529,8 @@ fun Mapa(
                                                     nombreSitioDestino = sitioPartida.nombreSitio
                                                     nombreSitioPartida = "Ubicación actual"
                                                     createRoute(start, end)
+                                                    mueveCamara = true
+                                                    searchSitioRecogida = false
                                                     rutaLoading = true
                                                 } else {
                                                     start =
@@ -566,6 +555,8 @@ fun Mapa(
                                                 }
                                                 mostrarListaSitios = false
                                                 createRoute(start, end)
+                                                mueveCamara = true
+                                                searchSitioRecogida = false
                                                 rutaLoading = true
                                             }
                                             focusManager.clearFocus()
@@ -601,6 +592,9 @@ fun Mapa(
     }
     BackHandler {
         if (muestraRuta.value){
+            if (searchSitioRecogida == true) {
+                searchSitioRecogida = false
+            }
             muestraRuta.value = false
             start = "0,0"
             end = "0,0"
@@ -618,7 +612,6 @@ fun Mapa(
             nombreSitioPartida = ""
         } else {
             navController.popBackStack()
-            mapaOrganizadorVM.searchSitioRecogida.value = false
         }
         focusManager.clearFocus()
     }
