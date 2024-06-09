@@ -124,7 +124,7 @@ fun MailScreen(navController: NavController){
                 label = { Text(text = "Correo", color = Color.Black) },
                 value = correoContacto,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
+                    keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
                 ),
                 textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
@@ -170,7 +170,7 @@ fun MailScreen(navController: NavController){
                 value = mensajeCorreo,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Done
                 ),
                 onValueChange = { mensajeCorreo = it }
             )

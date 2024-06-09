@@ -1,4 +1,4 @@
-package com.example.regalanavidad.voluntarioScreens
+package com.example.regalanavidad.sharedScreens
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow

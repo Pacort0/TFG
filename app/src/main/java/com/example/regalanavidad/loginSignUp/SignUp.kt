@@ -159,7 +159,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Done
                 ),
                 onValueChange = { password = it },
                 colors = TextFieldDefaults.colors(
@@ -204,7 +204,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     .padding(horizontal = 40.dp)
                     .clip(RoundedCornerShape(50.dp)),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(247, 228, 198)
+                    containerColor = ColorLogo
                 )
             ) {
                 Text(text = "Crear cuenta", fontSize = 16.sp)
@@ -220,7 +220,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     fontSize = 14.sp,
                     fontFamily = FontFamily.Default,
                     textDecoration = TextDecoration.Underline,
-                    color = Color(247, 228, 198)
+                    color = ColorLogo
                 )
             )
         }

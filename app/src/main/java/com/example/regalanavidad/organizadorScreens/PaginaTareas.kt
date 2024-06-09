@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -90,7 +89,6 @@ import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -348,7 +346,7 @@ fun TareasTabScreen(completadas: Boolean){
             }
             if(listaTareasCambiadas.value.isNotEmpty()){
                 FloatingActionButton(
-                    containerColor = ColorLogo,
+                    containerColor = FondoTarjetaInception,
                     onClick = {
                         guardarCambios = true
                         Toast.makeText(context, "Actualizando tareas...", Toast.LENGTH_SHORT).show()
@@ -413,7 +411,7 @@ fun TareasTabScreen(completadas: Boolean){
                                     .border(0.dp, Color.Transparent, CircleShape),
                                 readOnly = true,
                                 value = rolSeleccionado,
-                                textStyle = TextStyle(color = Color.Black),
+                                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                                 onValueChange = {},
                                 trailingIcon = { TrailingIconMio(expanded = expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -458,12 +456,12 @@ fun TareasTabScreen(completadas: Boolean){
                             value = usuario.nombreRango,
                             onValueChange = {},
                             readOnly = true,
-                            textStyle = TextStyle(color = Color.Black),
+                            textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                             label = {
                                 Text(
                                     text = "Cargo de la tarea",
                                     fontSize = 14.sp,
-                                    color = ColorLogo
+                                    color = Color.Black
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
@@ -627,18 +625,19 @@ fun TareaCard(tarea: Tarea){
             .fillMaxWidth()
             .clip(CircleShape)
             .border(0.dp, Color.Transparent, CircleShape)
-            .heightIn(min = 60.dp),
+            .height(65.dp),
         colors = CardDefaults.cardColors(
             containerColor = FondoIndvCards
         )
     ) {
         Row (
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxSize()
         ) {
             Column (
                 Modifier
                     .weight(0.45f)
-                    .padding(0.4.dp),
+                    .padding(start = 10.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

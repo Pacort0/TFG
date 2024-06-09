@@ -41,6 +41,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -94,11 +95,14 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,7 +123,7 @@ import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.modelos.Usuario
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.MailScreen
-import com.example.regalanavidad.organizadorScreens.OrganizadorHomeScreen
+import com.example.regalanavidad.organizadorScreens.CargaPantallas
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
@@ -129,7 +133,6 @@ import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.viewmodels.EventosVM
 import com.example.regalanavidad.viewmodels.MapaVM
-import com.example.regalanavidad.voluntarioScreens.VoluntarioHomeScreen
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Tasks
@@ -187,22 +190,14 @@ class Home : ComponentActivity() {
             }
             task.join()
         }
-        val esVoluntario = usuario.nombreRango == "Voluntario"
         val mapaOrganizadorVM = MapaVM()
 
         super.onCreate(savedInstanceState)
 
         setContent {
             var estadoMapa by remember { mutableStateOf(false) }
-
-            if(esVoluntario){
-                VoluntarioHomeScreen(estadoMapa, mapaOrganizadorVM){
-                        estado -> estadoMapa = estado
-                }
-            } else {
-                OrganizadorHomeScreen(estadoMapa, mapaOrganizadorVM){
-                        estado -> estadoMapa = estado
-                }
+            CargaPantallas(estadoMapa, mapaOrganizadorVM){
+                    estado -> estadoMapa = estado
             }
         }
     }
@@ -521,9 +516,9 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 }
                 val fechaDialogState = rememberMaterialDialogState()
                 val horaDialogState = rememberMaterialDialogState()
-                val alturaDialogo by remember { mutableStateOf(420.dp) }
-                var buscarSitio by remember { mutableStateOf(false) }
-
+                val alturaDialogo by remember { mutableStateOf(460.dp) }
+                val focusManager = LocalFocusManager.current
+                var sitioElegido by remember { mutableStateOf(false) }
 
                 Dialog(onDismissRequest = { agregaEvento = false }) {
                     Box(
@@ -531,7 +526,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             .fillMaxWidth()
                             .height(alturaDialogo.let {
                                 if (prediccionesNuevoSitioEvento.isNotEmpty()) 520.dp
-                                else if (textoBusqueda != "") 445.dp
+                                else if (textoBusqueda != "" && !sitioElegido) 480.dp
                                 else it
                             })
                             .background(FondoApp)
@@ -556,8 +551,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             OutlinedTextField(
                                 value = nombreEvento,
                                 onValueChange = { nombreEvento = it },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Next
+                                ),
                                 textStyle = TextStyle(color = Color.Black),
-                                label = { Text("Nombre del evento", color = ColorLogo) },
+                                label = { Text("Nombre del evento", color = Color.Black) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
@@ -571,10 +570,14 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 value = descripcionEvento,
                                 onValueChange = { descripcionEvento = it },
                                 textStyle = TextStyle(color = Color.Black),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Next
+                                ),
                                 label = {
                                     Text(
                                         text = "Descripción del evento",
-                                        color = ColorLogo
+                                        color = Color.Black
                                     )
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -589,22 +592,27 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                             OutlinedTextField(
                                 value = textoBusqueda,
                                 textStyle = TextStyle(color = Color.Black),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
                                 onValueChange = { nuevaBusqueda ->
                                     textoBusqueda = nuevaBusqueda
-                                    buscarSitio = true
+                                    if (textoBusqueda == "") {
+                                        sitioElegido = false
+                                    }
                                     scope.launch {
                                         prediccionesNuevoSitioEvento =
                                             obtenerPredicciones(nuevaBusqueda, connectivityManager)
                                     }
                                 },
-                                label = { Text("Lugar del evento", color = ColorLogo) },
+                                label = { Text("Lugar del evento", color = Color.Black) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .onFocusChanged { focusState ->
                                         if (!focusState.isFocused) {
                                             prediccionesNuevoSitioEvento = emptyList()
                                         }
-                                        buscarSitio = focusState.isFocused
                                     },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
@@ -614,50 +622,53 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                     unfocusedBorderColor = Color.Transparent
                                 )
                             )
-                            if (buscarSitio && prediccionesNuevoSitioEvento.isNotEmpty() && textoBusqueda.isNotBlank()) {
-                                LazyColumn {
-                                    val topSitios = prediccionesNuevoSitioEvento.take(4)
-                                    items(topSitios.size) { index ->
-                                        Card(
-                                            modifier = Modifier
-                                                .padding(top = 5.dp, end = 5.dp)
-                                                .height(70.dp)
-                                                .fillMaxWidth()
-                                                .clip(CircleShape)
-                                                .border(0.dp, Color.Transparent, CircleShape)
-                                                .background(FondoIndvCards)
-                                                .clickable {
-                                                    sitioEvento =
-                                                        prediccionesNuevoSitioEvento[index]
-                                                    textoBusqueda =
-                                                        prediccionesNuevoSitioEvento[index].nombreSitio
-                                                    buscarSitio = false
-                                                }
-                                                .padding(0.dp, 5.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = FondoIndvCards
-                                            )
-                                        ) {
-                                            Column(
-                                                modifier = Modifier.padding(8.dp)
-                                            ) {
-                                                if (topSitios[index].nombreSitio != "") {
-                                                    LazyRow {
-                                                        item {
-                                                            Text(
-                                                                topSitios[index].nombreSitio,
-                                                                fontSize = 16.sp,
-                                                                color = Color.Black
-                                                            )
-                                                        }
+                            if (prediccionesNuevoSitioEvento.isNotEmpty() && textoBusqueda.isNotBlank()){
+                                    LazyColumn {
+                                        val topSitios = prediccionesNuevoSitioEvento.take(4)
+                                        items(topSitios.size) { index ->
+                                            Card(
+                                                modifier = Modifier
+                                                    .padding(top = 5.dp, end = 5.dp)
+                                                    .height(70.dp)
+                                                    .fillMaxWidth()
+                                                    .clip(CircleShape)
+                                                    .border(0.dp, Color.Transparent, CircleShape)
+                                                    .background(FondoIndvCards)
+                                                    .clickable {
+                                                        sitioEvento =
+                                                            prediccionesNuevoSitioEvento[index]
+                                                        textoBusqueda =
+                                                            prediccionesNuevoSitioEvento[index].nombreSitio
+                                                        prediccionesNuevoSitioEvento = emptyList()
+                                                        sitioElegido = true
+                                                        focusManager.clearFocus()
                                                     }
-                                                    LazyRow {
-                                                        item {
-                                                            Text(
-                                                                text = topSitios[index].direccionSitio,
-                                                                fontSize = 13.sp,
-                                                                color = Color.Black
-                                                            )
+                                                    .padding(0.dp, 5.dp),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = FondoIndvCards
+                                                )
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.padding(8.dp)
+                                                ) {
+                                                    if (topSitios[index].nombreSitio != "") {
+                                                        LazyRow {
+                                                            item {
+                                                                Text(
+                                                                    topSitios[index].nombreSitio,
+                                                                    fontSize = 16.sp,
+                                                                    color = Color.Black
+                                                                )
+                                                            }
+                                                        }
+                                                        LazyRow {
+                                                            item {
+                                                                Text(
+                                                                    text = topSitios[index].direccionSitio,
+                                                                    fontSize = 13.sp,
+                                                                    color = Color.Black
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -665,28 +676,48 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         }
                                     }
                                 }
-                            } else if (textoBusqueda.isNotBlank() && prediccionesNuevoSitioEvento.isEmpty()) {
-                                Column {
-                                    if (!hayInternet(connectivityManager)) {
-                                        Text(text = "No tienes conexión")
-                                    } else {
-                                        Text(text = "Cargando...")
+                                else if (textoBusqueda.isNotBlank() && prediccionesNuevoSitioEvento.isEmpty() && !sitioElegido) {
+                                    Column {
+                                        if (!hayInternet(connectivityManager)) {
+                                            Text(text = "No tienes conexión")
+                                        } else {
+                                            Text(text = "Cargando...")
+                                        }
                                     }
-                                }
                             }
                             if (prediccionesNuevoSitioEvento.isEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = fechaFormateada,
-                                    Modifier.clickable { fechaDialogState.show() },
-                                    color = Color.Black
-                                )
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Fecha del evento",
+                                        color = Color.Black,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.align(Alignment.Start)
+                                    )
+                                    Text(
+                                        text = fechaFormateada,
+                                        Modifier.clickable { fechaDialogState.show() },
+                                        color = Color.Black
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = horaFormateada,
-                                    Modifier.clickable { horaDialogState.show() },
-                                    color = Color.Black
-                                )
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Hora de comienzo",
+                                        color = Color.Black,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.align(Alignment.Start)
+                                    )
+                                    Text(
+                                        text = horaFormateada,
+                                        Modifier.clickable { horaDialogState.show() },
+                                        color = Color.Black
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -937,7 +968,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 }
                                             }
                                             if (haySitios) {
-                                                ListaSitiosConfirmados(sitiosRecogidaConfirmados,
+                                                ListaSitiosConfirmados(
+                                                    sitiosRecogidaConfirmados,
                                                     false,
                                                     canEditSitios,
                                                     connectivityManager,
@@ -1916,9 +1948,10 @@ fun ListaSitiosConfirmados(
     var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
 
-    if(sitiosRecogidaConfirmados.size > 0) {
+    if(sitiosRecogidaConfirmados.isNotEmpty()) {
         LazyColumn {
             items(sitiosRecogidaConfirmados.size) { index ->
+                var expanded by remember { mutableStateOf(false) }
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1946,14 +1979,73 @@ fun ListaSitiosConfirmados(
                         Text(
                             text = sitiosRecogidaConfirmados[index].nombreSitio,
                             color = Color.Black,
-                            modifier = Modifier.weight(1f))
-                        if(canEdit && !isHomePage){
+                            modifier = Modifier.weight(1f)
+                        )
+                        if(canEdit) {
+                            Box {
+                                IconButton(onClick = { expanded = true }) {
+                                    Icon(
+                                        Icons.Default.MoreVert,
+                                        contentDescription = "Más opciones",
+                                        tint = Color.Black
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier.background(FondoTarjetaInception)
+                                ) {
+                                    DropdownMenuItem(onClick = {
+                                        expanded = false
+                                        onSitioEscogido(sitiosRecogidaConfirmados[index])
+                                    },
+                                        text = {Text("Ver en el mapa", color = Color.Black)},
+                                        leadingIcon = { Icon(
+                                            Icons.Filled.LocationOn,
+                                            contentDescription = "Ver en el mapa",
+                                            tint = Color.Black
+                                        )},
+                                        modifier = Modifier
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                ColorLogo,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .wrapContentSize()
+                                    )
+                                    DropdownMenuItem(onClick = {
+                                        expanded = false
+                                        indexActual = index
+                                        showEliminarDialog = true
+                                    },
+                                        text = {Text(text = "Eliminar evento", color = Color.Red)},
+                                        leadingIcon = {Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = Color.Black
+                                        )},
+                                        modifier = Modifier
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                ColorLogo,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .wrapContentSize()
+                                    )
+                                }
+                            }
+                        } else {
                             IconButton(onClick = {
-                                indexActual = index
-                                showEliminarDialog = true
+                                onSitioEscogido(sitiosRecogidaConfirmados[index])
                             },
                                 modifier = Modifier.weight(0.3f)) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar sitio", tint = Color.Black)
+                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Ver sitio", tint = Color.Black)
                             }
                         }
                     }
@@ -2026,7 +2118,7 @@ fun ListaEventosConfirmados(
     val contexto = LocalContext.current
     val firestore = FirestoreManagerDAL()
 
-    if(eventosConfirmados.size > 0) {
+    if(eventosConfirmados.isNotEmpty()) {
         LazyColumn(
             verticalArrangement = Arrangement.Center
         ) {
@@ -2072,7 +2164,7 @@ fun ListaEventosConfirmados(
                                     DropdownMenu(
                                         expanded = expanded,
                                         onDismissRequest = { expanded = false },
-                                        modifier = Modifier.background(ColorLogo)
+                                        modifier = Modifier.background(FondoTarjetaInception)
                                     ) {
                                         DropdownMenuItem(onClick = {
                                             expanded = false
@@ -2116,7 +2208,7 @@ fun ListaEventosConfirmados(
                                                 .padding(3.dp)
                                                 .border(
                                                     1.dp,
-                                                    FondoTarjetaInception,
+                                                    ColorLogo,
                                                     RoundedCornerShape(10.dp)
                                                 )
                                                 .wrapContentSize())
@@ -2126,7 +2218,7 @@ fun ListaEventosConfirmados(
                                         },
                                             text = {Text("Ver en el mapa", color = Color.Black)},
                                             leadingIcon = { Icon(
-                                                    Icons.Filled.LocationOn,
+                                                    painter = painterResource(id = R.drawable.opened_map),
                                                     contentDescription = "Ver en el mapa",
                                                     tint = Color.Black
                                                 )},
@@ -2136,10 +2228,11 @@ fun ListaEventosConfirmados(
                                                 .padding(3.dp)
                                                 .border(
                                                     1.dp,
-                                                    FondoTarjetaInception,
+                                                    ColorLogo,
                                                     RoundedCornerShape(10.dp)
                                                 )
-                                                .wrapContentSize())
+                                                .wrapContentSize()
+                                        )
                                         if (canEdit) {
                                             DropdownMenuItem(onClick = {
                                                 expanded = false
@@ -2158,7 +2251,7 @@ fun ListaEventosConfirmados(
                                                     .padding(3.dp)
                                                     .border(
                                                         1.dp,
-                                                        FondoTarjetaInception,
+                                                        ColorLogo,
                                                         RoundedCornerShape(10.dp)
                                                     )
                                                     .wrapContentSize()

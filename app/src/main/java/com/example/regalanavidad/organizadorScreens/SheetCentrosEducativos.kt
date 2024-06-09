@@ -95,6 +95,7 @@ import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.hayInternet
+import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
@@ -455,76 +456,78 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 )
                                             }
                                         }
-                                        Spacer(modifier = Modifier.height(15.dp))
-                                        Row (
-                                            Modifier.wrapContentSize()
-                                        ) {
-                                            Box (
-                                                modifier = Modifier
-                                                    .weight(0.45f)
-                                                    .fillMaxSize()
-                                                    .padding(start = 10.dp)
-                                            ){
-                                                Row (
-                                                    Modifier
+                                        if (usuario.nombreRango != "Logística") {
+                                            Spacer(modifier = Modifier.height(15.dp))
+                                            Row (
+                                                Modifier.wrapContentSize()
+                                            ) {
+                                                Box (
+                                                    modifier = Modifier
+                                                        .weight(0.45f)
                                                         .fillMaxSize()
-                                                        .clickable {
-                                                            startActivity(
-                                                                context,
-                                                                Intent(
-                                                                    Intent.ACTION_DIAL,
-                                                                    Uri.parse("tel:${listaCentrosEducativos.value[index].numeroCentro}")
-                                                                ),
-                                                                null
-                                                            )
-                                                        },
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Icon(
-                                                        Icons.Filled.Call,
-                                                        "Llamar",
-                                                        tint = Color.Black
-                                                    )
-                                                    Spacer(modifier = Modifier.width(5.dp))
-                                                    Text(text = "Llamar", color = Color.Black)
-                                                }
-                                            }
-                                            Box (
-                                                modifier = Modifier
-                                                    .weight(0.1f)
-                                                    .fillMaxSize()
-                                            ){
-                                                Row (
-                                                    Modifier.fillMaxSize(),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Text(text = "|", fontSize = 28.sp, color = Color.Black)
-                                                }
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .weight(0.45f)
-                                                    .fillMaxSize()
-                                                    .padding(end = 15.dp)
-                                            ){
-                                                Row (
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .clickable {
-                                                            centroEducativoElegido.correoCentro = listaCentrosEducativos.value[index].correoCentro
-                                                            navegaCorreo = true },
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
+                                                        .padding(start = 10.dp)
                                                 ){
-                                                    Icon(
-                                                        Icons.Filled.Email,
-                                                        "Correo",
-                                                        tint = Color.Black
-                                                    )
-                                                    Spacer(modifier = Modifier.width(5.dp))
-                                                    Text(text = "Redactar correo", color = Color.Black)
+                                                    Row (
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .clickable {
+                                                                startActivity(
+                                                                    context,
+                                                                    Intent(
+                                                                        Intent.ACTION_DIAL,
+                                                                        Uri.parse("tel:${listaCentrosEducativos.value[index].numeroCentro}")
+                                                                    ),
+                                                                    null
+                                                                )
+                                                            },
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Icon(
+                                                            Icons.Filled.Call,
+                                                            "Llamar",
+                                                            tint = Color.Black
+                                                        )
+                                                        Spacer(modifier = Modifier.width(5.dp))
+                                                        Text(text = "Llamar", color = Color.Black)
+                                                    }
+                                                }
+                                                Box (
+                                                    modifier = Modifier
+                                                        .weight(0.1f)
+                                                        .fillMaxSize()
+                                                ){
+                                                    Row (
+                                                        Modifier.fillMaxSize(),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(text = "|", fontSize = 28.sp, color = Color.Black)
+                                                    }
+                                                }
+                                                Box(
+                                                    modifier = Modifier
+                                                        .weight(0.45f)
+                                                        .fillMaxSize()
+                                                        .padding(end = 15.dp)
+                                                ){
+                                                    Row (
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .clickable {
+                                                                centroEducativoElegido.correoCentro = listaCentrosEducativos.value[index].correoCentro
+                                                                navegaCorreo = true },
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ){
+                                                        Icon(
+                                                            Icons.Filled.Email,
+                                                            "Correo",
+                                                            tint = Color.Black
+                                                        )
+                                                        Spacer(modifier = Modifier.width(5.dp))
+                                                        Text(text = "Redactar correo", color = Color.Black)
+                                                    }
                                                 }
                                             }
                                         }

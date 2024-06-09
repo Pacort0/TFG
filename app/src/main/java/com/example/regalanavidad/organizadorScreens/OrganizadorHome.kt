@@ -78,12 +78,12 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.MapaVM
-import com.example.regalanavidad.voluntarioScreens.ComoAyudar
-import com.example.regalanavidad.voluntarioScreens.ContactanosScreen
-import com.example.regalanavidad.voluntarioScreens.DatosYObjetivos
-import com.example.regalanavidad.voluntarioScreens.OtrosAnosScreen
-import com.example.regalanavidad.voluntarioScreens.PatrocinadoresScreen
-import com.example.regalanavidad.voluntarioScreens.QueEs
+import com.example.regalanavidad.sharedScreens.ComoAyudar
+import com.example.regalanavidad.sharedScreens.ContactanosScreen
+import com.example.regalanavidad.sharedScreens.DatosYObjetivos
+import com.example.regalanavidad.sharedScreens.OtrosAnosScreen
+import com.example.regalanavidad.sharedScreens.PatrocinadoresScreen
+import com.example.regalanavidad.sharedScreens.QueEs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -92,7 +92,7 @@ val drawerItems = listOf("Información", "Contáctanos", "Patrocinadores", "Otro
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMapaCambiado: (Boolean) -> Unit) {
+fun CargaPantallas(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMapaCambiado: (Boolean) -> Unit) {
     var currentTabTitle by remember { mutableStateOf("Home") }
     val homeTab = TabBarItem(
         title = "Home",
@@ -119,12 +119,12 @@ fun OrganizadorHomeScreen(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMap
         selectedIcon = ImageVector.vectorResource(id = R.drawable.sheets_filled),
         unselectedIcon =  ImageVector.vectorResource(id = R.drawable.sheets_outlined)
     )
-    var tabBarItems = listOf(homeTab, tareasTab, mapsTab)
+    var tabBarItems = listOf(homeTab, tareasTab, mapsTab, sheetsTab)
     if (usuario.nombreRango == "Coordinador"){
         tabBarItems = listOf(homeTab, tareasTab, mapsTab, rolesTab, sheetsTab)
     }
-    if (usuario.nombreRango == "Tesorería" || usuario.nombreRango == "RR.II."){
-        tabBarItems = listOf(homeTab, tareasTab, mapsTab, sheetsTab)
+    if (usuario.nombreRango == "Voluntario") {
+        tabBarItems = listOf(homeTab, mapsTab)
     }
     val navController = rememberNavController()
     RegalaNavidadTheme {
@@ -219,10 +219,8 @@ fun OrganizadorNavHost(innerPadding : PaddingValues, navController: NavHostContr
                     ScreenContent(screenTitle = "Mail", navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
                 }
             }
-            if(usuario.nombreRango == "Tesorería" || usuario.nombreRango == "RR.II." || usuario.nombreRango == "Coordinador"){
-                composable(sheetsTab.title) {
-                    ScreenContent(screenTitle = sheetsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
-                }
+            composable(sheetsTab.title) {
+                ScreenContent(screenTitle = sheetsTab.title, navController = navController, onMapaCambiado = onMapaCambiado, mapaOrganizadorVM = mapaOrganizadorVM)
             }
             composable("SheetCentrosEducativos"){
                 PaginaSheetCentrosEducativos(navController, onMapaCambiado)
@@ -382,7 +380,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(FondoTarjetaInception)
+            modifier = Modifier.background(Color.Transparent)
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(

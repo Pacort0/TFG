@@ -146,7 +146,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Next
+                        imeAction = ImeAction.Done
                     ),
                     onValueChange = { password = it },
                     colors = TextFieldDefaults.colors(
