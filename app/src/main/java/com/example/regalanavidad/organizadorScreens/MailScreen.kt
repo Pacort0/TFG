@@ -49,6 +49,7 @@ import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
+import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 
 @Composable
 fun MailScreen(navController: NavController){
@@ -126,7 +127,7 @@ fun MailScreen(navController: NavController){
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
                 ),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                 onValueChange = { correoContacto = it }
             )
             TextField(
@@ -140,11 +141,11 @@ fun MailScreen(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(15.dp))
-                    .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
+                    .border(1.dp, ColorLogo, RoundedCornerShape(16.dp))
                     .weight(0.1f),
                 label = { Text(text = "Asunto", color = Color.Black) },
                 value = asuntoCorreo,
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
@@ -165,7 +166,7 @@ fun MailScreen(navController: NavController){
                     .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                     .weight(0.7f),
                 label = { Text(text = "Mensaje", color = Color.Black) },
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                 value = mensajeCorreo,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
@@ -183,7 +184,7 @@ fun MailScreen(navController: NavController){
         ) {
             Button(
                 modifier = Modifier.wrapContentSize(),
-                colors = ButtonDefaults.buttonColors(containerColor = ColorLogo),
+                colors = ButtonDefaults.buttonColors(containerColor = FondoTarjetaInception),
                 onClick = {
                 correoContacto = ""
                 asuntoCorreo = ""
@@ -194,7 +195,7 @@ fun MailScreen(navController: NavController){
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 modifier = Modifier.wrapContentSize(),
-                colors = ButtonDefaults.buttonColors(containerColor = ColorLogo),
+                colors = ButtonDefaults.buttonColors(containerColor = FondoTarjetaInception),
                 onClick = {
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "message/rfc822"

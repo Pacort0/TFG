@@ -18,4 +18,11 @@ interface ApiRouteService {
         @Query("start", encoded = true) start:String,
         @Query("end", encoded = true) end:String
     ): Response<RouteResponse>
+
+    @GET("/v2/directions/cycling-regular")
+    suspend fun getCyclingRoute(
+        @Query("api_key") key:String,
+        @Query("start", encoded = true) start:String,
+        @Query("end", encoded = true) end:String
+    ): Response<RouteResponse>
 }

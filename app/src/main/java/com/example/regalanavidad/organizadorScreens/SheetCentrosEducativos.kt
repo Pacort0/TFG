@@ -86,9 +86,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
+import com.example.regalanavidad.R
 import com.example.regalanavidad.dal.getCentrosDataFromGoogleSheet
 import com.example.regalanavidad.dal.updateCentrosDataInGoogleSheet
-import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.CentroEducativoRequest
 import com.example.regalanavidad.modelos.CentroEducativoResponse
@@ -98,7 +98,6 @@ import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -513,7 +512,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                 Row (
                                                     Modifier
                                                         .fillMaxSize()
-                                                        .clickable { navegaCorreo = true },
+                                                        .clickable {
+                                                            centroEducativoElegido.correoCentro = listaCentrosEducativos.value[index].correoCentro
+                                                            navegaCorreo = true },
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.Center
                                                 ){

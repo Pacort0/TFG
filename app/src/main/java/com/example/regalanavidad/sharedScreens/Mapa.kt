@@ -16,17 +16,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +40,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.apiRouteService.ApiRouteService
@@ -78,12 +85,14 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-private var rutaCargada = mutableStateOf(false)
 private var route = mutableListOf<LatLng>()
 private var muestraRuta = mutableStateOf(false)
 private var calcularAPie = mutableStateOf(true)
 private var calcularCoche = mutableStateOf(false)
-private var duracionTrayecto = 0
+private var calcularBici = mutableStateOf(false)
+private var duracionTrayectoAPie = mutableIntStateOf(0)
+private var duracionTrayectoBici = mutableIntStateOf(0)
+private var duracionTrayectoCoche = mutableIntStateOf(0)
 private var listaSitios = mutableStateOf(emptyList<SitioRecogida>())
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -189,7 +198,7 @@ fun Mapa(
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val posicionActual by remember { mutableStateOf(currentLocation) }
-    var entraMapa by remember { mutableStateOf(true) }
+    var mueveCamara by remember { mutableStateOf(true) }
     val searchSitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.searchSitioRecogida) }
     val sitioRecogida by remember { mutableStateOf(mapaOrganizadorVM.sitioRecogida) }
     var rutaLoading by remember { mutableStateOf(false) }
@@ -245,8 +254,9 @@ fun Mapa(
                     }
                 }
             ) {
-                if (rutaCargada.value && muestraRuta.value) {
+                if (muestraRuta.value) {
                     rutaLoading = false
+                    mueveCamara = true
                     Polyline(points = route)
                 }
 
@@ -257,27 +267,32 @@ fun Mapa(
                             title = "Posición actual",
                             snippet = "Usted se encuentra aquí"
                         )
-                        if (entraMapa) {
+                        if (mueveCamara) {
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
-                            entraMapa = false
+                            mueveCamara = false
                         }
                     }
                 } else if (muestraRuta.value) {
-                    start.let {
-                        val startLatLng = LatLng(start.split(",")[1].toDouble(), start.split(",")[0].toDouble())
-                        Marker(
-                            state = MarkerState(position = startLatLng),
-                            title = "Sitio de recogida",
-                            snippet = "Usted se encuentra aquí"
-                        )
-                    }
-                    end.let {
-                        val endLatLng = LatLng(end.split(",")[1].toDouble(), end.split(",")[0].toDouble())
-                        Marker(
-                            state = MarkerState(position = endLatLng),
-                            title = "Sitio de recogida",
-                            snippet = "Usted se encuentra aquí"
-                        )
+                    val startLatLng = LatLng(start.split(",")[1].toDouble(), start.split(",")[0].toDouble())
+                    val endLatLng = LatLng(end.split(",")[1].toDouble(), end.split(",")[0].toDouble())
+
+                    val midLat = (startLatLng.latitude + endLatLng.latitude) / 2
+                    val midLng = (startLatLng.longitude + endLatLng.longitude) / 2
+                    val midLatLng = LatLng(midLat, midLng)
+
+                    Marker(
+                        state = MarkerState(position = startLatLng),
+                        title = "Sitio de recogida",
+                        snippet = "Usted se encuentra aquí"
+                    )
+                    Marker(
+                        state = MarkerState(position = endLatLng),
+                        title = "Sitio de recogida",
+                        snippet = "Usted se encuentra aquí"
+                    )
+                    if (mueveCamara){
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(midLatLng, 13f)
+                        mueveCamara = false
                     }
                 } else {
                     posicionActual?.let {
@@ -294,9 +309,9 @@ fun Mapa(
                             title = "Sitio de recogida ${sitio.nombreSitio}",
                             snippet = sitio.direccionSitio
                         )
-                        if (entraMapa) {
+                        if (mueveCamara) {
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(sitioLatLng, 15f)
-                            entraMapa = false
+                            mueveCamara = false
                         }
                     }
                 }
@@ -334,7 +349,7 @@ fun Mapa(
                     .fillMaxWidth()
                     .onFocusChanged { focusState ->
                         if (focusState.isFocused) {
-                            sitioPartida = SitioRecogida()
+                            nombreSitioPartida = ""
                             mostrarListaSitios = true
                             focusBarraPartida = true
                         } else {
@@ -370,7 +385,7 @@ fun Mapa(
                         .fillMaxWidth()
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
-                                sitioDestino.nombreSitio = ""
+                                nombreSitioDestino = ""
                                 mostrarListaSitios = true
                                 focusBarraPartida = false
                                 focusBarraDestino = true
@@ -381,6 +396,116 @@ fun Mapa(
                         }
                         .border(1.dp, Color.Black, RoundedCornerShape(15))
                 )
+            }
+            if (muestraRuta.value) {
+                Row (
+                    modifier = Modifier
+                        .background(Color.Transparent)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    ElevatedButton(
+                        modifier = Modifier.wrapContentSize(),
+                        onClick = {
+                            calcularAPie.value = true
+                            calcularBici.value = false
+                            calcularCoche.value = false
+                            muestraRuta.value = false
+                            createRoute(start, end)
+                            muestraRuta.value = true
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = FondoTarjetaInception,
+                            disabledContainerColor = FondoIndvCards
+                        ),
+                        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painterResource(id = R.drawable.apie),
+                                contentDescription = "A pie",
+                                Modifier.size(24.dp),
+                                tint = if (calcularAPie.value) Color.Black else Color.DarkGray,
+                            )
+                            if (calcularAPie.value && duracionTrayectoAPie.intValue != 0) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "${duracionTrayectoAPie.intValue} mins", fontSize = 15.sp, color = Color.Black)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    ElevatedButton(
+                        modifier = Modifier.wrapContentSize(),
+                        onClick = {
+                            calcularAPie.value = false
+                            calcularBici.value = true
+                            calcularCoche.value = false
+                            muestraRuta.value = false
+                            createRoute(start, end)
+                            muestraRuta.value = true
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = FondoTarjetaInception,
+                            disabledContainerColor = FondoIndvCards
+                        ),
+                        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp))
+                    {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painterResource(id = R.drawable.cycling),
+                                contentDescription = "En bici",
+                                Modifier.size(24.dp),
+                                tint = if (calcularBici.value) Color.Black else Color.DarkGray,
+                            )
+                            if (calcularBici.value && duracionTrayectoBici.intValue != 0) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(text = "${duracionTrayectoBici.intValue} mins", fontSize = 15.sp, color = Color.Black)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    ElevatedButton(
+                        modifier = Modifier.wrapContentSize(),
+                        onClick = {
+                            calcularAPie.value = false
+                            calcularBici.value = false
+                            calcularCoche.value = true
+                            muestraRuta.value = false
+                            createRoute(start, end)
+                            muestraRuta.value = true
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = FondoTarjetaInception,
+                            disabledContainerColor = FondoIndvCards
+                        ),
+                        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp))
+                    {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painterResource(id = R.drawable.coche_icon),
+                                contentDescription = "En coche",
+                                Modifier.size(24.dp),
+                                tint = if (calcularCoche.value) Color.Black else Color.DarkGray,
+                            )
+                            if (calcularCoche.value && duracionTrayectoCoche.intValue != 0) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(text = "${duracionTrayectoCoche.intValue} mins", fontSize = 15.sp, color = Color.Black)
+                            }
+                        }
+                    }
+                }
             }
             if (mostrarListaSitios) {
                 if (listaFiltrada.isNotEmpty()) {
@@ -408,8 +533,10 @@ fun Mapa(
                                             if (focusBarraPartida) {
                                                 sitioPartida = listaFiltrada[index]
                                                 if (!mostrarBarraDestino) {
-                                                    start = currentLocation!!.longitude.toString() + "," + currentLocation.latitude.toString()
-                                                    end = sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
+                                                    start =
+                                                        currentLocation!!.longitude.toString() + "," + currentLocation.latitude.toString()
+                                                    end =
+                                                        sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
                                                     mostrarListaSitios = false
                                                     mostrarBarraDestino = true
                                                     nombreSitioDestino = sitioPartida.nombreSitio
@@ -417,19 +544,24 @@ fun Mapa(
                                                     createRoute(start, end)
                                                     rutaLoading = true
                                                 } else {
-                                                    start = sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
+                                                    start =
+                                                        sitioPartida.longitudSitio.toString() + "," + sitioPartida.latitudSitio.toString()
+                                                    nombreSitioPartida = sitioPartida.nombreSitio
                                                 }
                                                 mostrarListaSitios = false
                                             } else {
                                                 sitioDestino = listaFiltrada[index]
-                                                end = sitioDestino.longitudSitio.toString() + "," + sitioDestino.latitudSitio.toString()
+                                                nombreSitioDestino = sitioDestino.nombreSitio
+                                                end =
+                                                    sitioDestino.longitudSitio.toString() + "," + sitioDestino.latitudSitio.toString()
                                                 mostrarListaSitios = false
                                             }
-                                            if (sitioDestino.nombreSitio != ""){
-                                                if (sitioPartida.nombreSitio == "") {
-                                                    sitioPartida.nombreSitio = "Ubicación actual"
+                                            if (nombreSitioDestino != "") {
+                                                if (nombreSitioPartida == "") {
+                                                    nombreSitioPartida = "Ubicación actual"
                                                     if (currentLocation != null) {
-                                                        start = currentLocation.longitude.toString() + "," + currentLocation.latitude.toString()
+                                                        start =
+                                                            currentLocation.longitude.toString() + "," + currentLocation.latitude.toString()
                                                     }
                                                 }
                                                 mostrarListaSitios = false
@@ -456,6 +588,7 @@ fun Mapa(
             onClick = {
                 if (!mostrarBarraDestino){
                     mostrarBarraDestino = true
+                    focusManager.clearFocus()
                 } },
             containerColor = FondoTarjetaInception,
             modifier = Modifier
@@ -474,15 +607,15 @@ fun Mapa(
         } else if (focusBarraDestino){
             focusBarraDestino = false
             mostrarListaSitios = false
-            sitioDestino.nombreSitio = ""
+            nombreSitioDestino = ""
         } else  if (focusBarraPartida) {
             focusBarraPartida = false
             mostrarListaSitios = false
-            sitioPartida.nombreSitio = ""
+            nombreSitioPartida = ""
         } else if (mostrarBarraDestino){
             mostrarBarraDestino = false
-        } else if(sitioPartida.nombreSitio != ""){
-            sitioPartida.nombreSitio = ""
+        } else if(nombreSitioPartida != ""){
+            nombreSitioPartida = ""
         } else {
             navController.popBackStack()
             mapaOrganizadorVM.searchSitioRecogida.value = false
@@ -510,13 +643,20 @@ fun createRoute(start:String, end:String){
     CoroutineScope(Dispatchers.IO).launch {
         call = if (calcularAPie.value){
             getRetrofit().create(ApiRouteService::class.java).getWalkableRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
+        } else if (calcularBici.value) {
+            getRetrofit().create(ApiRouteService::class.java).getCyclingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
         } else {
             getRetrofit().create(ApiRouteService::class.java).getDrivingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
         }
         if(call.isSuccessful){
             route = drawRoute(call.body())
-            duracionTrayecto = (getDuration(call.body())/60)
-            Log.d("Ruta","Llamada exitosa")
+            if (calcularAPie.value){
+                duracionTrayectoAPie.intValue = (getDuration(call.body())/60)
+            } else if (calcularBici.value) {
+                duracionTrayectoBici.intValue = (getDuration(call.body())/60)
+            } else {
+                duracionTrayectoCoche.intValue = (getDuration(call.body())/60)
+            }
         } else {
             Log.d("Ruta","Llamada fallida")
         }
@@ -528,7 +668,6 @@ fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
     routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
         listaCoordenadas.add(LatLng(it[1], it[0]))
     }
-    rutaCargada.value = true
     muestraRuta.value = true
     return listaCoordenadas
 }
