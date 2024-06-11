@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.regalanavidad.modelos.Gasto
 import com.example.regalanavidad.modelos.GastoResponse
 import com.example.regalanavidad.modelos.RequestPostGasto
-import com.example.regalanavidad.organizadorScreens.gastosSpreadsheetId
+import com.example.regalanavidad.sharedScreens.gastosSpreadsheetId
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers

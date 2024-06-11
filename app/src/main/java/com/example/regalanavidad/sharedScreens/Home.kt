@@ -41,11 +41,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -97,6 +100,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -104,6 +108,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
@@ -112,18 +117,18 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
-import com.example.regalanavidad.dal.FirestoreManagerDAL
 import com.example.regalanavidad.R
+import com.example.regalanavidad.dal.FirestoreManagerDAL
 import com.example.regalanavidad.dal.getDonationDataFromGoogleSheet
 import com.example.regalanavidad.modelos.CentroEducativo
-import com.example.regalanavidad.modelos.DonacionItem
+import com.example.regalanavidad.modelos.Donacion
 import com.example.regalanavidad.modelos.Evento
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.modelos.TabBarItem
 import com.example.regalanavidad.modelos.Usuario
+import com.example.regalanavidad.organizadorScreens.CargaPantallas
 import com.example.regalanavidad.organizadorScreens.ExcelScreen
 import com.example.regalanavidad.organizadorScreens.MailScreen
-import com.example.regalanavidad.organizadorScreens.CargaPantallas
 import com.example.regalanavidad.organizadorScreens.RolesTabScreen
 import com.example.regalanavidad.organizadorScreens.TareasScreen
 import com.example.regalanavidad.organizadorScreens.centroEducativoElegido
@@ -167,7 +172,8 @@ val auth = Firebase.auth
 var usuario = Usuario()
 private var sitiosRecogidaConfirmados = mutableListOf<SitioRecogida>()
 private val eventosConfirmados = mutableListOf<Evento>()
-var dineroRecaudado = mutableStateOf(emptyList<DonacionItem>())
+private var listaEventosCambiados = mutableListOf<Evento>()
+var dineroRecaudado = mutableStateOf(emptyList<Donacion>())
 const val donacionesSheetId = "11anB2ajRXo049Av60AvUb2lmKxmycjgUK934c5qgXu8"
 private lateinit var placesClient: PlacesClient
 val firestore = FirestoreManagerDAL()
@@ -336,6 +342,20 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     val coroutineScope = rememberCoroutineScope()
     var prediccionesNuevoSitioRecogida by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf())}
     var prediccionesNuevoSitioEvento by remember { mutableStateOf<List<SitioRecogida>>(mutableListOf()) }
+    var fechaEscogida by remember { mutableStateOf(LocalDate.now()) }
+    var horaEscogida by remember { mutableStateOf(LocalTime.NOON) }
+    val fechaFormateada by remember {
+        derivedStateOf {
+            DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida)
+        }
+    }
+    val horaFormateada by remember {
+        derivedStateOf {
+            DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida)
+        }
+    }
+    val fechaDialogState = rememberMaterialDialogState()
+    val horaDialogState = rememberMaterialDialogState()
 
     if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
         prediccionesNuevoSitioRecogida = emptyList()
@@ -501,22 +521,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             if (agregaEvento) {
                 var sitioEvento by remember { mutableStateOf(SitioRecogida()) }
                 var nombreEvento by remember { mutableStateOf("") }
-                var descripcionEvento by remember { mutableStateOf("") }
-                var fechaEscogida by remember { mutableStateOf(LocalDate.now()) }
-                var horaEscogida by remember { mutableStateOf(LocalTime.NOON) }
-                val fechaFormateada by remember {
-                    derivedStateOf {
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida)
-                    }
-                }
-                val horaFormateada by remember {
-                    derivedStateOf {
-                        DateTimeFormatter.ofPattern("HH:mm").format(horaEscogida)
-                    }
-                }
-                val fechaDialogState = rememberMaterialDialogState()
-                val horaDialogState = rememberMaterialDialogState()
-                val alturaDialogo by remember { mutableStateOf(460.dp) }
+                val alturaDialogo by remember { mutableStateOf(400.dp) }
                 val focusManager = LocalFocusManager.current
                 var sitioElegido by remember { mutableStateOf(false) }
 
@@ -525,8 +530,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(alturaDialogo.let {
-                                if (prediccionesNuevoSitioEvento.isNotEmpty()) 520.dp
-                                else if (textoBusqueda != "" && !sitioElegido) 480.dp
+                                if (prediccionesNuevoSitioEvento.isNotEmpty()) 460.dp
+                                else if (textoBusqueda != "" && !sitioElegido) 420.dp
                                 else it
                             })
                             .background(FondoApp)
@@ -557,29 +562,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 ),
                                 textStyle = TextStyle(color = Color.Black),
                                 label = { Text("Nombre del evento", color = Color.Black) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = FondoIndvCards,
-                                    unfocusedContainerColor = FondoIndvCards,
-                                    cursorColor = Color.Black,
-                                    focusedBorderColor = Color.Transparent,
-                                    unfocusedBorderColor = Color.Transparent
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = descripcionEvento,
-                                onValueChange = { descripcionEvento = it },
-                                textStyle = TextStyle(color = Color.Black),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Text,
-                                    imeAction = ImeAction.Next
-                                ),
-                                label = {
-                                    Text(
-                                        text = "Descripción del evento",
-                                        color = Color.Black
-                                    )
-                                },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = FondoIndvCards,
                                     unfocusedContainerColor = FondoIndvCards,
@@ -814,7 +796,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 val evento = Evento(
                                                     id = generarClaveAleatoria(15),
                                                     titulo = nombreEvento,
-                                                    descripcion = descripcionEvento,
                                                     startDate = fechaFormateada,
                                                     horaComienzo = horaFormateada,
                                                     lugar = sitioEvento
@@ -1104,8 +1085,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 }
                                                 ListaEventosConfirmados(
                                                     eventosConfirmados,
-                                                    false,
-                                                    canEditSitios,
+                                                    canEditEventos,
                                                     connectivityManager,
                                                     context,
                                                     onElementoEliminado = { elementoEliminado ->
@@ -1158,132 +1138,159 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         .background(Color.Transparent)
                                 )
                                 {
-                                    Row(
-                                        Modifier
-                                            .weight(0.5f)
-                                            .padding(10.dp),
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Column (
+                                        modifier = Modifier.weight(0.5f),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
                                     ) {
-                                        OutlinedCard(
-                                            onClick = {},
-                                            modifier = Modifier.fillMaxSize()
+                                        Row (
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.End
                                         ) {
-                                            Box(
+                                            ClickableText(
+                                                text = AnnotatedString("¿En qué nos gastamos el dinero?"),
+                                                onClick = {
+                                                    navController.navigate("SheetGastos")
+                                                },
+                                                style = TextStyle(
+                                                    fontSize = 15.sp,
+                                                    fontFamily = FontFamily.Default,
+                                                    textDecoration = TextDecoration.Underline,
+                                                    color = ColorLogo,
+                                                    textAlign = TextAlign.End
+                                                )
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Row(
+                                            Modifier
+                                                .padding(10.dp),
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            OutlinedCard(
+                                                onClick = {},
                                                 modifier = Modifier.fillMaxSize()
                                             ) {
-                                                Image(
-                                                    painter = painterResource(id = R.drawable.dinero_recaudado_wp),
-                                                    contentDescription = "Background Ig Image",
-                                                    contentScale = ContentScale.Crop,
+                                                Box(
                                                     modifier = Modifier.fillMaxSize()
-                                                )
-                                                Row(
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .padding(16.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
                                                 ) {
-                                                    Column(
-                                                        Modifier.fillMaxSize()
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.dinero_recaudado_wp),
+                                                        contentDescription = "Background Ig Image",
+                                                        contentScale = ContentScale.Crop,
+                                                        modifier = Modifier.fillMaxSize()
+                                                    )
+                                                    Row(
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .padding(16.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
                                                     ) {
-                                                        LaunchedEffect(key1 = Unit) {
-                                                            recaudacionsLoading = true
-                                                            val donacionResponse =
-                                                                getDonationDataFromGoogleSheet(
-                                                                    donacionesSheetId,
-                                                                    "donaciones"
-                                                                )
-                                                            dineroRecaudado.value =
-                                                                donacionResponse.donaciones
-                                                            recaudacionsLoading = false
-                                                        }
-                                                        if (recaudacionsLoading) {
-                                                            Text(text = "Cargando...")
-                                                        } else {
-                                                            Row(
-                                                                Modifier
-                                                                    .fillMaxWidth()
-                                                                    .weight(0.1f),
-                                                                horizontalArrangement = Arrangement.Center
-                                                            ) {
-                                                                Text(
-                                                                    text = "Dinero recaudado:",
-                                                                    fontWeight = FontWeight.Bold,
-                                                                    fontSize = 24.sp,
-                                                                    color = Color.White
-                                                                )
+                                                        Column(
+                                                            Modifier.fillMaxSize()
+                                                        ) {
+                                                            LaunchedEffect(key1 = Unit) {
+                                                                recaudacionsLoading = true
+                                                                val donacionResponse =
+                                                                    getDonationDataFromGoogleSheet(
+                                                                        donacionesSheetId,
+                                                                        "donaciones"
+                                                                    )
+                                                                dineroRecaudado.value =
+                                                                    donacionResponse.donaciones
+                                                                recaudacionsLoading = false
                                                             }
-                                                            dineroRecaudado.value.forEach { donacion ->
+                                                            if (recaudacionsLoading) {
+                                                                Text(text = "Cargando...")
+                                                            } else {
                                                                 Row(
-                                                                    modifier
-                                                                        .fillMaxSize()
-                                                                        .weight(
-                                                                            if (donacion.tipo == "TOTAL") 0.3f else 0.2f
-                                                                        )
+                                                                    Modifier
+                                                                        .fillMaxWidth()
+                                                                        .weight(0.1f),
+                                                                    horizontalArrangement = Arrangement.Center
                                                                 ) {
-                                                                    Card(
-                                                                        modifier = Modifier
+                                                                    Text(
+                                                                        text = "Dinero recaudado:",
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        fontSize = 24.sp,
+                                                                        color = Color.White
+                                                                    )
+                                                                }
+                                                                dineroRecaudado.value.forEach { donacion ->
+                                                                    Row(
+                                                                        modifier
                                                                             .fillMaxSize()
-                                                                            .padding(8.dp),
-                                                                        shape = MaterialTheme.shapes.medium,
-                                                                        colors = CardDefaults.cardColors(
-                                                                            containerColor = Color.Transparent
-                                                                        )
+                                                                            .weight(
+                                                                                if (donacion.tipo == "TOTAL") 0.3f else 0.2f
+                                                                            )
                                                                     ) {
-                                                                        Box(
-                                                                            modifier = modifier
-                                                                                .graphicsLayer {
-                                                                                    alpha =
-                                                                                        0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
-                                                                                }
-                                                                                .drawBehind {
-                                                                                    drawIntoCanvas { canvas ->
-                                                                                        val paint =
-                                                                                            Paint()
-                                                                                        val frameworkPaint =
-                                                                                            paint.asFrameworkPaint()
-                                                                                        frameworkPaint.color =
-                                                                                            0x99FFFFFF.toInt()
-                                                                                        frameworkPaint.maskFilter =
-                                                                                            android.graphics.BlurMaskFilter(
-                                                                                                30f,
-                                                                                                android.graphics.BlurMaskFilter.Blur.NORMAL
-                                                                                            )
-                                                                                        canvas.nativeCanvas.apply {
-                                                                                            drawRect(
-                                                                                                0f,
-                                                                                                0f,
-                                                                                                size.width,
-                                                                                                size.height,
-                                                                                                frameworkPaint
-                                                                                            )
+                                                                        Card(
+                                                                            modifier = Modifier
+                                                                                .fillMaxSize()
+                                                                                .padding(8.dp),
+                                                                            shape = MaterialTheme.shapes.medium,
+                                                                            colors = CardDefaults.cardColors(
+                                                                                containerColor = Color.Transparent
+                                                                            )
+                                                                        ) {
+                                                                            Box(
+                                                                                modifier = modifier
+                                                                                    .graphicsLayer {
+                                                                                        alpha =
+                                                                                            0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
+                                                                                    }
+                                                                                    .drawBehind {
+                                                                                        drawIntoCanvas { canvas ->
+                                                                                            val paint =
+                                                                                                Paint()
+                                                                                            val frameworkPaint =
+                                                                                                paint.asFrameworkPaint()
+                                                                                            frameworkPaint.color =
+                                                                                                0x99FFFFFF.toInt()
+                                                                                            frameworkPaint.maskFilter =
+                                                                                                android.graphics.BlurMaskFilter(
+                                                                                                    30f,
+                                                                                                    android.graphics.BlurMaskFilter.Blur.NORMAL
+                                                                                                )
+                                                                                            canvas.nativeCanvas.apply {
+                                                                                                drawRect(
+                                                                                                    0f,
+                                                                                                    0f,
+                                                                                                    size.width,
+                                                                                                    size.height,
+                                                                                                    frameworkPaint
+                                                                                                )
+                                                                                            }
                                                                                         }
                                                                                     }
-                                                                                }
-                                                                        ) {
-                                                                            Box(modifier = Modifier.fillMaxSize()) {
-                                                                                when (donacion.tipo) {
-                                                                                    "BIZUM" -> DonacionRow(
-                                                                                        donacion,
-                                                                                        R.drawable.bizum
-                                                                                    )
+                                                                            ) {
+                                                                                Box(modifier = Modifier.fillMaxSize()) {
+                                                                                    when (donacion.tipo) {
+                                                                                        "BIZUM" -> DonacionRow(
+                                                                                            donacion,
+                                                                                            R.drawable.bizum
+                                                                                        )
 
-                                                                                    "EFECTIVO" -> DonacionRow(
-                                                                                        donacion,
-                                                                                        R.drawable.dinero_efectivo
-                                                                                    )
+                                                                                        "EFECTIVO" -> DonacionRow(
+                                                                                            donacion,
+                                                                                            R.drawable.dinero_efectivo
+                                                                                        )
 
-                                                                                    "TRANSFERENCIA" -> DonacionRow(
-                                                                                        donacion,
-                                                                                        R.drawable.transferencia
-                                                                                    )
+                                                                                        "TRANSFERENCIA" -> DonacionRow(
+                                                                                            donacion,
+                                                                                            R.drawable.transferencia
+                                                                                        )
 
-                                                                                    "TOTAL" -> DonacionRow(
-                                                                                        donacion,
-                                                                                        R.drawable.total
-                                                                                    )
+                                                                                        "TOTAL" -> DonacionRow(
+                                                                                            donacion,
+                                                                                            R.drawable.total
+                                                                                        )
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -1501,6 +1508,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Color.Black,
                                                     RoundedCornerShape(20.dp)
                                                 )
+                                                .clip(RoundedCornerShape(20.dp))
                                         ) {
                                             CartaRSS(R.drawable.logo_ig, "Instagram")
                                         }
@@ -1539,6 +1547,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Color.Black,
                                                     RoundedCornerShape(20.dp)
                                                 )
+                                                .clip(RoundedCornerShape(20.dp))
                                         ) {
                                             CartaRSS(R.drawable.logo_tiktok, "TikTok")
                                         }
@@ -1577,6 +1586,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                     Color.Black,
                                                     RoundedCornerShape(20.dp)
                                                 )
+                                                .clip(RoundedCornerShape(20.dp))
                                         ) {
                                             CartaRSS(R.drawable.logo_whatsapp, "WhatsApp")
                                         }
@@ -1648,6 +1658,29 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 navController.navigate("Mail")
                 redactaEmail = false
             }
+            if (listaEventosCambiados.isNotEmpty()){
+                FloatingActionButton(
+                    containerColor = FondoTarjetaInception,
+                    onClick = {
+                        recargarEventos = true
+                        Toast.makeText(context, "Actualizando eventos...", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(0.dp, 0.dp, 20.dp, 20.dp)
+                        .height(40.dp)
+                        .width(130.dp)
+                ){
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar", Modifier.size(30.dp), tint = Color.Black)
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(text = "Guardar")
+                    }
+                }
+            }
         }
         if (showCloseAppDialog) {
             AlertDialog(
@@ -1703,7 +1736,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
 }
 @Composable
-fun DonacionRow(donacion: DonacionItem, imageResId: Int) {
+fun DonacionRow(donacion: Donacion, imageResId: Int) {
     Row(
         Modifier
             .fillMaxSize()
@@ -2045,7 +2078,7 @@ fun ListaSitiosConfirmados(
                                 onSitioEscogido(sitiosRecogidaConfirmados[index])
                             },
                                 modifier = Modifier.weight(0.3f)) {
-                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Ver sitio", tint = Color.Black)
+                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Ver sitio", tint = Color.Black, modifier = Modifier.size(35.dp))
                             }
                         }
                     }
@@ -2107,7 +2140,7 @@ fun ListaSitiosConfirmados(
 @Composable
 fun ListaEventosConfirmados(
     eventosConfirmados: MutableList<Evento>,
-    isHomePage: Boolean, canEdit: Boolean,
+    canEdit: Boolean,
     connectivityManager: ConnectivityManager,
     context: Context,
     onElementoEliminado: (Boolean) -> Unit,
@@ -2123,142 +2156,178 @@ fun ListaEventosConfirmados(
             verticalArrangement = Arrangement.Center
         ) {
             items(eventosConfirmados.size) { index ->
+                var actionsExpanded by remember { mutableStateOf(false) }
+                var infoExpanded by remember {mutableStateOf(false)}
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
-                        .clip(CircleShape)
-                        .border(0.dp, Color.Transparent, CircleShape),
+                        .clip(RoundedCornerShape(15.dp))
+                        .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
                     colors = CardDefaults.cardColors(
                         containerColor = FondoIndvCards
                     )
                 ) {
-                    var expanded by remember { mutableStateOf(false) }
-                    Column {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                    Row (
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(5.dp)) {
+                        Column(
+                            Modifier
+                                .weight(0.1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = eventosConfirmados[index].titulo,
+                            Icon(
+                                imageVector = infoExpanded.let { if (!infoExpanded) {
+                                    Icons.Default.KeyboardArrowDown
+                                } else {
+                                    Icons.Default.KeyboardArrowUp
+                                } }, contentDescription = "Contraer",
                                 modifier = Modifier
-                                    .weight(0.6f)
-                                    .align(Alignment.CenterVertically),
-                                color = Color.Black,
-                            )
-                            Text(
-                                text = eventosConfirmados[index].startDate,
-                                color = Color.Black,
-                                modifier = Modifier
-                                    .weight(0.4f)
-                                    .align(Alignment.CenterVertically),
-                                fontSize = 15.sp)
-                            if (!isHomePage) {
-                                Box {
-                                    IconButton(onClick = { expanded = true }) {
-                                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.Black)
+                                    .size(30.dp)
+                                    .clickable { infoExpanded = !infoExpanded },
+                                tint = Color.Black,)
+                        }
+                        Text(
+                            text = eventosConfirmados[index].titulo,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .weight(0.4f)
+                                .padding(5.dp)
+                                .align(Alignment.CenterVertically),
+                            color = Color.Black,
+                        )
+                        Text(
+                            text = eventosConfirmados[index].startDate,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .weight(0.4f)
+                                .align(Alignment.CenterVertically),
+                            fontSize = 16.sp
+                        )
+                        Box (modifier = Modifier.weight(0.1f)) {
+                            IconButton(onClick = { actionsExpanded = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.Black)
+                            }
+                            DropdownMenu(
+                                expanded = actionsExpanded,
+                                onDismissRequest = { actionsExpanded = false },
+                                modifier = Modifier.background(FondoTarjetaInception)
+                            ) {
+                                DropdownMenuItem(onClick = {
+                                    actionsExpanded = false
+                                    val arrayFecha = eventosConfirmados[index].startDate.split("/")
+                                    val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
+                                    val startMillis: Long = Calendar.getInstance().run {
+                                        set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
+                                        timeInMillis
                                     }
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier.background(FondoTarjetaInception)
-                                    ) {
-                                        DropdownMenuItem(onClick = {
-                                            expanded = false
-                                            val arrayFecha = eventosConfirmados[index].startDate.split("/")
-                                            val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
-                                            val startMillis: Long = Calendar.getInstance().run {
-                                                set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
-                                                timeInMillis
-                                            }
-                                            val endMillis: Long = Calendar.getInstance().run {
-                                                set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt() + 2, arrayHora[1].toInt())
-                                                timeInMillis
-                                            }
+                                    val endMillis: Long = Calendar.getInstance().run {
+                                        set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt() + 2, arrayHora[1].toInt())
+                                        timeInMillis
+                                    }
 
-                                            val descripcion = eventosConfirmados[index].descripcion.ifEmpty {
-                                                "Evento organizado por Regala Navidad"
-                                            }
-
-                                            Intent(Intent.ACTION_INSERT).apply {
-                                                data = CalendarContract.Events.CONTENT_URI
-                                                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
-                                                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
-                                                putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
-                                                putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
-                                                putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
-                                                putExtra(CalendarContract.Events.DESCRIPTION, descripcion)
-                                                putExtra(CalendarContract.Events.HAS_ALARM, 1)
-                                            }.also { intent ->
-                                                startActivity(contexto, intent, null)
-                                            }
-                                        },
-                                            text = {Text("Añadir al calendario", color = Color.Black)},
-                                            leadingIcon = {Icon(
-                                                Icons.Filled.DateRange,
-                                                contentDescription = "Añadir al calendario",
-                                                tint = Color.Black
-                                            )},
-                                            modifier = Modifier
-                                                .background(Color.Transparent)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .padding(3.dp)
-                                                .border(
-                                                    1.dp,
-                                                    ColorLogo,
-                                                    RoundedCornerShape(10.dp)
-                                                )
-                                                .wrapContentSize())
-                                        DropdownMenuItem(onClick = {
-                                            expanded = false
-                                            onEventoEscogido(eventosConfirmados[index])
-                                        },
-                                            text = {Text("Ver en el mapa", color = Color.Black)},
-                                            leadingIcon = { Icon(
-                                                    painter = painterResource(id = R.drawable.opened_map),
-                                                    contentDescription = "Ver en el mapa",
-                                                    tint = Color.Black
-                                                )},
-                                            modifier = Modifier
-                                                .background(Color.Transparent)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .padding(3.dp)
-                                                .border(
-                                                    1.dp,
-                                                    ColorLogo,
-                                                    RoundedCornerShape(10.dp)
-                                                )
-                                                .wrapContentSize()
+                                    Intent(Intent.ACTION_INSERT).apply {
+                                        data = CalendarContract.Events.CONTENT_URI
+                                        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
+                                        putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                                        putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
+                                        putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
+                                        putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                        putExtra(CalendarContract.Events.DESCRIPTION, "Evento organizado por Regala Navidad")
+                                        putExtra(CalendarContract.Events.HAS_ALARM, 1)
+                                    }.also { intent ->
+                                        startActivity(contexto, intent, null)
+                                    }
+                                },
+                                    text = {Text("Añadir al calendario", color = Color.Black)},
+                                    leadingIcon = {Icon(
+                                        Icons.Filled.DateRange,
+                                        contentDescription = "Añadir al calendario",
+                                        tint = Color.Black
+                                    )},
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .padding(3.dp)
+                                        .border(
+                                            1.dp,
+                                            ColorLogo,
+                                            RoundedCornerShape(10.dp)
                                         )
-                                        if (canEdit) {
-                                            DropdownMenuItem(onClick = {
-                                                expanded = false
-                                                indexActual = index
-                                                showEliminarDialog = true
-                                            },
-                                                text = {Text(text = "Eliminar evento", color = Color.Red)},
-                                                leadingIcon = {Icon(
-                                                    Icons.Filled.Delete,
-                                                    contentDescription = "Eliminar",
-                                                    tint = Color.Black
-                                                )},
-                                                modifier = Modifier
-                                                    .background(Color.Transparent)
-                                                    .clip(RoundedCornerShape(10.dp))
-                                                    .padding(3.dp)
-                                                    .border(
-                                                        1.dp,
-                                                        ColorLogo,
-                                                        RoundedCornerShape(10.dp)
-                                                    )
-                                                    .wrapContentSize()
+                                        .wrapContentSize())
+                                DropdownMenuItem(onClick = {
+                                    actionsExpanded = false
+                                    onEventoEscogido(eventosConfirmados[index])
+                                },
+                                    text = {Text("Ver en el mapa", color = Color.Black)},
+                                    leadingIcon = { Icon(
+                                        Icons.Filled.LocationOn,
+                                        contentDescription = "Ver en el mapa",
+                                        tint = Color.Black
+                                    )},
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .padding(3.dp)
+                                        .border(
+                                            1.dp,
+                                            ColorLogo,
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .wrapContentSize()
+                                )
+                                if (canEdit) {
+                                    DropdownMenuItem(onClick = {
+                                        actionsExpanded = false
+                                        indexActual = index
+                                        showEliminarDialog = true
+                                    },
+                                        text = {Text(text = "Eliminar evento", color = Color.Red)},
+                                        leadingIcon = {Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = Color.Black
+                                        )},
+                                        modifier = Modifier
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                ColorLogo,
+                                                RoundedCornerShape(10.dp)
                                             )
-                                        }
-                                    }
+                                            .wrapContentSize()
+                                    )
                                 }
+                            }
+                        }
+                    }
+                    if (infoExpanded){
+                        Column (
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .wrapContentHeight()
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Row (
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ){
+                                Text(text = "Sitio: ${eventosConfirmados[index].lugar.nombreSitio}",
+                                    color = Color.Black)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = "|", fontSize = 28.sp, color = Color.Black)
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(text = "Hora: ${eventosConfirmados[index].horaComienzo}",
+                                    color = Color.Black)
                             }
                         }
                     }

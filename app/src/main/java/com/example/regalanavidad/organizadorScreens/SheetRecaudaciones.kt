@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -211,9 +212,15 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                         modifier = Modifier
-                                            .background(FondoTarjetaInception)
-                                            .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
-                                            .padding(5.dp),
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                ColorLogo,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .wrapContentSize(),
                                     )
                                 }
                             }

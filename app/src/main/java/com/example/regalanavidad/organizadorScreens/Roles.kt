@@ -41,6 +41,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -93,7 +95,15 @@ fun RolesTabScreen(navController: NavController){
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = FondoIndvCards,
-            contentColor = Color.Black
+            contentColor = Color.Black,
+            indicator = { tabPositions ->
+                if (selectedTabIndex < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]) ,
+                        color = ColorLogo
+                    )
+                }
+            }
         )
         {
             tabTitles.forEachIndexed { index, title ->
@@ -405,7 +415,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                         .background(Color.Transparent)
                         .clip(RoundedCornerShape(10.dp))
                         .padding(3.dp)
-                        .border(0.dp, Color.Transparent, RoundedCornerShape(10.dp))
+                        .border(1.dp, FondoTarjetaInception, RoundedCornerShape(10.dp))
                         .wrapContentSize()
                 )
             }

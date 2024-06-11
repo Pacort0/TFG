@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,11 +47,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -108,12 +112,11 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     var ubicacionDenegada by remember { mutableStateOf(!locationPermissionState.hasPermission) }
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var cargarSitios by remember { mutableStateOf(false) }
-    var ubicacionAdded by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = locationPermissionState.hasPermission, key2 = hayInternet) {
         if (locationPermissionState.hasPermission) {
             ubicacionDenegada = false
-            if (hayInternet(connectivityManager)) {
+            if (hayInternet) {
                 hayInternet = true
                 val locationRequest = LocationRequest.Builder(100, 300)
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
@@ -124,6 +127,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
                             for (location in it.locations) {
                                 currentLocation = LatLng(location.latitude, location.longitude)
                                 isLoading = false
+                                cargarSitios = true // Activar carga de sitios una vez obtenida la ubicación
                             }
                         }
                         fusedLocationClient.removeLocationUpdates(this)
@@ -151,21 +155,9 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     }
 
     LaunchedEffect(key1 = cargarSitios) {
-        if (hayInternet(connectivityManager)){
-            if(currentLocation != null && !ubicacionAdded) {
-                    listaSitios.value +=
-                        SitioRecogida(
-                        "Ubicación actual",
-                        currentLocation!!.latitude,
-                        currentLocation!!.longitude,
-                        "Calle de la piruleta"
-                        )
-                ubicacionAdded = true
-                }
+        if (hayInternet) {
             listaSitios.value = firestore.getListaSitiosYEventosUnicos()
             cargarSitios = false
-        } else {
-            hayInternet = false
         }
     }
 
@@ -178,14 +170,13 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     } else if (!hayInternet) {
         NoInternetScreen(
             onRetry = {
-                hayInternet = true
+                hayInternet = hayInternet(connectivityManager)
             }
         )
     } else if (isLoading) {
         PantallaCarga("Cargando mapa...")
     } else {
-        Mapa(mapaOrganizadorVM, navController, currentLocation)
-        cargarSitios = true
+        Mapa(mapaOrganizadorVM, navController, currentLocation, connectivityManager)
     }
 }
 
@@ -194,7 +185,8 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
 fun Mapa(
     mapaOrganizadorVM: MapaVM,
     navController: NavController,
-    currentLocation: LatLng?
+    currentLocation: LatLng?,
+    connectivityManager: ConnectivityManager
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val posicionActual by remember { mutableStateOf(currentLocation) }
@@ -274,7 +266,7 @@ fun Mapa(
                             start = "-5.986495,37.391524"
                             end = "${sitioRecogida!!.longitudSitio},${sitioRecogida!!.latitudSitio}"
                         }
-                        createRoute(start, end)
+                        createRoute(start, end, connectivityManager)
 
                         startLatLng = LatLng(posicionActual!!.latitude, posicionActual!!.longitude)
                         endLatLng = LatLng(sitioRecogida!!.latitudSitio, sitioRecogida!!.longitudSitio)
@@ -316,7 +308,8 @@ fun Mapa(
                     nombreSitioPartida = nuevoSitioPartida
                     listaFiltrada = filtrarSitios(nuevoSitioPartida, listaSitios.value, sitioDestino)
                 },
-                placeholder = { Text(text = if (mostrarBarraDestino) {"Lugar de partida"} else "Buscar un sitio", color = Color.LightGray)},
+                placeholder = { Text(text = if (mostrarBarraDestino) {"Lugar de partida"} else "Buscar un sitio", color = Color.DarkGray)},
+                textStyle = TextStyle(color = Color.Black),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = FondoIndvCards,
                     unfocusedContainerColor = FondoIndvCards,
@@ -352,7 +345,8 @@ fun Mapa(
                     onValueChange = { nuevoSitioDestino ->
                         nombreSitioDestino = nuevoSitioDestino
                         listaFiltrada = filtrarSitios(nuevoSitioDestino, listaSitios.value, sitioPartida)},
-                    placeholder = { Text(text = "Lugar de destino", color = Color.LightGray)},
+                    placeholder = { Text(text = "Lugar de destino", color = Color.DarkGray)},
+                    textStyle = TextStyle(color = Color.Black),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = FondoIndvCards,
                         unfocusedContainerColor = FondoIndvCards,
@@ -395,12 +389,11 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
+                            muestraRuta.value = false
                             calcularAPie.value = true
                             calcularBici.value = false
                             calcularCoche.value = false
-                            muestraRuta.value = false
-                            createRoute(start, end)
-                            muestraRuta.value = true
+                            createRoute(start, end, connectivityManager)
                         },
                         colors = ButtonDefaults.elevatedButtonColors(
                             containerColor = FondoTarjetaInception,
@@ -428,12 +421,11 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
+                            muestraRuta.value = false
                             calcularAPie.value = false
                             calcularBici.value = true
                             calcularCoche.value = false
-                            muestraRuta.value = false
-                            createRoute(start, end)
-                            muestraRuta.value = true
+                            createRoute(start, end, connectivityManager)
                         },
                         colors = ButtonDefaults.elevatedButtonColors(
                             containerColor = FondoTarjetaInception,
@@ -462,12 +454,11 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
+                            muestraRuta.value = false
                             calcularAPie.value = false
                             calcularBici.value = false
                             calcularCoche.value = true
-                            muestraRuta.value = false
-                            createRoute(start, end)
-                            muestraRuta.value = true
+                            createRoute(start, end, connectivityManager)
                         },
                         colors = ButtonDefaults.elevatedButtonColors(
                             containerColor = FondoTarjetaInception,
@@ -486,8 +477,7 @@ fun Mapa(
                                 tint = if (calcularCoche.value) Color.Black else Color.DarkGray,
                             )
                             if (calcularCoche.value && duracionTrayectoCoche.intValue != 0) {
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Spacer(modifier = Modifier.width(5.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(text = "${duracionTrayectoCoche.intValue} mins", fontSize = 15.sp, color = Color.Black)
                             }
                         }
@@ -505,13 +495,17 @@ fun Mapa(
                         items(listaFiltrada.size) { index ->
                             Card (
                                 modifier = Modifier
+                                    .height(55.dp)
                                     .background(Color.Transparent)
-                                    .border(1.dp, Color.Gray, RoundedCornerShape(15)),
+                                    .border(1.dp, Color.Gray, RoundedCornerShape(20))
+                                    .clip(RoundedCornerShape(20)),
                                 colors = CardDefaults.cardColors(
                                     containerColor = Color.Transparent
                                 )
                             ) {
                                 Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(10.dp)
@@ -528,7 +522,7 @@ fun Mapa(
                                                     mostrarBarraDestino = true
                                                     nombreSitioDestino = sitioPartida.nombreSitio
                                                     nombreSitioPartida = "Ubicación actual"
-                                                    createRoute(start, end)
+                                                    createRoute(start, end, connectivityManager)
                                                     mueveCamara = true
                                                     searchSitioRecogida = false
                                                     rutaLoading = true
@@ -554,18 +548,18 @@ fun Mapa(
                                                     }
                                                 }
                                                 mostrarListaSitios = false
-                                                createRoute(start, end)
+                                                createRoute(start, end, connectivityManager)
                                                 mueveCamara = true
                                                 searchSitioRecogida = false
                                                 rutaLoading = true
                                             }
                                             focusManager.clearFocus()
                                         },
-                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
                                         text = listaFiltrada[index].nombreSitio,
                                         color = Color.Black,
+                                        fontSize = 15.sp,
                                         modifier = Modifier.align(Alignment.CenterVertically)
                                     )
                                 }
@@ -583,11 +577,12 @@ fun Mapa(
                 } },
             containerColor = FondoTarjetaInception,
             modifier = Modifier
+                .alpha(muestraRuta.value.let { if (it) 0.0f else 1.0f })
                 .align(Alignment.BottomStart)
                 .padding(start = 16.dp, bottom = 16.dp)
                 .size(60.dp))
         {
-            Icon(painter = painterResource(id = R.drawable.distance), contentDescription = "Cómo llegar")
+            Icon(painter = painterResource(id = R.drawable.distance), contentDescription = "Cómo llegar", tint = Color.Black)
         }
     }
     BackHandler {
@@ -631,27 +626,29 @@ fun getRetrofit():Retrofit{
         .build()
 }
 
-fun createRoute(start:String, end:String){
+fun createRoute(start:String, end:String, connectivityManager: ConnectivityManager){
     var call: Response<RouteResponse>
-    CoroutineScope(Dispatchers.IO).launch {
-        call = if (calcularAPie.value){
-            getRetrofit().create(ApiRouteService::class.java).getWalkableRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
-        } else if (calcularBici.value) {
-            getRetrofit().create(ApiRouteService::class.java).getCyclingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
-        } else {
-            getRetrofit().create(ApiRouteService::class.java).getDrivingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
-        }
-        if(call.isSuccessful){
-            route = drawRoute(call.body())
-            if (calcularAPie.value){
-                duracionTrayectoAPie.intValue = (getDuration(call.body())/60)
+    if (hayInternet(connectivityManager)) {
+        CoroutineScope(Dispatchers.IO).launch {
+            call = if (calcularAPie.value){
+                getRetrofit().create(ApiRouteService::class.java).getWalkableRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
             } else if (calcularBici.value) {
-                duracionTrayectoBici.intValue = (getDuration(call.body())/60)
+                getRetrofit().create(ApiRouteService::class.java).getCyclingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
             } else {
-                duracionTrayectoCoche.intValue = (getDuration(call.body())/60)
+                getRetrofit().create(ApiRouteService::class.java).getDrivingRoute("5b3ce3597851110001cf6248137fc99131dc495393d861417cf8cbde", start, end)
             }
-        } else {
-            Log.d("Ruta","Llamada fallida")
+            if(call.isSuccessful){
+                route = drawRoute(call.body())
+                if (calcularAPie.value){
+                    duracionTrayectoAPie.intValue = (getDuration(call.body())/60)
+                } else if (calcularBici.value) {
+                    duracionTrayectoBici.intValue = (getDuration(call.body())/60)
+                } else {
+                    duracionTrayectoCoche.intValue = (getDuration(call.body())/60)
+                }
+            } else {
+                Log.d("Ruta","Llamada fallida")
+            }
         }
     }
 }

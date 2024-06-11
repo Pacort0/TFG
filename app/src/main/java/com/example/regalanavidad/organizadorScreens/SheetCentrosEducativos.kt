@@ -225,9 +225,15 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                         },
                                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                         modifier = Modifier
-                                            .background(FondoTarjetaInception)
-                                            .padding(5.dp)
-                                            .border(1.dp, ColorLogo, CircleShape),
+                                            .background(Color.Transparent)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .padding(3.dp)
+                                            .border(
+                                                1.dp,
+                                                ColorLogo,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .wrapContentSize(),
                                     )
                                 }
                             }

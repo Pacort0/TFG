@@ -110,6 +110,22 @@ class FirestoreManagerDAL {
             .map { it.first } // Devuelve solo los eventos
     }
 
+    suspend fun actualizaEventos (listaEventosACambiar:List<Evento>){
+        val listaEventos = firestore.collection("eventos")
+        listaEventosACambiar.forEach { evento ->
+            val querySnapshot = listaEventos.whereEqualTo("id", evento.id).get().await()
+            val idDocumentoEvento = querySnapshot.documents[0].id
+
+            val refEvento = firestore.collection("eventos").document(idDocumentoEvento)
+            try {
+                refEvento.update(evento.toMap()).await()
+                Log.d("Eventos", "Evento actualizado con éxito")
+            } catch (e: Exception) {
+                Log.w("Eventos", "Error updating document", e)
+            }
+        }
+    }
+
     suspend fun eliminaEvento(evento: Evento){
         val querySnapshot = firestore.collection("eventos").whereEqualTo("id", evento.id).get().await()
         val idDocumentoEvento = querySnapshot.documents[0].id

@@ -16,7 +16,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_regala_navidad_logo"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/ic_regala_navidad_logo"
+        android:roundIcon="@drawable/regala_navidad_fondo"
         android:supportsRtl="true"
         android:theme="@style/Theme.RegalaNavidad"
         tools:targetApi="31">

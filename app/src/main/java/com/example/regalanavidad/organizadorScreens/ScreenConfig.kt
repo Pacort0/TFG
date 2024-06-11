@@ -75,13 +75,13 @@ import com.example.regalanavidad.sharedScreens.usuario
 
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
-import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.example.regalanavidad.ui.theme.RegalaNavidadTheme
 import com.example.regalanavidad.viewmodels.MapaVM
 import com.example.regalanavidad.sharedScreens.ComoAyudar
 import com.example.regalanavidad.sharedScreens.ContactanosScreen
 import com.example.regalanavidad.sharedScreens.DatosYObjetivos
 import com.example.regalanavidad.sharedScreens.OtrosAnosScreen
+import com.example.regalanavidad.sharedScreens.PaginaSheetGastos
 import com.example.regalanavidad.sharedScreens.PatrocinadoresScreen
 import com.example.regalanavidad.sharedScreens.QueEs
 import kotlinx.coroutines.CoroutineScope

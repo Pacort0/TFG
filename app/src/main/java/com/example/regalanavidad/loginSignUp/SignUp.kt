@@ -6,6 +6,7 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -66,6 +68,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
     var password by remember { mutableStateOf("") }
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var verPassword by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     Column(
@@ -147,6 +150,12 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(
+                trailingIcon = { Icon(
+                    painter = painterResource(id = R.drawable.ojo_ocultar),
+                    contentDescription = "Ocultar contraseña",
+                    tint = Color.Black,
+                    modifier = Modifier.size(24.dp).clickable { verPassword = !verPassword })
+                },
                 label = {
                     Text(
                         text = "Contraseña",
@@ -158,7 +167,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                 textStyle = TextStyle(color = Color.Black),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
+                    keyboardType = verPassword.let { if (it) KeyboardType.Text else KeyboardType.Password},
                     imeAction = ImeAction.Done
                 ),
                 onValueChange = { password = it },

@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -73,6 +76,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
     var password by remember { mutableStateOf("") }
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
+    var verPassword by remember { mutableStateOf(false) }
 
     if (currentUser != null && currentUser.isEmailVerified) {
         email = currentUser.email.toString()
@@ -134,6 +138,13 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 TextField(
+                    trailingIcon = { if (password.isNotEmpty() && password.isNotBlank()) {
+                        Icon(
+                            painter = painterResource(id = verPassword.let { if (it) R.drawable.ojo_ver else R.drawable.ojo_ocultar }),
+                            contentDescription = "Ocultar contraseña",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp).clickable { verPassword = !verPassword }.padding(end = 10.dp))
+                    }},
                     label = {
                         Text(
                             text = "Contraseña",
@@ -143,7 +154,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                     },
                     value = password,
                     textStyle = TextStyle(color = Color.Black),
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = verPassword.let { if (it) VisualTransformation.None else PasswordVisualTransformation() },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done

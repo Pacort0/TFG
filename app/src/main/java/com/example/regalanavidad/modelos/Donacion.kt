@@ -1,10 +1,10 @@
 package com.example.regalanavidad.modelos
 
-data class DonacionItem(
+data class Donacion(
     var tipo:String = "",
     var cantidad:String = ""
 )
 data class DonacionResponse(
-    val donaciones: List<DonacionItem> = emptyList()
+    val donaciones: List<Donacion> = emptyList()
 )
 

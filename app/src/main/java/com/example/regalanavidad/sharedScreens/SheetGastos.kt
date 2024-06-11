@@ -1,4 +1,4 @@
-package com.example.regalanavidad.organizadorScreens
+package com.example.regalanavidad.sharedScreens
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -66,13 +66,7 @@ import com.example.regalanavidad.dal.updateGastosDataInGoogleSheet
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Gasto
 import com.example.regalanavidad.modelos.GastoResponse
-import com.example.regalanavidad.sharedScreens.NoInternetScreen
-import com.example.regalanavidad.sharedScreens.PantallaCarga
-import com.example.regalanavidad.sharedScreens.dineroRecaudado
-import com.example.regalanavidad.sharedScreens.donacionesSheetId
 import com.example.regalanavidad.dal.getDonationDataFromGoogleSheet
-import com.example.regalanavidad.sharedScreens.hayInternet
-import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
