@@ -214,7 +214,7 @@ fun TareasTabScreen(completadas: Boolean){
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var refresca by remember { mutableStateOf(false)}
+    var refresca by remember { mutableStateOf(true)}
     val pullRefreshState = rememberPullRefreshState(refreshing = guardarCambios, onRefresh = {
         guardarCambios = !guardarCambios
         refresca = !refresca

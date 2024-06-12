@@ -1143,28 +1143,29 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        Row (
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(10.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.End
-                                        ) {
-                                            ClickableText(
-                                                text = AnnotatedString("¿En qué nos gastamos el dinero?"),
-                                                onClick = {
-                                                    navController.navigate("SheetGastos")
-                                                },
-                                                style = TextStyle(
-                                                    fontSize = 15.sp,
-                                                    fontFamily = FontFamily.Default,
-                                                    textDecoration = TextDecoration.Underline,
-                                                    color = ColorLogo,
-                                                    textAlign = TextAlign.End
+                                        if (usuario.nombreRango == "Voluntario") {
+                                            Row (
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(end = 10.dp, bottom = 5.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.End
+                                            ) {
+                                                ClickableText(
+                                                    text = AnnotatedString("¿En qué nos gastamos el dinero?"),
+                                                    onClick = {
+                                                        navController.navigate("SheetGastos")
+                                                    },
+                                                    style = TextStyle(
+                                                        fontSize = 16.sp,
+                                                        fontFamily = FontFamily.Default,
+                                                        textDecoration = TextDecoration.Underline,
+                                                        color = ColorLogo,
+                                                        textAlign = TextAlign.End
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
-                                        Spacer(modifier = Modifier.height(2.dp))
                                         Row(
                                             Modifier
                                                 .padding(10.dp),
@@ -1989,8 +1990,8 @@ fun ListaSitiosConfirmados(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
-                        .clip(CircleShape)
-                        .border(0.dp, Color.Transparent, CircleShape)
+                        .clip(RoundedCornerShape(15.dp))
+                        .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
                         .let {
                             if (!isHomePage) {
                                 it.clickable {
@@ -2162,6 +2163,7 @@ fun ListaEventosConfirmados(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
+                        .clickable { infoExpanded = !infoExpanded}
                         .clip(RoundedCornerShape(15.dp))
                         .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
                     colors = CardDefaults.cardColors(

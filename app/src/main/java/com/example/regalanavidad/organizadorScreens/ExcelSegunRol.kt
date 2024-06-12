@@ -39,7 +39,7 @@ import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.sharedScreens.usuario
 import com.example.regalanavidad.ui.theme.FondoApp
-import com.example.regalanavidad.ui.theme.FondoMenus
+import com.example.regalanavidad.ui.theme.FondoExcel
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -151,7 +151,7 @@ private fun CartaExcel(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FondoMenus),
+                .background(FondoExcel),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

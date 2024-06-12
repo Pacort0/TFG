@@ -41,16 +41,16 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(navController, "inicio"){
                         composable("inicio"){
-                            Login(navController, auth)
+                            Login(navController)
                         }
                         composable("recuperaPassword"){
-                            PantallaOlvidoContrasena(auth, navController)
+                            PantallaOlvidoContrasena(navController)
                         }
                         composable("registroCuenta"){
-                            SignUpScreen(navController, auth)
+                            SignUpScreen(navController)
                         }
                         composable("waitingScreen"){
-                            WaitForEmailVerificationScreen(auth)
+                            WaitForEmailVerificationScreen()
                         }
                     }
                 }

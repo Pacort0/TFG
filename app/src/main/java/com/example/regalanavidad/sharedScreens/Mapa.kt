@@ -2,6 +2,7 @@ package com.example.regalanavidad.sharedScreens
 
 import android.Manifest
 import android.content.Context
+import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Looper
@@ -109,45 +110,51 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    var ubicacionDenegada by remember { mutableStateOf(!locationPermissionState.hasPermission) }
+    var ubicacionDenegada by remember { mutableStateOf(false) }
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var cargarSitios by remember { mutableStateOf(false) }
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    var ubicacionActivada by remember{ mutableStateOf(false) }
 
-    LaunchedEffect(key1 = locationPermissionState.hasPermission, key2 = hayInternet) {
+    LaunchedEffect(key1 = locationPermissionState.hasPermission, key2 = hayInternet, key3 = ubicacionActivada) {
         if (locationPermissionState.hasPermission) {
             ubicacionDenegada = false
-            if (hayInternet) {
-                hayInternet = true
-                val locationRequest = LocationRequest.Builder(100, 300)
-                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                ubicacionActivada = true
+                if (hayInternet) {
+                    hayInternet = true
+                    val locationRequest = LocationRequest.Builder(100, 300)
+                        .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
 
-                val locationCallback = object : LocationCallback() {
-                    override fun onLocationResult(locationResult: LocationResult) {
-                        locationResult.let {
-                            for (location in it.locations) {
-                                currentLocation = LatLng(location.latitude, location.longitude)
-                                isLoading = false
-                                cargarSitios = true // Activar carga de sitios una vez obtenida la ubicación
+                    val locationCallback = object : LocationCallback() {
+                        override fun onLocationResult(locationResult: LocationResult) {
+                            locationResult.let {
+                                for (location in it.locations) {
+                                    currentLocation = LatLng(location.latitude, location.longitude)
+                                    isLoading = false
+                                    cargarSitios =
+                                        true // Activar carga de sitios una vez obtenida la ubicación
+                                }
                             }
+                            fusedLocationClient.removeLocationUpdates(this)
                         }
-                        fusedLocationClient.removeLocationUpdates(this)
                     }
+                    try {
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            locationCallback,
+                            Looper.getMainLooper()
+                        )
+                    } catch (e: SecurityException) {
+                        Toast.makeText(
+                            context,
+                            "No se puede acceder a la localización del dispositivo",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    hayInternet = false
                 }
-                try {
-                    fusedLocationClient.requestLocationUpdates(
-                        locationRequest,
-                        locationCallback,
-                        Looper.getMainLooper()
-                    )
-                } catch (e: SecurityException) {
-                    Toast.makeText(
-                        context,
-                        "No se puede acceder a la localización del dispositivo",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } else {
-                hayInternet = false
             }
         } else {
             ubicacionDenegada = true
@@ -161,10 +168,20 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
         }
     }
 
-    if (ubicacionDenegada) {
+    if (isLoading) {
+        PantallaCarga("Cargando mapa...")
+    } else if (ubicacionDenegada) {
         DeniedLocationScreen(
             onRequestPermissionAgain = {
                 locationPermissionState.launchPermissionRequest()
+            }
+        )
+    } else if (!ubicacionActivada) {
+        NoUbicacionScreen (
+            onRetry = {
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    ubicacionActivada = true
+                }
             }
         )
     } else if (!hayInternet) {
@@ -173,8 +190,6 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
                 hayInternet = hayInternet(connectivityManager)
             }
         )
-    } else if (isLoading) {
-        PantallaCarga("Cargando mapa...")
     } else {
         Mapa(mapaOrganizadorVM, navController, currentLocation, connectivityManager)
     }

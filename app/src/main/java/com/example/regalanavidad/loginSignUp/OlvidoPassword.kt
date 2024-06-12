@@ -43,8 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
+import com.example.regalanavidad.sharedScreens.auth
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
+import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
@@ -54,7 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
+fun PantallaOlvidoContrasena(navController: NavController){
     var email by remember{ mutableStateOf("") }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -148,7 +150,7 @@ fun PantallaOlvidoContrasena(auth: FirebaseAuth, navController: NavController){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ColorLogo
                 )
-            ) { Text(text = "Recuperar contraseña", fontSize = 16.sp) }
+            ) { Text(text = "Recuperar contraseña", fontSize = 16.sp, color = Blanco) }
 
             Spacer(modifier = Modifier.height(10.dp))
 

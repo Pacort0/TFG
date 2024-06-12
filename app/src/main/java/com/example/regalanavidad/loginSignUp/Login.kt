@@ -53,13 +53,13 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.sharedScreens.Home
+import com.example.regalanavidad.sharedScreens.auth
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,7 +67,7 @@ import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 @Composable
-fun Login(navController: NavController, auth: FirebaseAuth) {
+fun Login(navController: NavController) {
 
     val currentUser = auth.currentUser
     val context = LocalContext.current
@@ -143,7 +143,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                             painter = painterResource(id = verPassword.let { if (it) R.drawable.ojo_ver else R.drawable.ojo_ocultar }),
                             contentDescription = "Ocultar contraseña",
                             tint = Color.Black,
-                            modifier = Modifier.size(28.dp).clickable { verPassword = !verPassword }.padding(end = 10.dp))
+                            modifier = Modifier.size(32.dp).clickable { verPassword = !verPassword }.padding(end = 10.dp))
                     }},
                     label = {
                         Text(
@@ -194,7 +194,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
                                     hayInternet = hayInternet(connectivityManager)
                                     if (hayInternet){
                                         scope.launch {
-                                            iniciarSesion(navController, auth, email, password, context)
+                                            iniciarSesion(navController, email, password, context)
                                         }
                                     } else {
                                         Toast.makeText(context, "No hay Internet", Toast.LENGTH_SHORT).show()
@@ -267,7 +267,7 @@ fun Login(navController: NavController, auth: FirebaseAuth) {
     }
 }
 
-private fun iniciarSesion(navController: NavController, auth: FirebaseAuth, email: String, password: String, context: Context) {
+private fun iniciarSesion(navController: NavController, email: String, password: String, context: Context) {
     val scope = CoroutineScope(Job() + Dispatchers.IO)
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->

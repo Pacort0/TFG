@@ -49,6 +49,39 @@ fun PantallaCarga(textoCargando:String){
 }
 
 @Composable
+fun NoUbicacionScreen(onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoApp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ubicacion_desactivada),
+            contentDescription = "No Ubicación",
+            modifier = Modifier.size(200.dp)
+        )
+        Spacer(modifier = Modifier.height(30.dp))
+        Text(text = "¡Vaya!", fontSize = 24.sp, color = Color.Black)
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(text = "Tienes la ubicación desactivda.\nActívala para poder acceder al mapa.",
+            fontSize = 16.sp,
+            color = Color.Black,
+            textAlign = TextAlign.Center)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            colors = ButtonDefaults.buttonColors(
+                containerColor = FondoIndvCards
+            ),
+            onClick = onRetry
+        ) {
+            Text(text = "Reintentar", color = Color.Black, fontSize = 18.sp)
+        }
+    }
+}
+
+@Composable
 fun NoInternetScreen(onRetry: () -> Unit) {
     Column(
         modifier = Modifier
@@ -76,7 +109,7 @@ fun NoInternetScreen(onRetry: () -> Unit) {
             ),
             onClick = onRetry
         ) {
-            Text(text = "Reintentar", color = Color.Black)
+            Text(text = "Reintentar", color = Color.Black, fontSize = 18.sp)
         }
     }
 }
@@ -109,7 +142,7 @@ fun DeniedLocationScreen(onRequestPermissionAgain: () -> Unit) {
             ),
             onClick = onRequestPermissionAgain
         ) {
-            Text(text = "Reintentar", color = Color.Black)
+            Text(text = "Reintentar", color = Color.Black, fontSize = 18.sp)
         }
     }
 }

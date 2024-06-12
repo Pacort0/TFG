@@ -86,7 +86,6 @@ import com.example.regalanavidad.sharedScreens.hayInternet
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.example.regalanavidad.ui.theme.FondoMenus
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -249,7 +248,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 }
                             }, modifier = Modifier.width(160.dp),
                                 colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = FondoMenus
+                                    containerColor = FondoTarjetaInception
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
                             ) {

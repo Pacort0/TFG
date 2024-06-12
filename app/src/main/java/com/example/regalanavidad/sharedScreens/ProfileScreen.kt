@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.regalanavidad.R
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +77,7 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.height(15.dp))
 
         // Editable username
-        OutlinedTextField(
+        /*OutlinedTextField(
             value = settingsForm,
             onValueChange = {
                 settingsForm = it
@@ -91,15 +92,16 @@ fun ProfileScreen() {
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             ),
-        )
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Text(text = usuario.correo, color = Color.Black)
+        )*/
+        Text(text = usuario.nombre, color = Color.Black, fontSize = 20.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = usuario.nombreRango, color = Color.Black)
+        Text(text = usuario.correo, color = Color.Black, fontSize = 20.sp)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(text = usuario.nombreRango, color = Color.Black, fontSize = 20.sp)
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -110,7 +112,8 @@ fun ProfileScreen() {
                 auth.signOut()
                 val intent = Intent(context, MainActivity::class.java)
                 context.startActivity(intent)
-            }
+            },
+            style = TextStyle(color = Color.Black, fontSize = 20.sp)
         )
 
         // Show the Save button if name is changed and not empty

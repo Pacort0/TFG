@@ -42,25 +42,27 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.Usuario
+import com.example.regalanavidad.sharedScreens.auth
 import com.example.regalanavidad.sharedScreens.firestore
 import com.example.regalanavidad.sharedScreens.hayInternet
+import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
+fun SignUpScreen(navController: NavController){
 
     val context = LocalContext.current
     var usuario by remember { mutableStateOf("") }
@@ -150,12 +152,13 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(
-                trailingIcon = { Icon(
-                    painter = painterResource(id = R.drawable.ojo_ocultar),
-                    contentDescription = "Ocultar contraseña",
-                    tint = Color.Black,
-                    modifier = Modifier.size(24.dp).clickable { verPassword = !verPassword })
-                },
+                trailingIcon = { if (password.isNotEmpty() && password.isNotBlank()) {
+                    Icon(
+                        painter = painterResource(id = verPassword.let { if (it) R.drawable.ojo_ver else R.drawable.ojo_ocultar }),
+                        contentDescription = "Ocultar contraseña",
+                        tint = Color.Black,
+                        modifier = Modifier.size(32.dp).clickable { verPassword = !verPassword }.padding(end = 10.dp))
+                }},
                 label = {
                     Text(
                         text = "Contraseña",
@@ -165,9 +168,9 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                 },
                 value = password,
                 textStyle = TextStyle(color = Color.Black),
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = verPassword.let { if (it) VisualTransformation.None else PasswordVisualTransformation() },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = verPassword.let { if (it) KeyboardType.Text else KeyboardType.Password},
+                    keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
                 ),
                 onValueChange = { password = it },
@@ -191,7 +194,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                                 hayInternet = hayInternet(connectivityManager)
                                 if (hayInternet){
                                     scope.launch {
-                                        signUp(auth, usuario, email, password, context, navController)
+                                        signUp(usuario, email, password, context, navController)
                                     }
                                 } else {
                                     Toast.makeText(context, "No hay internet", Toast.LENGTH_SHORT).show()
@@ -216,7 +219,7 @@ fun SignUpScreen(navController: NavController, auth: FirebaseAuth){
                     containerColor = ColorLogo
                 )
             ) {
-                Text(text = "Crear cuenta", fontSize = 16.sp)
+                Text(text = "Crear cuenta", fontSize = 16.sp, color = Blanco)
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -243,7 +246,7 @@ fun isValidEmail(inputEmail: CharSequence?): Boolean {
     }
 }
 
-private fun signUp(auth: FirebaseAuth, username: String, email:String, password:String, context: Context, navController: NavController){
+private fun signUp(username: String, email:String, password:String, context: Context, navController: NavController){
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {task ->
         if(task.isSuccessful){
             val user = auth.currentUser!!

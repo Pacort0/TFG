@@ -18,8 +18,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,14 +32,17 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
+import com.example.regalanavidad.R
 import com.example.regalanavidad.sharedScreens.Home
 import com.example.regalanavidad.sharedScreens.MainActivity.Companion.email
-import com.example.regalanavidad.R
+import com.example.regalanavidad.sharedScreens.auth
+import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
+import kotlinx.coroutines.delay
 
 @Composable
-fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
+fun WaitForEmailVerificationScreen() {
     var user = auth.currentUser
     if (user != null) {
         email = user.email.toString()
@@ -73,8 +74,9 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
                 onClick = {
                     if (user != null) {
                         user?.sendEmailVerification()
+                        Toast.makeText(context, "Enlace reenviado", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, "No user is signed in", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Usuario no registrado", Toast.LENGTH_SHORT).show()
                     }
                 },
                 shape = RoundedCornerShape(50.dp),
@@ -87,7 +89,7 @@ fun WaitForEmailVerificationScreen(auth: FirebaseAuth) {
                     containerColor = ColorLogo
                 )
             ) {
-                Text(text = "Reenviar enlace")
+                Text(text = "Reenviar enlace", color = Blanco)
             }
         //Poner botón de 'ya verificado'
 
