@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -25,7 +26,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
@@ -42,7 +50,7 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import kotlinx.coroutines.delay
 
 @Composable
-fun WaitForEmailVerificationScreen() {
+fun WaitForEmailVerificationScreen(navController: NavController) {
     var user = auth.currentUser
     if (user != null) {
         email = user.email.toString()
@@ -70,29 +78,43 @@ fun WaitForEmailVerificationScreen() {
 
         Spacer(modifier = Modifier.height(30.dp))
 
-            Button(
+        Button(
+            onClick = {
+                if (user != null) {
+                    user?.sendEmailVerification()
+                    Toast.makeText(context, "Enlace reenviado", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Usuario no registrado", Toast.LENGTH_SHORT).show()
+                }
+            },
+            shape = RoundedCornerShape(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(horizontal = 40.dp)
+                .clip(RoundedCornerShape(50.dp)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ColorLogo
+            )
+        ) {
+            Text(text = "Reenviar enlace", color = Blanco)
+        }
+        Spacer(modifier = Modifier.height(15.dp))
+        if (user == null) {
+            ClickableText(
+                text = AnnotatedString("Volver a la pantalla principal"),
                 onClick = {
-                    if (user != null) {
-                        user?.sendEmailVerification()
-                        Toast.makeText(context, "Enlace reenviado", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Usuario no registrado", Toast.LENGTH_SHORT).show()
-                    }
+                    navController.navigate("inicio")
                 },
-                shape = RoundedCornerShape(50.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 40.dp)
-                    .clip(RoundedCornerShape(50.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ColorLogo
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Default,
+                    textDecoration = TextDecoration.Underline,
+                    color = ColorLogo,
+                    textAlign = TextAlign.End
                 )
-            ) {
-                Text(text = "Reenviar enlace", color = Blanco)
-            }
-        //Poner botón de 'ya verificado'
-
+            )
+        }
 }
     // Para usar corrutinas en un composable, usamos 'LaunchedEffect'
     LaunchedEffect(key1 = user?.isEmailVerified) { //El parámetro key1 asegura que el efecto se recompondrá cuando el valor de user?.isEmailVerified cambie.
@@ -107,7 +129,7 @@ fun WaitForEmailVerificationScreen() {
                 break // Sale del bucle while una vez se ha verificado
             } else {
                 // Si el email no se ha verificado, lo comprobará de nuevo en 5 segundos
-                delay(5000) // Wait for 5 seconds
+                delay(2500) // Espera 2.5 segundos
             }
         }
     }

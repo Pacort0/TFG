@@ -61,7 +61,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.apiRouteService.ApiRouteService
-import com.example.regalanavidad.apiRouteService.RouteResponse
+import com.example.regalanavidad.modelos.RouteResponse
+import com.example.regalanavidad.dal.getRetrofit
 import com.example.regalanavidad.modelos.SitioRecogida
 import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.FondoApp
@@ -87,8 +88,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 private var route = mutableListOf<LatLng>()
 private var muestraRuta = mutableStateOf(false)
@@ -632,13 +631,6 @@ fun filtrarSitios(query: String, sitios: List<SitioRecogida>, sitioExcluido: Sit
     return sitios.filter {
         it.nombreSitio.contains(query, ignoreCase = true) && it != sitioExcluido
     }
-}
-
-fun getRetrofit():Retrofit{
-    return Retrofit.Builder()
-        .baseUrl("https://api.openrouteservice.org/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
 }
 
 fun createRoute(start:String, end:String, connectivityManager: ConnectivityManager){

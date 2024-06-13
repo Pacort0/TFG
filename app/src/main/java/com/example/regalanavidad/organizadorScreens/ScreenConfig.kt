@@ -84,6 +84,7 @@ import com.example.regalanavidad.sharedScreens.OtrosAnosScreen
 import com.example.regalanavidad.sharedScreens.PaginaSheetGastos
 import com.example.regalanavidad.sharedScreens.PatrocinadoresScreen
 import com.example.regalanavidad.sharedScreens.QueEs
+import com.example.regalanavidad.ui.theme.FondoOpcionesSubMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -290,7 +291,7 @@ fun ModalItems(navController: NavController, scope: CoroutineScope, drawerState:
                             painter = painterResource(id = asignaLogoSegunOpcion(item)),
                             contentDescription = "Icono opción",
                             tint = Color.Black,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     },
                     colors = NavigationDrawerItemDefaults.colors(
@@ -366,7 +367,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
                     painter = painterResource(id = R.drawable.information),
                     contentDescription = "Icono información",
                     tint = Color.Black,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             },
             trailingIcon = { TrailingIconMio(expanded = expanded) },
@@ -380,7 +381,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.Transparent)
+            modifier = Modifier.background(FondoOpcionesSubMenu)
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
@@ -389,7 +390,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
                             painter = painterResource(id = asignaLogoSegunOpcion(selectionOption)),
                             contentDescription = "Icono opción",
                             tint = Color.Black,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(25.dp)
                         )
                     },
                     text = { Text(selectionOption, fontSize = 17.sp) },

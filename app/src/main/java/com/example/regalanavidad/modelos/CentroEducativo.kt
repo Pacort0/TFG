@@ -27,7 +27,7 @@ data class CentroEducativoRequest(
 )
 
 data class RequestPostCentroEducativo(
-    val spreadsheet_id: String,
+    val spreadSheetId: String,
     val sheet: String,
-    val valores: List<CentroEducativoRequest>
+    val centros: List<CentroEducativoRequest>
 )

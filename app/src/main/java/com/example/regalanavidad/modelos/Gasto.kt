@@ -13,7 +13,7 @@ data class GastoResponse(
 )
 
 data class RequestPostGasto(
-    val spreadsheet_id: String,
+    val spreadSheetId: String,
     val sheet: String,
     val gasto: Gasto
 )

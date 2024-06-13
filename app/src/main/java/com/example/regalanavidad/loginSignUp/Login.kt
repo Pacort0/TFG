@@ -89,7 +89,7 @@ fun Login(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(FondoApp)
-                .padding(start = 25.dp, top = 25.dp, end = 25.dp),
+                .padding(start = 25.dp, top = 50.dp, end = 25.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -130,7 +130,8 @@ fun Login(navController: NavController) {
                         focusedContainerColor = FondoIndvCards,
                         unfocusedContainerColor = FondoIndvCards,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
+                        focusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color.Black
                     ),
                     modifier = Modifier.clip(RoundedCornerShape(50.dp))
                 )
@@ -143,7 +144,11 @@ fun Login(navController: NavController) {
                             painter = painterResource(id = verPassword.let { if (it) R.drawable.ojo_ver else R.drawable.ojo_ocultar }),
                             contentDescription = "Ocultar contraseña",
                             tint = Color.Black,
-                            modifier = Modifier.size(32.dp).clickable { verPassword = !verPassword }.padding(end = 10.dp))
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable { verPassword = !verPassword }
+                                .padding(end = 10.dp)
+                        )
                     }},
                     label = {
                         Text(
@@ -164,7 +169,8 @@ fun Login(navController: NavController) {
                         focusedContainerColor = FondoIndvCards,
                         unfocusedContainerColor = FondoIndvCards,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
+                        focusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color.Black
                         ),
                     modifier = Modifier.clip(RoundedCornerShape(50.dp))
                 )

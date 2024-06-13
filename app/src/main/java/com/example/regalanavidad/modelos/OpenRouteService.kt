@@ -1,4 +1,4 @@
-package com.example.regalanavidad.apiRouteService
+package com.example.regalanavidad.modelos
 
 import com.google.gson.annotations.SerializedName
 data class RouteResponse(@SerializedName("features") val features:List<Feature>)

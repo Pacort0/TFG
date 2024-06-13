@@ -77,7 +77,7 @@ fun SignUpScreen(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(start = 25.dp, top = 25.dp, end = 25.dp),
+            .padding(start = 25.dp, top = 50.dp, end = 25.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -118,7 +118,8 @@ fun SignUpScreen(navController: NavController){
                     focusedContainerColor = FondoIndvCards,
                     unfocusedContainerColor = FondoIndvCards,
                     unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent
+                    focusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black
                 ),
                 modifier = Modifier.clip(RoundedCornerShape(50.dp))
             )
@@ -144,7 +145,8 @@ fun SignUpScreen(navController: NavController){
                     focusedContainerColor = FondoIndvCards,
                     unfocusedContainerColor = FondoIndvCards,
                     unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent
+                    focusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black
                 ),
                 modifier = Modifier.clip(RoundedCornerShape(50.dp))
             )
@@ -178,7 +180,8 @@ fun SignUpScreen(navController: NavController){
                     focusedContainerColor = FondoIndvCards,
                     unfocusedContainerColor = FondoIndvCards,
                     unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent
+                    focusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black
                 ),
                 modifier = Modifier.clip(RoundedCornerShape(50.dp))
             )

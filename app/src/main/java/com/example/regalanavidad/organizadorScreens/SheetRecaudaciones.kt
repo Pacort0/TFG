@@ -344,7 +344,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                 {
                                                     Text(
                                                         text = tipo.tipo,
-                                                        fontSize = 20.sp,
+                                                        fontSize = 18.sp,
                                                         color = Color.Black)
                                                 }
                                                 Column (Modifier
@@ -376,12 +376,17 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                 tipo.tipo
                                                             )
                                                         }) {
-                                                            Icon(painterResource(id = R.drawable.menos), contentDescription = "Quitar", Modifier.size(31.dp), tint = Color.Black)
+                                                            Icon(
+                                                                painter = painterResource(id = R.drawable.menos),
+                                                                contentDescription = "Quitar",
+                                                                modifier = Modifier.size(25.dp),
+                                                                tint = Color.Black
+                                                            )
                                                         }
                                                         Spacer(modifier = Modifier.width(4.dp))
                                                         TextField(
                                                             value = "$cantidadProd",
-                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 20.sp, color = Color.Black),
+                                                            textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 18.sp, color = Color.Black),
                                                             onValueChange = { cantidad ->
                                                                 val trimmedCantidad = cantidad.trim() // Eliminar espacios en Color.Black
                                                                 if (trimmedCantidad.isEmpty()) {
@@ -410,6 +415,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                 focusedIndicatorColor = Color.Transparent,
                                                                 focusedContainerColor = Color.Transparent,
                                                                 unfocusedContainerColor = Color.Transparent,
+                                                                 cursorColor = Color.Black
                                                             ),
                                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                             modifier = Modifier
@@ -436,7 +442,10 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                                 tipo.tipo
                                                             )
                                                         }) {
-                                                            Icon(Icons.Filled.AddCircle, contentDescription = "Añadir", Modifier.size(31.dp), tint = Color.Black)
+                                                            Icon(Icons.Filled.AddCircle,
+                                                                contentDescription = "Añadir",
+                                                                modifier = Modifier.size(25.dp),
+                                                                tint = Color.Black)
                                                         }
                                                     }
                                                 }

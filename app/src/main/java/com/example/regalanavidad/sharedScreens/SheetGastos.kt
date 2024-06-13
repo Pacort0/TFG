@@ -446,7 +446,7 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
                                         Toast
                                             .makeText(
                                                 context,
-                                                "Por favor, llena todos los campos",
+                                                "Por favor, rellena todos los campos",
                                                 Toast.LENGTH_SHORT
                                             )
                                             .show() } },

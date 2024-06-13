@@ -15,6 +15,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -88,13 +93,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -356,6 +358,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
     val fechaDialogState = rememberMaterialDialogState()
     val horaDialogState = rememberMaterialDialogState()
+    var isClicked by remember { mutableStateOf(false) }
+    val rotationAngle by animateFloatAsState(if (isClicked) 0f else -45f, label = "")
 
     if (textoBusqueda == "" && prediccionesNuevoSitioRecogida.isNotEmpty()){
         prediccionesNuevoSitioRecogida = emptyList()
@@ -1177,18 +1181,14 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                 modifier = Modifier.fillMaxSize()
                                             ) {
                                                 Box(
-                                                    modifier = Modifier.fillMaxSize()
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .background(FondoIndvCards)
                                                 ) {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.dinero_recaudado_wp),
-                                                        contentDescription = "Background Ig Image",
-                                                        contentScale = ContentScale.Crop,
-                                                        modifier = Modifier.fillMaxSize()
-                                                    )
                                                     Row(
                                                         Modifier
                                                             .fillMaxSize()
-                                                            .padding(16.dp),
+                                                            .padding(start = 5.dp, top = 15.dp, end = 5.dp, bottom = 15.dp),
                                                         verticalAlignment = Alignment.CenterVertically,
                                                         horizontalArrangement = Arrangement.Center
                                                     ) {
@@ -1219,7 +1219,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                         text = "Dinero recaudado:",
                                                                         fontWeight = FontWeight.Bold,
                                                                         fontSize = 24.sp,
-                                                                        color = Color.White
+                                                                        color = Color.Black
                                                                     )
                                                                 }
                                                                 dineroRecaudado.value.forEach { donacion ->
@@ -1239,59 +1239,35 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                                                 containerColor = Color.Transparent
                                                                             )
                                                                         ) {
-                                                                            Box(
-                                                                                modifier = modifier
-                                                                                    .graphicsLayer {
-                                                                                        alpha =
-                                                                                            0.99f // Necesario para activar el desenfoque en Android 12 y anteriores
-                                                                                    }
-                                                                                    .drawBehind {
-                                                                                        drawIntoCanvas { canvas ->
-                                                                                            val paint =
-                                                                                                Paint()
-                                                                                            val frameworkPaint =
-                                                                                                paint.asFrameworkPaint()
-                                                                                            frameworkPaint.color =
-                                                                                                0x99FFFFFF.toInt()
-                                                                                            frameworkPaint.maskFilter =
-                                                                                                android.graphics.BlurMaskFilter(
-                                                                                                    30f,
-                                                                                                    android.graphics.BlurMaskFilter.Blur.NORMAL
-                                                                                                )
-                                                                                            canvas.nativeCanvas.apply {
-                                                                                                drawRect(
-                                                                                                    0f,
-                                                                                                    0f,
-                                                                                                    size.width,
-                                                                                                    size.height,
-                                                                                                    frameworkPaint
-                                                                                                )
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                            ) {
-                                                                                Box(modifier = Modifier.fillMaxSize()) {
-                                                                                    when (donacion.tipo) {
-                                                                                        "BIZUM" -> DonacionRow(
-                                                                                            donacion,
-                                                                                            R.drawable.bizum
-                                                                                        )
+                                                                            Box(modifier = Modifier
+                                                                                .fillMaxSize()
+                                                                                .background(
+                                                                                    FondoTarjetaInception
+                                                                                )) {
+                                                                                when (donacion.tipo) {
+                                                                                    "BIZUM" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.bizum,
+                                                                                        "Bizum"
+                                                                                    )
 
-                                                                                        "EFECTIVO" -> DonacionRow(
-                                                                                            donacion,
-                                                                                            R.drawable.dinero_efectivo
-                                                                                        )
+                                                                                    "EFECTIVO" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.dinero_efectivo,
+                                                                                        "Efectivo"
+                                                                                    )
 
-                                                                                        "TRANSFERENCIA" -> DonacionRow(
-                                                                                            donacion,
-                                                                                            R.drawable.transferencia
-                                                                                        )
+                                                                                    "TRANSFERENCIA" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.transferencia,
+                                                                                        "Transferencia"
+                                                                                    )
 
-                                                                                        "TOTAL" -> DonacionRow(
-                                                                                            donacion,
-                                                                                            R.drawable.total
-                                                                                        )
-                                                                                    }
+                                                                                    "TOTAL" -> DonacionRow(
+                                                                                        donacion,
+                                                                                        R.drawable.total,
+                                                                                        "Total"
+                                                                                    )
                                                                                 }
                                                                             }
                                                                         }
@@ -1629,27 +1605,44 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
             }
             if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "RR.II.") {
                 FloatingActionButton(
-                    onClick = { redactaEmail = true },
+                    onClick = { },
                     containerColor = FondoTarjetaInception,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(12.dp, 0.dp, 0.dp, 35.dp)
                         .height(40.dp)
-                        .width(if (pagerState.currentPage == 0 || pagerState.currentPage == 1) 160.dp else 40.dp)
+                        .width(if (isClicked) 160.dp else 40.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Icon(
-                            painterResource(id = R.drawable.lapiz),
+                            painter = painterResource(id = R.drawable.lapiz),
                             contentDescription = "Enviar correo",
-                            Modifier.size(25.dp),
+                            modifier = Modifier
+                                .size(25.dp)
+                                .rotate(rotationAngle)
+                                .clickable {
+                                    isClicked = !isClicked
+                                },
                             tint = Color.Black
                         )
-                        if (pagerState.currentPage == 0 || pagerState.currentPage == 1) {
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(text = "Redactar correo", color = Color.Black)
+                        AnimatedVisibility(
+                            visible = isClicked,
+                            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                            exit = fadeOut(animationSpec = tween(durationMillis = 300))
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "Redactar correo",
+                                    color = Color.Black,
+                                    modifier = Modifier.clickable {
+                                        redactaEmail = true
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -1737,29 +1730,39 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
     }
 }
 @Composable
-fun DonacionRow(donacion: Donacion, imageResId: Int) {
+fun DonacionRow(donacion: Donacion, imageResId: Int, texto: String) {
     Row(
         Modifier
             .fillMaxSize()
-            .padding(if (donacion.tipo == "TOTAL") 5.dp else 2.dp),
+            .padding(if (donacion.tipo == "TOTAL") 5.dp else 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Start
     ) {
         Image(
             painter = painterResource(id = imageResId),
             contentDescription = "Imagen Donativo",
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .weight(0.4f)
+                .weight(if (donacion.tipo == "TOTAL") 0.4f else 0.2f)
                 .padding(end = 5.dp)
         )
+        if (donacion.tipo != "TOTAL") {
+            Text(
+                text = texto,
+                color = Color.Black,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(0.35f)
+            )
+        }
         Text(
             text = donacion.cantidad,
             color = Color(44, 173, 18),
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.6f)
+            modifier = Modifier.weight(if (donacion.tipo == "TOTAL") 0.6f else 0.45f)
         )
     }
 }
@@ -2163,7 +2166,7 @@ fun ListaEventosConfirmados(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(5.dp)
-                        .clickable { infoExpanded = !infoExpanded}
+                        .clickable { infoExpanded = !infoExpanded }
                         .clip(RoundedCornerShape(15.dp))
                         .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
                     colors = CardDefaults.cardColors(

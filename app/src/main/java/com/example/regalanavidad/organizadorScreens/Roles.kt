@@ -415,7 +415,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
                         .background(Color.Transparent)
                         .clip(RoundedCornerShape(10.dp))
                         .padding(3.dp)
-                        .border(1.dp, FondoTarjetaInception, RoundedCornerShape(10.dp))
+                        .border(1.dp, ColorLogo, RoundedCornerShape(10.dp))
                         .wrapContentSize()
                 )
             }

@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                             SignUpScreen(navController)
                         }
                         composable("waitingScreen"){
-                            WaitForEmailVerificationScreen()
+                            WaitForEmailVerificationScreen(navController)
                         }
                     }
                 }

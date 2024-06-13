@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -210,7 +209,7 @@ fun TareasTabScreen(completadas: Boolean){
     val fechaFormateada by remember{ derivedStateOf { DateTimeFormatter.ofPattern("dd/MM/yyyy").format(fechaEscogida) } }
     val fechaDialogState = rememberMaterialDialogState()
     val scope = rememberCoroutineScope()
-    val options = listOf("Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario", "Coordinador")
+    val listaRoles = listOf("Tesorería", "RR.II.", "Logística", "Imagen", "Voluntario")
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -401,16 +400,21 @@ fun TareasTabScreen(completadas: Boolean){
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
                                 .background(Color.Transparent)
-                                .clip(CircleShape)
-                                .border(0.dp, Color.Transparent, CircleShape)
+                                .clip(RoundedCornerShape(15.dp))
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
                         ) {
                             TextField(
                                 modifier = Modifier
                                     .menuAnchor()
-                                    .clip(CircleShape)
-                                    .border(0.dp, Color.Transparent, CircleShape),
+                                    .clip(RoundedCornerShape(15.dp))
+                                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
                                 readOnly = true,
-                                value = rolSeleccionado,
+                                value =
+                                if (rolSeleccionado == "Coordinador") {
+                                    "Elije un rol"
+                                } else {
+                                    rolSeleccionado
+                                },
                                 textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                                 onValueChange = {},
                                 trailingIcon = { TrailingIconMio(expanded = expanded) },
@@ -428,7 +432,7 @@ fun TareasTabScreen(completadas: Boolean){
                                 modifier = Modifier
                                     .background(FondoTarjetaInception)
                             ) {
-                                options.forEach { selectionOption ->
+                                listaRoles.forEach { selectionOption ->
                                     DropdownMenuItem(
                                         text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                                         onClick = {
@@ -443,7 +447,7 @@ fun TareasTabScreen(completadas: Boolean){
                                             .padding(3.dp)
                                             .border(
                                                 1.dp,
-                                                FondoTarjetaInception,
+                                                ColorLogo,
                                                 RoundedCornerShape(10.dp)
                                             )
                                             .wrapContentSize()
@@ -456,7 +460,7 @@ fun TareasTabScreen(completadas: Boolean){
                             value = usuario.nombreRango,
                             onValueChange = {},
                             readOnly = true,
-                            textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
+                            textStyle = TextStyle(color = Color.DarkGray, fontSize = 16.sp),
                             label = {
                                 Text(
                                     text = "Cargo de la tarea",
@@ -551,27 +555,31 @@ fun TareasTabScreen(completadas: Boolean){
                                 onClick = {
                                     hayInternet = hayInternet(connectivityManager)
                                     if (hayInternet) {
-                                        if (descripcion.isNotEmpty()) {
-                                            val tarea =
-                                                Tarea(
-                                                    rol = rolSeleccionado,
-                                                    descripcion = descripcion,
-                                                    fechaLimite = fechaFormateada,
-                                                    completada = false
-                                                )
-                                            showTareaDialog = false
-                                            scope.launch(Dispatchers.IO) {
-                                                firestore.insertaTarea(tarea)
-                                                guardarCambios = true
+                                        if (listaRoles.any { it == rolSeleccionado }){
+                                            if (descripcion.isNotEmpty()) {
+                                                val tarea =
+                                                    Tarea(
+                                                        rol = rolSeleccionado,
+                                                        descripcion = descripcion,
+                                                        fechaLimite = fechaFormateada,
+                                                        completada = false
+                                                    )
+                                                showTareaDialog = false
+                                                scope.launch(Dispatchers.IO) {
+                                                    firestore.insertaTarea(tarea)
+                                                    guardarCambios = true
+                                                }
+                                            } else {
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        "Por favor, llena todos los campos",
+                                                        Toast.LENGTH_SHORT
+                                                    )
+                                                    .show()
                                             }
                                         } else {
-                                            Toast
-                                                .makeText(
-                                                    context,
-                                                    "Por favor, llena todos los campos",
-                                                    Toast.LENGTH_SHORT
-                                                )
-                                                .show()
+                                            Toast.makeText(context, "Por favor, elige un rol", Toast.LENGTH_SHORT).show()
                                         }
                                     } else {
                                       Toast.makeText(context, "No tienes Internet", Toast.LENGTH_SHORT).show()
@@ -623,9 +631,9 @@ fun TareaCard(tarea: Tarea){
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
-            .height(65.dp),
+            .clip(RoundedCornerShape(15.dp))
+            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+            .height(75.dp),
         colors = CardDefaults.cardColors(
             containerColor = FondoIndvCards
         )
@@ -637,11 +645,25 @@ fun TareaCard(tarea: Tarea){
             Column (
                 Modifier
                     .weight(0.45f)
-                    .padding(start = 10.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
+                    .padding(start = 16.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = tarea.descripcion, fontSize = 16.sp, color = Color.Black)
+                if (usuario.nombreRango == "Coordinador") {
+                    Text(
+                        text = tarea.rol,
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        modifier = Modifier.weight(0.3f)
+                    )
+                }
+                Text(
+                    text = tarea.descripcion,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.weight(usuario.nombreRango.let { if (it == "Coordinador") 0.7f else 1f }
+                    )
+                )
             }
             Column (
                 Modifier.weight(0.55f),
@@ -665,8 +687,8 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
             .padding(5.dp)
-            .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
+            .clip(RoundedCornerShape(15.dp))
+            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
             .background(FondoTarjetaInception)
     ) {
         TextField(
@@ -713,9 +735,9 @@ fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tare
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     modifier = Modifier
                         .background(Color.Transparent)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(15.dp))
                         .padding(3.dp)
-                        .border(0.dp, Color.Transparent, RoundedCornerShape(10.dp))
+                        .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                         .wrapContentSize()
                 )
             }
