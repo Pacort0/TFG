@@ -701,6 +701,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
     val opcionesEstados = listOf("No Iniciada", "En curso", "En revision", "Completada", "Cancelada")
     var expanded by remember { mutableStateOf(false) }
     var nuevoEstado by remember { mutableStateOf(centroEducativo.estadoCentro) }
+    val estadoOriginal by remember { mutableStateOf(centroEducativo.estadoCentro)}
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -734,10 +735,7 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                 DropdownMenuItem(
                     text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                     onClick = {
-                        if(selectionOption != centroEducativo.estadoCentro){
-                            nuevoEstado = selectionOption
-                            centroEducativo.estadoCentro = selectionOption
-
+                        if(selectionOption != estadoOriginal){
                             // Buscar si ya existe un registro para este centro
                             val index = listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
 
@@ -750,7 +748,16 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                                 // Si no existe, añadirlo a la lista
                                 listaCentrosCambiados.value += centroEducativo.toCentroEducativoRequest()
                             }
+                        } else {
+                            // Si el estado vuelve a ser el mismo, quitar de la lista
+                            val index = listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
+                            if (index != -1) {
+                                val newList = listaCentrosCambiados.value.toMutableList()
+                                newList.removeAt(index)
+                                listaCentrosCambiados.value = newList
+                            }
                         }
+                        nuevoEstado = selectionOption
                         expanded = false
                         scope.launch { drawerState.close() }
                         Log.d("Centros", listaCentrosCambiados.value.toString())
