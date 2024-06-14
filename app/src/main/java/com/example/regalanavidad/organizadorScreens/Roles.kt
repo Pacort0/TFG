@@ -238,7 +238,7 @@ fun TabRoles(voluntarios: Boolean){
             modifier = Modifier
                 .fillMaxSize()
                 .background(FondoApp)
-                .padding(start = 20.dp, end = 20.dp)
+                .padding(10.dp)
         ) {
             Column (
                 Modifier.fillMaxSize()
