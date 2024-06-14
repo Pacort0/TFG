@@ -368,7 +368,7 @@ fun TareasTabScreen(completadas: Boolean){
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(20.dp, 0.dp, 0.dp, 30.dp)
-                        .height(35.dp)
+                        .height(40.dp)
                         .width(130.dp)
                 ) {
                     Row(
@@ -376,9 +376,10 @@ fun TareasTabScreen(completadas: Boolean){
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(30.dp),
                             painter = painterResource(id = R.drawable.save),
-                            contentDescription = "Actualizar tareas"
+                            contentDescription = "Actualizar tareas",
+                            tint = Color.Black
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
