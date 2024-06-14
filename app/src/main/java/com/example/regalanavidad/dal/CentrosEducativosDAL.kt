@@ -72,7 +72,7 @@ suspend fun getCentrosDataFromGoogleSheet(spreadsheetId: String, sheetName: Stri
 
 suspend fun updateCentrosDataInGoogleSheet(spreadsheetId: String, sheetName: String, centros: List<CentroEducativoRequest>): Response {
     return withContext(Dispatchers.IO) {
-        val url = "https://script.google.com/macros/s/AKfycbygcfd8kcWN8C0fJw3Eh4vW15BhQ1GVu6cHw1MjO9rbe5bWgxxIjhk12SVGWenap40FPA/exec"
+        val url = "https://script.google.com/macros/s/AKfycbxwWMYlmTA7m58jUVWQ9urrk__2cp2SR85-ZO6JzDS5dy0qbatr3V5G1eVin3E-JIMDnQ/exec"
         val requestPost = RequestPostCentroEducativo(spreadsheetId, sheetName, centros)
         val json = Gson().toJson(requestPost)
         Log.d("postCentros", json)

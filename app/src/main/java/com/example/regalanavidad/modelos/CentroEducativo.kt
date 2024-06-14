@@ -23,11 +23,11 @@ data class CentroEducativoResponse(
 data class CentroEducativoRequest(
     val nombreCentro: String,
     var tareaCentro: String,
-    val estadoCentro: String
+    var estadoCentro: String
 )
 
 data class RequestPostCentroEducativo(
-    val spreadSheetId: String,
+    val spreadsheet_id: String,
     val sheet: String,
     val centros: List<CentroEducativoRequest>
 )

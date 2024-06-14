@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -281,8 +280,8 @@ fun TabRoles(voluntarios: Boolean){
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(4.dp)
-                                            .clip(CircleShape)
-                                            .border(0.dp, Color.Transparent, CircleShape)
+                                            .clip(RoundedCornerShape(15.dp))
+                                            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
                                             .wrapContentHeight(),
                                         colors = CardDefaults.cardColors(
                                             containerColor = FondoIndvCards
@@ -305,14 +304,14 @@ fun TabRoles(voluntarios: Boolean){
             }
             if(listaUsuariosCambiados.value.isNotEmpty()){
                 FloatingActionButton(
-                    containerColor = ColorLogo,
+                    containerColor = FondoTarjetaInception,
                     onClick = {
                         guardarCambios = true
                         Toast.makeText(context, "Actualizando roles...", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(0.dp, 0.dp, 20.dp, 20.dp)
+                        .align(Alignment.BottomStart)
+                        .padding(20.dp, 0.dp, 0.dp, 30.dp)
                         .height(40.dp)
                         .width(130.dp)
                 ){
@@ -320,9 +319,18 @@ fun TabRoles(voluntarios: Boolean){
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(painterResource(id = R.drawable.save), contentDescription = "Guardar", Modifier.size(30.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.save),
+                            contentDescription = "Guardar",
+                            modifier = Modifier.size(30.dp),
+                            tint = Color.Black)
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text(text = "Guardar")
+                        Text(
+                            text = "Guardar",
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
@@ -342,8 +350,8 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
-            .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
+            .clip(RoundedCornerShape(15.dp))
+            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
             .background(FondoTarjetaInception)
     ) {
         TextField(
@@ -373,7 +381,7 @@ fun RolesSubMenu(drawerState: DrawerState, scope: CoroutineScope, usuarioRegistr
             modifier = Modifier
                 .background(FondoTarjetaInception)
                 .clip(RoundedCornerShape(20.dp))
-                .border(0.dp, Color.Transparent, CircleShape)
+                .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
         ) {
             options.filter { usuarioRegistrado.nombreRango != it }.forEach { selectionOption ->
                 DropdownMenuItem(

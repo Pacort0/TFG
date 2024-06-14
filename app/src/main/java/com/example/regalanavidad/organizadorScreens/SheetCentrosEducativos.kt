@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -87,11 +86,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.regalanavidad.R
-import com.example.regalanavidad.dal.getCentrosDataFromGoogleSheet
+import com.example.regalanavidad.dal.getCentrosFromDistrito
 import com.example.regalanavidad.dal.updateCentrosDataInGoogleSheet
 import com.example.regalanavidad.modelos.CentroEducativo
 import com.example.regalanavidad.modelos.CentroEducativoRequest
-import com.example.regalanavidad.modelos.CentroEducativoResponse
 import com.example.regalanavidad.sharedScreens.NoInternetScreen
 import com.example.regalanavidad.sharedScreens.PantallaCarga
 import com.example.regalanavidad.sharedScreens.hayInternet
@@ -184,14 +182,14 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
-                                .clip(CircleShape)
+                                .clip(RoundedCornerShape(15.dp))
                                 .background(FondoTarjetaInception)
                         ) {
                             TextField(
                                 modifier = Modifier
                                     .menuAnchor()
-                                    .clip(CircleShape)
-                                    .border(0.dp, Color.Black, CircleShape),
+                                    .clip(RoundedCornerShape(15.dp))
+                                    .border(0.dp, Color.Black, RoundedCornerShape(15.dp)),
                                 readOnly = true,
                                 value = distritoSeleccionado,
                                 textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center, color = Color.Black),
@@ -229,9 +227,9 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                             .clip(RoundedCornerShape(10.dp))
                                             .padding(3.dp)
                                             .border(
-                                                1.dp,
-                                                ColorLogo,
-                                                RoundedCornerShape(10.dp)
+                                                0.dp,
+                                                Color.Transparent,
+                                                RoundedCornerShape(15.dp)
                                             )
                                             .wrapContentSize(),
                                     )
@@ -402,7 +400,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                                     modifier = Modifier
                                                         .weight(0.75f)
                                                         .padding(4.dp)
-                                                        .clip(CircleShape)
+                                                        .clip(RoundedCornerShape(15.dp))
                                                         .onFocusChanged { focusState ->
                                                             textFieldHasFocus = focusState.isFocused
                                                         },
@@ -586,6 +584,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                                 onClick = {
                                     showAlertDialog = false
                                     navController.popBackStack()
+                                    listaCentrosCambiados.value = emptyList()
                                 }
                             ){
                                 Text("Sí, estoy seguro", color = Color.Black)
@@ -642,6 +641,7 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
                     showAlertDialog = true
                 } else {
                     navController.popBackStack()
+                    listaCentrosCambiados.value = emptyList()
                     listaCentrosCambiados.value = emptyList()
                 }
             }
@@ -707,8 +707,8 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier
-            .clip(CircleShape)
-            .border(0.dp, Color.Transparent, CircleShape)
+            .clip(RoundedCornerShape(15.dp))
+            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
             .background(cambiaColorEstado(nuevoEstado))
     ) {
         TextField(
@@ -735,14 +735,17 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                 DropdownMenuItem(
                     text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                     onClick = {
+                        nuevoEstado = selectionOption
                         if(selectionOption != estadoOriginal){
                             // Buscar si ya existe un registro para este centro
                             val index = listaCentrosCambiados.value.indexOfFirst { it.nombreCentro == centroEducativo.nombreCentro }
 
+                            centroEducativo.estadoCentro = selectionOption
                             if (index != -1) {
                                 // Si existe, sobrescribirlo
                                 val newList = listaCentrosCambiados.value.toMutableList()
                                 newList[index] = centroEducativo.toCentroEducativoRequest()
+                                newList[index].estadoCentro = selectionOption
                                 listaCentrosCambiados.value = newList
                             } else {
                                 // Si no existe, añadirlo a la lista
@@ -757,7 +760,6 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
                                 listaCentrosCambiados.value = newList
                             }
                         }
-                        nuevoEstado = selectionOption
                         expanded = false
                         scope.launch { drawerState.close() }
                         Log.d("Centros", listaCentrosCambiados.value.toString())
@@ -770,36 +772,4 @@ fun EstadosSubMenu(drawerState: DrawerState, scope: CoroutineScope, centroEducat
             }
         }
     }
-}
-
-suspend fun getCentrosFromDistrito(distritoSeleccionado:String):List<CentroEducativo>{
-    var centroResponse = CentroEducativoResponse(emptyList())
-    when(distritoSeleccionado){
-        "Sevilla Este" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "SevillaEste")
-        }
-        "Aljarafe" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Aljarafe")
-        }
-        "Montequinto" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Montequinto")
-        }
-        "Casco Antiguo" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "CascoAntiguo")
-        }
-        "Nervión-Porvenir" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "NervionPorvenir")
-        }
-        "Triana" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Triana")
-        }
-        "Heliópolis" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "Heliopolis")
-        }
-        "Facultades US" -> {
-            centroResponse = getCentrosDataFromGoogleSheet(infoCentrosSheetId, "FacultadesUS")
-        }
-    }
-    Log.d("Centros", centroResponse.toString())
-    return centroResponse.centros
 }

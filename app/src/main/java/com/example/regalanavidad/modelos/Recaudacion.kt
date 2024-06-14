@@ -15,7 +15,7 @@ data class ProductoResponse(
     val productos:List<Producto> = emptyList()
 )
 data class RequestPostRecaudacion(
-    val spreadSheetId: String,
+    val spreadsheet_id: String,
     val sheet: String,
     val productos: List<Producto>
 )

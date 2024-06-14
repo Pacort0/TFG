@@ -24,7 +24,7 @@ suspend fun getRecaudacionesFromSheet(spreadsheetId:String, sheet:String): Produ
             val response = client.newCall(request).execute()
             val responseData = response.body?.string()
             if (responseData != null) {
-                Log.d("JSON", responseData)
+                Log.d("postRecaudaciones", responseData)
             }
             val productos: ProductoResponse = Gson().fromJson(responseData, ProductoResponse::class.java)
             productos

@@ -167,9 +167,7 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
         }
     }
 
-    if (isLoading) {
-        PantallaCarga("Cargando mapa...")
-    } else if (ubicacionDenegada) {
+    if (ubicacionDenegada) {
         DeniedLocationScreen(
             onRequestPermissionAgain = {
                 locationPermissionState.launchPermissionRequest()
@@ -189,6 +187,8 @@ fun MapsScreen(navController: NavController, mapaOrganizadorVM: MapaVM) {
                 hayInternet = hayInternet(connectivityManager)
             }
         )
+    } else if (isLoading) {
+        PantallaCarga("Cargando mapa...")
     } else {
         Mapa(mapaOrganizadorVM, navController, currentLocation, connectivityManager)
     }
@@ -591,7 +591,7 @@ fun Mapa(
                 } },
             containerColor = FondoTarjetaInception,
             modifier = Modifier
-                .alpha(muestraRuta.value.let { if (it) 0.0f else 1.0f })
+                .alpha(listaFiltrada.isNotEmpty().let { if (it) 0.0f else 1.0f })
                 .align(Alignment.BottomStart)
                 .padding(start = 16.dp, bottom = 16.dp)
                 .size(60.dp))

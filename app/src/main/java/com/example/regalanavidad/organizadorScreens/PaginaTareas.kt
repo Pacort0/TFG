@@ -352,7 +352,7 @@ fun TareasTabScreen(completadas: Boolean){
                     },
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(20.dp, 0.dp, 0.dp, 20.dp)
+                        .padding(20.dp, 0.dp, 0.dp, 30.dp)
                         .height(35.dp)
                         .width(130.dp)
                 ) {
@@ -370,6 +370,7 @@ fun TareasTabScreen(completadas: Boolean){
                             text = "Guardar",
                             color = Color.Black,
                             textAlign = TextAlign.Center,
+                            fontSize = 16.sp
                         )
                     }
                 }

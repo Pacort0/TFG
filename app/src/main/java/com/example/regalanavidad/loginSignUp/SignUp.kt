@@ -137,7 +137,7 @@ fun SignUpScreen(navController: NavController){
                 value = email,
                 textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
+                    keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
                 ),
                 onValueChange = { email = it },

@@ -78,12 +78,13 @@ fun Login(navController: NavController) {
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var verPassword by remember { mutableStateOf(false) }
 
+    //Si el usuario ya inició sesión y verificó su correo, se le redirige a la pantalla principal
     if (currentUser != null && currentUser.isEmailVerified) {
         email = currentUser.email.toString()
         val intent = Intent(context, Home::class.java)
         intent.putExtra("correo", email)
         context.startActivity(intent)
-    } else {
+    } else { //Si no, se cierra la sesión
         auth.signOut()
         Column(
             modifier = Modifier
@@ -97,7 +98,7 @@ fun Login(navController: NavController) {
                 modifier = Modifier.weight(0.4f),
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            ) {//Logo
                 Image(
                     painter = painterResource(id = R.drawable.ic_regala_navidad_logo),
                     contentDescription = "RegalaNavidadLogo",
@@ -106,6 +107,7 @@ fun Login(navController: NavController) {
                         .size(270.dp),
                 )
             }
+            //Formulario
             Column(
                 modifier = Modifier.weight(0.6f),
                 verticalArrangement = Arrangement.Top,
@@ -122,8 +124,8 @@ fun Login(navController: NavController) {
                     value = email,
                     textStyle = TextStyle(color = Color.Black),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next //Pasa al siguiente textfield
                     ),
                     onValueChange = { email = it },
                     colors = TextFieldDefaults.colors(
@@ -140,6 +142,7 @@ fun Login(navController: NavController) {
 
                 TextField(
                     trailingIcon = { if (password.isNotEmpty() && password.isNotBlank()) {
+                        //Icono para mostrar u ocultar la contraseña
                         Icon(
                             painter = painterResource(id = verPassword.let { if (it) R.drawable.ojo_ver else R.drawable.ojo_ocultar }),
                             contentDescription = "Ocultar contraseña",
@@ -162,7 +165,7 @@ fun Login(navController: NavController) {
                     visualTransformation = verPassword.let { if (it) VisualTransformation.None else PasswordVisualTransformation() },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
+                        imeAction = ImeAction.Done //Cierra el teclado
                     ),
                     onValueChange = { password = it },
                     colors = TextFieldDefaults.colors(
@@ -177,6 +180,7 @@ fun Login(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                //Redirige a la pantalla de recuperar contraseña
                 ClickableText(
                     text = AnnotatedString("¿Olvidaste tu contraseña?"),
                     onClick = {
@@ -192,6 +196,8 @@ fun Login(navController: NavController) {
                 )
 
                 Spacer(modifier = Modifier.height(35.dp))
+
+                //Botón para iniciar sesión con todas las comprobaciones necesarias
                 Button(
                     onClick = {
                         if (email.isNotEmpty() and password.isNotEmpty()) {
@@ -242,6 +248,8 @@ fun Login(navController: NavController) {
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
+
+                //Redirige a la pantalla de registro
                 ClickableText(
                     text = AnnotatedString("¿No tienes una cuenta? Regístrate"),
                     onClick = {
@@ -257,6 +265,8 @@ fun Login(navController: NavController) {
             }
         }
     }
+
+    //Si se ha cerrado sesión y se quiere ir para atrás, controlamos el comportamiento
     BackHandler {
         val paginaPreviaPila = navController.previousBackStackEntry
         if(paginaPreviaPila != null){
@@ -273,11 +283,13 @@ fun Login(navController: NavController) {
     }
 }
 
+//Función para iniciar sesión
 private fun iniciarSesion(navController: NavController, email: String, password: String, context: Context) {
     val scope = CoroutineScope(Job() + Dispatchers.IO)
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                //Si el correo está verificado, se inicia sesión
                 if (auth.currentUser?.isEmailVerified == true) {
                     val intent = Intent(context, Home::class.java)
                     intent.putExtra("correo", email)
@@ -287,6 +299,8 @@ private fun iniciarSesion(navController: NavController, email: String, password:
                         val usuario = firestore.getUserByEmail(auth.currentUser?.email.toString())
                         val usuarioNewPassword = usuario?.copy()
                         if (usuario != null) {
+                            //Si se inicia sesión con una contraseña distinta a la que se tiene en la base de datos (se ha cambiado),
+                            // se actualiza
                             if (usuario.password != password) {
                                 if (usuarioNewPassword != null) {
                                     usuarioNewPassword.password = password
@@ -295,7 +309,7 @@ private fun iniciarSesion(navController: NavController, email: String, password:
                             }
                         }
                     }
-                } else {
+                } else { //Si no, se le pide que verifique su correo
                     Toast.makeText(context, "Valida tu correo electrónico", Toast.LENGTH_SHORT).show()
                     navController.navigate("waitingScreen")
                 }

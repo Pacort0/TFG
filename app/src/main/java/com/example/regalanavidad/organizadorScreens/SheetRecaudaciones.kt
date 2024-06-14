@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
@@ -98,8 +97,8 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
     var productoResponse: ProductoResponse
     val scope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
-    val opcionesDistritos = listOf("No Perecederos", "Conservas", "Desayuno", "Ingr. Básicos", "Higiene", "Prod. Bebés", "Prod. Navideños")
-    var productoSeleccionado by remember { mutableStateOf(opcionesDistritos[0]) }
+    val opcionesProductos = listOf("No Perecederos", "Conservas", "Desayuno", "Ingr. Básicos", "Higiene", "Prod. Bebés", "Prod. Navideños")
+    var productoSeleccionado by remember { mutableStateOf(opcionesProductos[0]) }
     var productosLoading by remember { mutableStateOf(true) }
     var listaProductosCambiados by remember {mutableStateOf(listOf<Producto>())}
     var showAlertDialog by remember { mutableStateOf(false)}
@@ -169,15 +168,15 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
-                                .clip(CircleShape)
-                                .border(0.dp, Color.Transparent, CircleShape)
+                                .clip(RoundedCornerShape(15.dp))
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
                                 .background(FondoTarjetaInception)
                         ) {
                             TextField(
                                 modifier = Modifier
                                     .menuAnchor()
-                                    .clip(CircleShape)
-                                    .border(0.dp, Color.Transparent, CircleShape),
+                                    .clip(RoundedCornerShape(15.dp))
+                                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
                                 readOnly = true,
                                 value = productoSeleccionado,
                                 textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.Black),
@@ -196,7 +195,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                 modifier = Modifier
                                     .background(FondoTarjetaInception)
                             ) {
-                                opcionesDistritos.forEach { selectionOption ->
+                                opcionesProductos.forEach { selectionOption ->
                                     DropdownMenuItem(
                                         text = { Text(selectionOption, fontSize = 18.sp, color = Color.Black) },
                                         onClick = {
@@ -228,7 +227,9 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                     Column(
                         Modifier
                             .fillMaxWidth()
-                            .weight(0.5f)
+                            .weight(0.5f),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         if (listaProductosCambiados.isNotEmpty()) {
                             ElevatedButton(onClick = {
@@ -334,8 +335,8 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .border(0.dp, Color.Transparent, CircleShape)
-                                                    .clip(CircleShape)
+                                                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+                                                    .clip(RoundedCornerShape(15.dp))
                                                     .background(FondoTarjetaInception)
                                                     .padding(8.dp)){
                                                 Column (Modifier.weight(0.35f),
@@ -360,26 +361,28 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                         horizontalArrangement = Arrangement.End
                                                     ) {
                                                         IconButton(onClick = {
-                                                            cantidadProd--
-                                                            tipo.cantidad = cantidadProd.toString()
+                                                            if (cantidadProd > 0) {
+                                                                cantidadProd--
+                                                                tipo.cantidad = cantidadProd.toString()
 
-                                                            val producto = listaProductos[index]
-                                                            val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
+                                                                val producto = listaProductos[index]
+                                                                val productoExistente = listaProductosCambiados.find { it.nombre == producto.nombre }
 
-                                                            listaProductosCambiados = gestionaLista(
-                                                                cantidadProd,
-                                                                cantidadOriginalProd,
-                                                                productoExistente,
-                                                                listaProductosCambiados,
-                                                                listaProductos,
-                                                                index,
-                                                                tipo.tipo
-                                                            )
+                                                                listaProductosCambiados = gestionaLista(
+                                                                    cantidadProd,
+                                                                    cantidadOriginalProd,
+                                                                    productoExistente,
+                                                                    listaProductosCambiados,
+                                                                    listaProductos,
+                                                                    index,
+                                                                    tipo.tipo
+                                                                )
+                                                            }
                                                         }) {
                                                             Icon(
                                                                 painter = painterResource(id = R.drawable.menos),
                                                                 contentDescription = "Quitar",
-                                                                modifier = Modifier.size(25.dp),
+                                                                modifier = Modifier.size(28.dp),
                                                                 tint = Color.Black
                                                             )
                                                         }
@@ -388,12 +391,16 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                             value = "$cantidadProd",
                                                             textStyle = TextStyle(textAlign = TextAlign.Center, fontSize = 18.sp, color = Color.Black),
                                                             onValueChange = { cantidad ->
-                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en Color.Black
+                                                                val trimmedCantidad = cantidad.trim() // Eliminar espacios en blanco
                                                                 if (trimmedCantidad.isEmpty()) {
                                                                     cantidadProd = 0 // O cualquier valor predeterminado
                                                                 } else {
                                                                     val nuevaCantidad = trimmedCantidad.toInt()
-                                                                    cantidadProd = nuevaCantidad
+                                                                    cantidadProd = if (nuevaCantidad < 0) {
+                                                                        0
+                                                                    } else {
+                                                                        nuevaCantidad
+                                                                    }
                                                                 }
                                                                 tipo.cantidad = cantidadProd.toString()
 
@@ -444,7 +451,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                                                         }) {
                                                             Icon(Icons.Filled.AddCircle,
                                                                 contentDescription = "Añadir",
-                                                                modifier = Modifier.size(25.dp),
+                                                                modifier = Modifier.size(28.dp),
                                                                 tint = Color.Black)
                                                         }
                                                     }
