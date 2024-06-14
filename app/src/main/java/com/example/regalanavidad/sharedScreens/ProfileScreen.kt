@@ -18,10 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,8 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +48,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen() {
     val context = LocalContext.current
-    var settingsForm by remember { mutableStateOf(TextFieldValue(usuario.nombre)) }
+    val settingsForm by remember { mutableStateOf(TextFieldValue(usuario.nombre)) }
     var isNameChanged by remember { mutableStateOf(false) }
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
@@ -74,7 +70,7 @@ fun ProfileScreen() {
                 .size(100.dp)
                 .clip(CircleShape)
         )
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         // Editable username
         /*OutlinedTextField(
@@ -93,17 +89,17 @@ fun ProfileScreen() {
                 imeAction = ImeAction.Next
             ),
         )*/
-        Text(text = usuario.nombre, color = Color.Black, fontSize = 20.sp)
+        Text(text = "Nombre de usuario: ${usuario.nombre}", color = Color.Black, fontSize = 18.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = usuario.correo, color = Color.Black, fontSize = 20.sp)
+        Text(text = "Dirección de correi: ${usuario.correo}", color = Color.Black, fontSize = 18.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = usuario.nombreRango, color = Color.Black, fontSize = 20.sp)
+        Text(text = "Rol de usuario: ${usuario.nombreRango}", color = Color.Black, fontSize = 18.sp)
 
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         // Clickable "Cerrar sesión" text
         ClickableText(

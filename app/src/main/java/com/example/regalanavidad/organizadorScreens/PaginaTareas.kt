@@ -90,6 +90,7 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +110,13 @@ fun TareasScreen(navController: NavController) {
     var showAlertDialog by remember { mutableStateOf(false) }
     var llamadaBackHandler by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
+
+    ObserveNavigationChanges(navController) {
+        listaTareasCambiadas.value = emptyList()
+    }
+
     Column {
+        //Dos pestañas para mostrar las tareas pendientes y completadas
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = FondoIndvCards,
@@ -123,6 +130,7 @@ fun TareasScreen(navController: NavController) {
                 }
             },
         ) {
+            //Según la pestaña seleccionada, se
             tabTitles.forEachIndexed { index, title ->
                 Tab(
                     selectedContentColor = Color.Black,
@@ -145,6 +153,7 @@ fun TareasScreen(navController: NavController) {
             1 -> TareasTabScreen(true)  // Tareas completadas
         }
         if (showAlertDialog) {
+            // Mostrar un diálogo de alerta si el usuario intenta cambiar de pestaña con cambios sin guardar
             AlertDialog(
                 onDismissRequest = { showAlertDialog = false },
                 title = { Text(text = "Tiene cambios sin guardar", color = Color.Black) },
@@ -213,61 +222,64 @@ fun TareasTabScreen(completadas: Boolean){
     var expanded by remember { mutableStateOf(false) }
     var rolSeleccionado by remember { mutableStateOf(usuario.nombreRango) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var refresca by remember { mutableStateOf(true)}
+    var refresca by remember { mutableStateOf(false)}
     val pullRefreshState = rememberPullRefreshState(refreshing = guardarCambios, onRefresh = {
         guardarCambios = !guardarCambios
         refresca = !refresca
     })
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
-    var mostrarTodo by remember { mutableStateOf(false) }
+    var mostrarContenido by remember { mutableStateOf(false) }
     var cargando by remember { mutableStateOf(true) }
 
+    // Cargar las tareas desde Firestore o actualizarlas si hay cambios
     LaunchedEffect(key1 = guardarCambios) {
         cargando = true
         hayInternet = hayInternet(connectivityManager)
-        if (hayInternet){
-            if (listaTareasCambiadas.value.isNotEmpty()) {
-                if (!refresca){
+        if (hayInternet){ //Si hay internet
+            if (listaTareasCambiadas.value.isNotEmpty()) { //Si la lista de tareas cambiadas no está vacía
+                if (!refresca){ //Si no se está refrescando la pantalla
                     listaTareasCambiadas.value.forEach { tarea ->
-                        firestore.editaTarea(tarea)
+                        firestore.editaTarea(tarea) //Editar tareas en Firestore
                     }
                 }
+                //Actualizar la lista de tareas
                 listaTareas.value = firestore.getTareas()
                 listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
                 guardarCambios = false
                 refresca = false
-            } else {
+            } else { //Si la lista de tareas cambiadas está vacía
                 listaTareas.value = firestore.getTareas()
                 listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
                 guardarCambios = false
                 refresca = false
             }
-        } else if (listaTareas.value.isNotEmpty()){
+        } else if (listaTareas.value.isNotEmpty()){ //Si no hay internet y la lista de tareas no está vacía
             listaTareasFiltradas = filtraTareas(listaTareas.value, completadas)
             guardarCambios = false
             refresca = false
         }
+        //Vaciamos la lista y salimos del launchedEffect
         listaTareasCambiadas.value = emptyList()
-        mostrarTodo = hayInternet
+        mostrarContenido = hayInternet
         cargando = false
     }
 
-    if(cargando){
+    if(cargando){ //Pantalla de carga
         PantallaCarga("Cargando tareas...")
-    } else if (!mostrarTodo) {
-        NoInternetScreen(
+    } else if (!mostrarContenido) {
+        NoInternetScreen( //Pantalla sin internet
             onRetry = {
                 guardarCambios = true
                 refresca = true
             }
         )
-    } else {
+    } else { //Pantalla normal
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FondoApp)
-                .pullRefresh(pullRefreshState)
+                .pullRefresh(pullRefreshState) //Para hacer el pull to refresh
         ) {
             Column (
                 Modifier
@@ -309,6 +321,7 @@ fun TareasTabScreen(completadas: Boolean){
                         }
                     }
                 }
+                //Pantalla de carga mientras se actualizan o cargan las tareas
                 if (guardarCambios){
                     Column (
                         modifier = Modifier.fillMaxSize(),
@@ -317,18 +330,19 @@ fun TareasTabScreen(completadas: Boolean){
                     ) {
                         Text(text = "Cargando tareas...", fontSize = 18.sp, color = Color.Black)
                     }
-                } else {
+                } else { //Pantalla normal
                     Column(
                         Modifier
                             .fillMaxWidth()
                     ) {
+                        //Mostrar las tareas pendientes o completadas
                         if (listaTareasFiltradas.isNotEmpty() && !guardarCambios) {
                             LazyColumn {
                                 items(listaTareasFiltradas.size) { index ->
                                     TareaCard(listaTareasFiltradas[index])
                                 }
                             }
-                        } else {
+                        } else { //Si no hay tareas pendientes o completadas
                             Column(
                                 modifier = Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -343,6 +357,7 @@ fun TareasTabScreen(completadas: Boolean){
                     }
                 }
             }
+            //Si hay tareas cambiadas, mostramos el botón de guardar
             if(listaTareasCambiadas.value.isNotEmpty()){
                 FloatingActionButton(
                     containerColor = FondoTarjetaInception,
@@ -383,6 +398,7 @@ fun TareasTabScreen(completadas: Boolean){
         }
     }
     if (showTareaDialog){
+        //Dialog para crear una nueva tarea y guardarla en la base de datos
         Dialog(onDismissRequest = {showTareaDialog = false}) {
             Box(modifier = Modifier
                 .width(350.dp)
@@ -395,6 +411,7 @@ fun TareasTabScreen(completadas: Boolean){
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    //El coordinador puede elegir el rol de la tarea
                     if(usuario.nombreRango == "Coordinador"){
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -457,6 +474,7 @@ fun TareasTabScreen(completadas: Boolean){
                             }
                         }
                     } else {
+                        //Formulario
                         OutlinedTextField(
                             value = usuario.nombreRango,
                             onValueChange = {},
@@ -553,6 +571,7 @@ fun TareasTabScreen(completadas: Boolean){
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Button(
+                                //Hacemos las comprobaciones necesarias antes de guardar la tarea en la BBDD
                                 onClick = {
                                     hayInternet = hayInternet(connectivityManager)
                                     if (hayInternet) {
@@ -605,15 +624,19 @@ fun TareasTabScreen(completadas: Boolean){
     MaterialDialog(
         dialogState = fechaDialogState,
         buttons = {
-            positiveButton("Guardar") {
+            positiveButton(text = "Guardar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                 fechaDialogState.hide()
             }
-            negativeButton("Cancelar") {
+            negativeButton(text = "Cancelar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                 fechaDialogState.hide()
             }
         }
     ) {
         datepicker(
+            colors = DatePickerDefaults.colors(
+                headerBackgroundColor = FondoTarjetaInception,
+                dateActiveBackgroundColor = FondoTarjetaInception
+            ),
             initialDate = LocalDate.now(),
             title = "Selecciona la fecha del evento",
             onDateChange = { fechaEscogida = it },
@@ -624,6 +647,8 @@ fun TareasTabScreen(completadas: Boolean){
         )
     }
 }
+
+//Composable de las cartas individuales
 @Composable
 fun TareaCard(tarea: Tarea){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -676,6 +701,8 @@ fun TareaCard(tarea: Tarea){
         }
     }
 }
+
+//Para el selector de completada o pendiente
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TareaCompletadaSubMenu(drawerState: DrawerState, scope: CoroutineScope, tarea: Tarea, estadoPrevio: Boolean){

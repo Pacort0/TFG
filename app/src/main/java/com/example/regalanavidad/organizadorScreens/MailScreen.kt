@@ -2,6 +2,7 @@ package com.example.regalanavidad.organizadorScreens
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -100,6 +101,7 @@ fun MailScreen(navController: NavController){
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
+        //Formulario para rellenar un correo y enviarlo o limpiar los campos
         Column (
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,6 +110,7 @@ fun MailScreen(navController: NavController){
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            //Receptor del correo
             TextField(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -130,6 +133,7 @@ fun MailScreen(navController: NavController){
                 textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
                 onValueChange = { correoContacto = it }
             )
+            //Asunto del correo
             TextField(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -152,6 +156,7 @@ fun MailScreen(navController: NavController){
                 ),
                 onValueChange = { asuntoCorreo = it }
             )
+            //Mensaje del correo
             TextField(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
@@ -175,6 +180,7 @@ fun MailScreen(navController: NavController){
                 onValueChange = { mensajeCorreo = it }
             )
         }
+        //Botones para limpiar los campos o enviar el correo
         Row (
             modifier = Modifier
                 .fillMaxWidth()
@@ -197,23 +203,26 @@ fun MailScreen(navController: NavController){
                 modifier = Modifier.wrapContentSize(),
                 colors = ButtonDefaults.buttonColors(containerColor = FondoTarjetaInception),
                 onClick = {
-                val intent = Intent(Intent.ACTION_SEND)
-                intent.type = "message/rfc822"
-                intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(correoContacto))
-                intent.putExtra(Intent.EXTRA_SUBJECT, asuntoCorreo)
-                intent.putExtra(Intent.EXTRA_TEXT, mensajeCorreo)
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:") // Nos aseguramos de que solo entren en accion aplicaciones de correo
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf(correoContacto))
+                        putExtra(Intent.EXTRA_SUBJECT, asuntoCorreo)
+                        putExtra(Intent.EXTRA_TEXT, mensajeCorreo)
+                    }
 
-                try {
-                    contexto.startActivity(Intent.createChooser(intent, "Enviar correo"))
-                    correoContacto = ""
-                    asuntoCorreo = ""
-                    mensajeCorreo = ""
-                } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(contexto, "No hay aplicaciones de correo instaladas", Toast.LENGTH_SHORT).show()
+                    try {
+                        contexto.startActivity(Intent.createChooser(intent, "Enviar correo"))
+                        correoContacto = ""
+                        asuntoCorreo = ""
+                        mensajeCorreo = ""
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(contexto, "No hay aplicaciones de correo instaladas", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }) {
+            ) {
                 Text(text = "Enviar", color = Color.Black, fontSize = 16.sp)
             }
+
         }
     }
     if (showAlertDialog) {

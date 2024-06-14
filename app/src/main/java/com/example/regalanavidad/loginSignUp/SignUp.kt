@@ -71,8 +71,8 @@ fun SignUpScreen(navController: NavController){
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
     var verPassword by remember { mutableStateOf(false) }
-
     val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,6 +94,8 @@ fun SignUpScreen(navController: NavController){
                     .size(270.dp),
             )
         }
+
+        //Formulario
         Column(
             modifier = Modifier.weight(0.6f),
             verticalArrangement = Arrangement.Top,
@@ -190,6 +192,7 @@ fun SignUpScreen(navController: NavController){
 
             Spacer(modifier = Modifier.height(35.dp))
             Button(
+                //Hacemos todas las comprobaciones necesarias para que el usuario pueda registrarse
                 onClick = {
                     if(email.isNotEmpty() and password.isNotEmpty() and usuario.isNotEmpty()) {
                         if (isValidEmail(email)) {
@@ -241,6 +244,8 @@ fun SignUpScreen(navController: NavController){
         }
     }
 }
+
+//Comprobamos que el email introducido es correcto
 fun isValidEmail(inputEmail: CharSequence?): Boolean {
     return if (inputEmail == null) {
         false
@@ -249,6 +254,7 @@ fun isValidEmail(inputEmail: CharSequence?): Boolean {
     }
 }
 
+//Función para registrar un usuario nuevo
 private fun signUp(username: String, email:String, password:String, context: Context, navController: NavController){
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {task ->
         if(task.isSuccessful){

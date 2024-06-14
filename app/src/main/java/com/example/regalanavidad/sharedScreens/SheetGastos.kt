@@ -73,6 +73,7 @@ import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
 import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.Dispatchers
@@ -283,15 +284,19 @@ fun PaginaSheetGastos(onMapaCambiado: (Boolean) -> Unit) {
             MaterialDialog(
                 dialogState = fechaDialogState,
                 buttons = {
-                    positiveButton("Guardar") {
+                    positiveButton(text = "Guardar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                         fechaDialogState.hide()
                     }
-                    negativeButton("Cancelar") {
+                    negativeButton(text = "Cancelar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                         fechaDialogState.hide()
                     }
                 }
             ) {
                 datepicker(
+                    colors = DatePickerDefaults.colors(
+                        headerBackgroundColor = FondoTarjetaInception,
+                        dateActiveBackgroundColor = FondoTarjetaInception
+                    ),
                     initialDate = LocalDate.now(),
                     title = "Selecciona la fecha del evento",
                     onDateChange = { fechaEscogida = it },

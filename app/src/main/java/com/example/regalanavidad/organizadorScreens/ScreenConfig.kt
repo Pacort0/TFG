@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,10 +59,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.regalanavidad.R
 import com.example.regalanavidad.modelos.TabBarItem
@@ -135,6 +139,12 @@ fun CargaPantallas(mapaAbierto: Boolean, mapaOrganizadorVM: MapaVM, onMapaCambia
         ) {
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val scope = rememberCoroutineScope()
+            // Observe navigation changes and update the current tab title and selected item
+            val currentBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = currentBackStackEntry?.destination?.route ?: homeTab.title
+
+            currentTabTitle = tabBarItems.find { it.title == currentRoute }?.title ?: homeTab.title
+
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 gesturesEnabled = drawerAbierto(drawerState.currentValue, mapaAbierto),
@@ -393,7 +403,7 @@ fun InformacionSubMenu(navController: NavController, drawerState: DrawerState, s
                             modifier = Modifier.size(25.dp)
                         )
                     },
-                    text = { Text(selectionOption, fontSize = 17.sp) },
+                    text = { Text(selectionOption, fontSize = 17.sp, color = Color.Black) },
                     onClick = {
                         when(selectionOption){
                             "¿Qué es Regala Navidad?" -> {
@@ -427,5 +437,28 @@ private fun asignaLogoSegunOpcion(opcion: String): Int {
         "Patrocinadores" -> R.drawable.patrocinadores_icon
         "Otros años" -> R.drawable.calendar
         else -> R.drawable.voluntario_icono
+    }
+}
+
+@Composable
+fun ObserveNavigationChanges(
+    navController: NavController,
+    onNavigated: (String) -> Unit
+) {
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val lifecycle = currentBackStackEntry?.lifecycle
+
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                currentBackStackEntry?.destination?.route?.let { route ->
+                    onNavigated(route)
+                }
+            }
+        }
+        lifecycle?.addObserver(observer)
+        onDispose {
+            lifecycle?.removeObserver(observer)
+        }
     }
 }

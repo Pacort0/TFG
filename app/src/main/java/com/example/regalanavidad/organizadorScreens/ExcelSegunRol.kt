@@ -47,20 +47,22 @@ fun ExcelScreen(navController: NavController, onMapaCambiado: (Boolean) -> Unit)
     val context = LocalContext.current
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     var hayInternet by remember { mutableStateOf(hayInternet(connectivityManager)) }
-    var mostrarTodo by remember { mutableStateOf(false) }
+    var mostrarContenido by remember { mutableStateOf(false) }
 
+    // Verificar si hay internet
     LaunchedEffect(key1 = Unit, key2 = hayInternet) {
         hayInternet = hayInternet(connectivityManager)
-        mostrarTodo = hayInternet
+        mostrarContenido = hayInternet
     }
 
-    if(!mostrarTodo) {
+    if(!mostrarContenido) {
         NoInternetScreen(
             onRetry = {
                 hayInternet = true
             }
         )
     } else {
+        //Según el rango del usuario, se le mostrará una u otra pantalla
         if (usuario.nombreRango == "Coordinador" ||
             usuario.nombreRango == "RR.II." ||
             usuario.nombreRango == "Logística" ||
@@ -84,6 +86,7 @@ fun ExcelRol(navController: NavController) {
     val nombreRutaGastos = "SheetGastos"
     val nombreRutaRecaudaciones = "SheetRecaudaciones"
 
+    //Carta de Centros Educativos
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -105,6 +108,7 @@ fun ExcelRol(navController: NavController) {
             }
         }
 
+        //A todos los usuarios se les muestra la pantalla de gastos
         Row(
             Modifier
                 .weight(1f)
@@ -116,6 +120,7 @@ fun ExcelRol(navController: NavController) {
             CartaExcel(navController, textoGastos, nombreRutaGastos)
         }
 
+        //Carta de Productos Recaudados
         if (usuario.nombreRango == "Coordinador" || usuario.nombreRango == "Tesorería") {
             Row(
                 Modifier

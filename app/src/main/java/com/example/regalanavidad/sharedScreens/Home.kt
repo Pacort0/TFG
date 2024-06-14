@@ -20,6 +20,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -118,6 +119,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.regalanavidad.BuildConfig.MAPS_API_KEY
 import com.example.regalanavidad.R
 import com.example.regalanavidad.dal.FirestoreManagerDAL
@@ -152,6 +154,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
@@ -213,22 +216,31 @@ class Home : ComponentActivity() {
 
 @Composable
 fun TabView(tabBarItems: List<TabBarItem>, navController: NavController, mapaOrganizadorVM: MapaVM, onTabSelected: (String) -> Unit) {
-    var selectedTabIndex by rememberSaveable {
-        mutableIntStateOf(0)
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(tabBarItems.indexOfFirst { it.title == currentRoute }) }
+
+    LaunchedEffect(currentRoute) {
+        val index = tabBarItems.indexOfFirst { it.title == currentRoute }
+        if (index != -1) {
+            selectedTabIndex = index
+        }
     }
 
     NavigationBar (
         modifier = Modifier.height(80.dp),
         containerColor = ColorLogo
     ) {
-        // looping over each tab to generate the views and navigation for each item
         tabBarItems.forEachIndexed { index, tabBarItem ->
             NavigationBarItem(
                 selected = selectedTabIndex == index,
                 onClick = {
-                    selectedTabIndex = index
-                    onTabSelected(tabBarItem.title) // Invoke the callback with the selected tab's title
-                    navController.navigate(tabBarItem.title)
+                    onTabSelected(tabBarItem.title)
+                    navController.navigate(tabBarItem.title) {
+                        if (tabBarItem.title != "Mapa"){
+                            launchSingleTop = true
+                        }
+                    }
                     mapaOrganizadorVM.searchSitioRecogida.value = false
                 },
                 colors = NavigationBarItemDefaults.colors(
@@ -710,15 +722,19 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         MaterialDialog(
                             dialogState = fechaDialogState,
                             buttons = {
-                                positiveButton("Guardar") {
+                                positiveButton(text = "Guardar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                                     fechaDialogState.hide()
                                 }
-                                negativeButton("Cancelar") {
+                                negativeButton(text = "Cancelar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                                     fechaDialogState.hide()
                                 }
                             }
                         ) {
                             datepicker(
+                                colors = DatePickerDefaults.colors(
+                                    headerBackgroundColor = FondoTarjetaInception,
+                                    dateActiveBackgroundColor = FondoTarjetaInception
+                                ),
                                 initialDate = LocalDate.now(),
                                 title = "Selecciona la fecha del evento",
                                 onDateChange = { fechaEscogida = it },
@@ -732,10 +748,10 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                         MaterialDialog(
                             dialogState = horaDialogState,
                             buttons = {
-                                positiveButton("Guardar") {
+                                positiveButton(text = "Guardar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                                     fechaDialogState.hide()
                                 }
-                                negativeButton("Cancelar") {
+                                negativeButton(text = "Cancelar", textStyle = TextStyle(color = FondoTarjetaInception)) {
                                     fechaDialogState.hide()
                                 }
                             }
@@ -745,13 +761,13 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                 title = "Selecciona la fecha del evento",
                                 onTimeChange = { horaEscogida = it },
                                 colors = TimePickerDefaults.colors(
-                                    activeBackgroundColor = Color.Black, //Fondo horas
-                                    inactiveBackgroundColor = Color.LightGray, //Fondo que no está activo
+                                    activeBackgroundColor = ColorLogo, //Fondo horas
+                                    inactiveBackgroundColor = FondoIndvCards, //Fondo que no está activo
                                     activeTextColor = Color.White, //Color de texto activo
                                     inactiveTextColor = Color.Black, //Color de texto inactivo
-                                    inactivePeriodBackground = Color.LightGray, //Fondo de la parte inactiva
-                                    selectorColor = Color.Blue, //Selector horas
-                                    selectorTextColor = Color.White,
+                                    inactivePeriodBackground = FondoIndvCards, //Fondo de la parte inactiva
+                                    selectorColor = FondoTarjetaInception, //Selector horas
+                                    selectorTextColor = Color.Black,
                                     headerTextColor = Color.White, //Titulo
                                     borderColor = Color.White
                                 ),
@@ -1177,8 +1193,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             OutlinedCard(
+                                                border = BorderStroke(0.dp, Color.Transparent),
                                                 onClick = {},
-                                                modifier = Modifier.fillMaxSize()
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+                                                    .clip(RoundedCornerShape(20.dp)),
                                             ) {
                                                 Box(
                                                     modifier = Modifier
@@ -1598,7 +1618,6 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                 agregaSitio = false
                 agregaEvento = false
 
-                MapsScreen(navController, mapaOrganizadorVM)
                 onMapaCambiado(true)
                 navController.navigate("Mapa")
                 navegaSitio = false

@@ -64,6 +64,7 @@ import com.example.regalanavidad.apiRouteService.ApiRouteService
 import com.example.regalanavidad.modelos.RouteResponse
 import com.example.regalanavidad.dal.getRetrofit
 import com.example.regalanavidad.modelos.SitioRecogida
+import com.example.regalanavidad.organizadorScreens.ObserveNavigationChanges
 import com.example.regalanavidad.ui.theme.Blanco
 import com.example.regalanavidad.ui.theme.FondoApp
 import com.example.regalanavidad.ui.theme.FondoIndvCards
@@ -91,6 +92,7 @@ import retrofit2.Response
 
 private var route = mutableListOf<LatLng>()
 private var muestraRuta = mutableStateOf(false)
+private var dibujaRuta = mutableStateOf(false)
 private var calcularAPie = mutableStateOf(true)
 private var calcularCoche = mutableStateOf(false)
 private var calcularBici = mutableStateOf(false)
@@ -229,6 +231,20 @@ fun Mapa(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            ObserveNavigationChanges(navController) {
+                searchSitioRecogida = false
+                dibujaRuta.value = false
+                muestraRuta.value = false
+                start = "0,0"
+                end = "0,0"
+                focusBarraDestino = false
+                mostrarListaSitios = false
+                nombreSitioDestino = ""
+                focusBarraPartida = false
+                nombreSitioPartida = ""
+                mostrarBarraDestino = false
+                nombreSitioPartida = ""
+            }
             GoogleMap(
                 modifier = Modifier
                     .weight(0.8f)
@@ -245,9 +261,12 @@ fun Mapa(
                 ),
                 onMapClick = { latLng: LatLng ->
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, cameraPositionState.position.zoom)
+                },
+                onMapLoaded = {
+
                 }
             ) {
-                if (muestraRuta.value) {
+                if (dibujaRuta.value) {
                     rutaLoading = false
                     Polyline(points = route)
                 }
@@ -403,7 +422,7 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
-                            muestraRuta.value = false
+                            dibujaRuta.value = false
                             calcularAPie.value = true
                             calcularBici.value = false
                             calcularCoche.value = false
@@ -435,7 +454,7 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
-                            muestraRuta.value = false
+                            dibujaRuta.value = false
                             calcularAPie.value = false
                             calcularBici.value = true
                             calcularCoche.value = false
@@ -468,7 +487,7 @@ fun Mapa(
                     ElevatedButton(
                         modifier = Modifier.wrapContentSize(),
                         onClick = {
-                            muestraRuta.value = false
+                            dibujaRuta.value = false
                             calcularAPie.value = false
                             calcularBici.value = false
                             calcularCoche.value = true
@@ -536,6 +555,7 @@ fun Mapa(
                                                     mostrarBarraDestino = true
                                                     nombreSitioDestino = sitioPartida.nombreSitio
                                                     nombreSitioPartida = "Ubicación actual"
+                                                    dibujaRuta.value = false
                                                     createRoute(start, end, connectivityManager)
                                                     mueveCamara = true
                                                     searchSitioRecogida = false
@@ -562,6 +582,7 @@ fun Mapa(
                                                     }
                                                 }
                                                 mostrarListaSitios = false
+                                                dibujaRuta.value = false
                                                 createRoute(start, end, connectivityManager)
                                                 mueveCamara = true
                                                 searchSitioRecogida = false
@@ -585,13 +606,17 @@ fun Mapa(
         }
         FloatingActionButton(
             onClick = {
+                if (muestraRuta.value){
+                    nombreSitioDestino = ""
+                    nombreSitioPartida = ""
+                }
                 if (!mostrarBarraDestino){
                     mostrarBarraDestino = true
                     focusManager.clearFocus()
                 } },
             containerColor = FondoTarjetaInception,
             modifier = Modifier
-                .alpha(listaFiltrada.isNotEmpty().let { if (it) 0.0f else 1.0f })
+                .alpha(if (focusBarraDestino || focusBarraPartida) 0.0f else 1.0f)
                 .align(Alignment.BottomStart)
                 .padding(start = 16.dp, bottom = 16.dp)
                 .size(60.dp))
@@ -604,6 +629,7 @@ fun Mapa(
             if (searchSitioRecogida == true) {
                 searchSitioRecogida = false
             }
+            dibujaRuta.value = false
             muestraRuta.value = false
             start = "0,0"
             end = "0,0"
@@ -665,6 +691,7 @@ fun drawRoute(routeResponse: RouteResponse?): MutableList<LatLng> {
     routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
         listaCoordenadas.add(LatLng(it[1], it[0]))
     }
+    dibujaRuta.value = true
     muestraRuta.value = true
     return listaCoordenadas
 }

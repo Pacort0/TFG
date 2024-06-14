@@ -126,10 +126,12 @@ fun PaginaSheetCentrosEducativos(navController: NavController, onMapaCambiado: (
     var mostrarTodo by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = centrosLoading) {
+        listaCentrosCambiados.value = emptyList()
         onMapaCambiado(true)
         hayInternet = hayInternet(connectivityManager)
         if (hayInternet) {
-            listaCentrosEducativos.value = getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
+            listaCentrosEducativos.value =
+                getCentrosFromDistrito(distritoSeleccionado = distritoSeleccionado)
         }
         mostrarTodo = hayInternet
         centrosLoading = false

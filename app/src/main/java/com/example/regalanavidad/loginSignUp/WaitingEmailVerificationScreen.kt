@@ -49,6 +49,7 @@ import com.example.regalanavidad.ui.theme.ColorLogo
 import com.example.regalanavidad.ui.theme.FondoApp
 import kotlinx.coroutines.delay
 
+//Pantalla para esperar la verificación del correo electrónico
 @Composable
 fun WaitForEmailVerificationScreen(navController: NavController) {
     var user = auth.currentUser

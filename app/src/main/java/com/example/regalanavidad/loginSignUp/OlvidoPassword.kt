@@ -84,6 +84,7 @@ fun PantallaOlvidoContrasena(navController: NavController){
                     .size(270.dp),
             )
         }
+        //El formulario consiste de un textfield para meter el correo del usuario y un botón para enviar el correo de recuperación
         Column (
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,

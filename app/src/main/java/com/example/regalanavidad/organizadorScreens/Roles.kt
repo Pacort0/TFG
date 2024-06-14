@@ -3,6 +3,7 @@ package com.example.regalanavidad.organizadorScreens
 import android.content.Context
 import android.net.ConnectivityManager
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
@@ -81,6 +82,7 @@ import com.example.regalanavidad.ui.theme.FondoTarjetaInception
 private var listaUsuariosCambiados = mutableStateOf(emptyList<Usuario>())
 private var listaUsuarios = mutableStateOf(emptyList<Usuario>())
 
+//La estructura de esta página es muy similar a la de la página de Tareas, por lo que no hace falta comentar
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun RolesTabScreen(navController: NavController){
@@ -168,7 +170,6 @@ fun RolesTabScreen(navController: NavController){
                 }
             )
         }
-
         // Manejo del botón de retroceso
         BackHandler {
             if (listaUsuariosCambiados.value.isNotEmpty()) {
@@ -179,6 +180,10 @@ fun RolesTabScreen(navController: NavController){
                 listaUsuariosCambiados.value = emptyList()
             }
         }
+    }
+    // Observa los cambios de navegación
+    ObserveNavigationChanges(navController) {
+        listaUsuariosCambiados.value = emptyList()
     }
 }
 
@@ -197,6 +202,7 @@ fun TabRoles(voluntarios: Boolean){
     LaunchedEffect(key1 = guardarCambios) {
         hayInternet = hayInternet(connectivityManager)
         if (hayInternet) {
+            Log.d("Roles", listaUsuariosCambiados.value.toString())
             listaUsuariosCambiados.value.forEach { usuario ->
                 firestore.editaUsuario(usuario)
             }
@@ -219,7 +225,7 @@ fun TabRoles(voluntarios: Boolean){
         mostrarTodo = hayInternet
     }
 
-    if (cargando){
+    if (cargando || guardarCambios){
         PantallaCarga("Cargando usuarios...")
     } else if (!mostrarTodo){
         NoInternetScreen(
