@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -319,6 +320,7 @@ private fun iniciarSesion(navController: NavController, email: String, password:
                     "Error iniciando sesión",
                     Toast.LENGTH_SHORT,
                 ).show()
+                Log.d("InicioSesion", "${task.exception?.message}")
             }
         }
 }

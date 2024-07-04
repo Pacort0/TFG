@@ -1051,58 +1051,58 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                             )
                                         }
                                     } else {
-                                        if (hayEventos) {
-                                            Column(
-                                                Modifier.fillMaxSize(),
-                                                horizontalAlignment = Alignment.CenterHorizontally
+                                        Column(
+                                            Modifier.fillMaxSize(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Row(
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(5.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Row(
-                                                    Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(5.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Box(modifier = Modifier.fillMaxWidth()) {
-                                                        Text(
-                                                            text = "Eventos próximos",
-                                                            textAlign = TextAlign.Center,
-                                                            fontSize = 24.sp,
-                                                            modifier = Modifier.align(Alignment.Center),
-                                                            color = Color.Black
-                                                        )
-                                                        if (canEditEventos) {
-                                                            IconButton(
-                                                                onClick = {
-                                                                    hayInternet = hayInternet(
-                                                                        connectivityManager
-                                                                    )
-                                                                    if (hayInternet) {
-                                                                        agregaEvento = true
-                                                                    } else {
-                                                                        Toast.makeText(
-                                                                            context,
-                                                                            "No tienes Internet",
-                                                                            Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                    }
-                                                                },
-                                                                modifier = Modifier
-                                                                    .size(58.dp)
-                                                                    .align(Alignment.CenterEnd)
-                                                                    .padding(end = 20.dp)
-                                                            )
-                                                            {
-                                                                Icon(
-                                                                    Icons.Filled.AddCircle,
-                                                                    "Agregar evento",
-                                                                    Modifier.fillMaxSize(),
-                                                                    tint = Color.Black
+                                                Box(modifier = Modifier.fillMaxWidth()) {
+                                                    Text(
+                                                        text = "Eventos próximos",
+                                                        textAlign = TextAlign.Center,
+                                                        fontSize = 24.sp,
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                        color = Color.Black
+                                                    )
+                                                    if (canEditEventos) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                hayInternet = hayInternet(
+                                                                    connectivityManager
                                                                 )
-                                                            }
+                                                                if (hayInternet) {
+                                                                    agregaEvento = true
+                                                                } else {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "No tienes Internet",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                            },
+                                                            modifier = Modifier
+                                                                .size(58.dp)
+                                                                .align(Alignment.CenterEnd)
+                                                                .padding(end = 20.dp)
+                                                        )
+                                                        {
+                                                            Icon(
+                                                                Icons.Filled.AddCircle,
+                                                                "Agregar evento",
+                                                                Modifier.fillMaxSize(),
+                                                                tint = Color.Black
+                                                            )
                                                         }
                                                     }
                                                 }
+                                            }
+                                            if (hayEventos) {
                                                 ListaEventosConfirmados(
                                                     eventosConfirmados,
                                                     canEditEventos,
@@ -1117,12 +1117,12 @@ fun HomeScreen(modifier: Modifier, navController: NavController, mapaOrganizador
                                                         navegaSitio = true
                                                     }
                                                 )
+                                            } else {
+                                                Text(
+                                                    text = "No hay eventos confirmados",
+                                                    color = Color.Black
+                                                )
                                             }
-                                        } else {
-                                            Text(
-                                                text = "No hay eventos confirmados",
-                                                color = Color.Black
-                                            )
                                         }
                                     }
                                 }
@@ -2004,113 +2004,110 @@ fun ListaSitiosConfirmados(
     var showEliminarDialog by remember { mutableStateOf(false) }
     var indexActual by remember { mutableIntStateOf(0) }
 
-    if(sitiosRecogidaConfirmados.isNotEmpty()) {
-        LazyColumn {
-            items(sitiosRecogidaConfirmados.size) { index ->
-                var expanded by remember { mutableStateOf(false) }
-                Card(
+    LazyColumn {
+        items(sitiosRecogidaConfirmados.size) { index ->
+            var expanded by remember { mutableStateOf(false) }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+                    .let {
+                        if (!isHomePage) {
+                            it.clickable {
+                                onSitioEscogido(sitiosRecogidaConfirmados[index])
+                            }
+                        } else it
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = FondoIndvCards
+                )
+            ) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp)
-                        .clip(RoundedCornerShape(15.dp))
-                        .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
-                        .let {
-                            if (!isHomePage) {
-                                it.clickable {
-                                    onSitioEscogido(sitiosRecogidaConfirmados[index])
-                                }
-                            } else it
-                        },
-                    colors = CardDefaults.cardColors(
-                        containerColor = FondoIndvCards
-                    )
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = sitiosRecogidaConfirmados[index].nombreSitio,
-                            color = Color.Black,
-                            modifier = Modifier.weight(1f)
-                        )
-                        if(canEdit) {
-                            Box {
-                                IconButton(onClick = { expanded = true }) {
-                                    Icon(
-                                        Icons.Default.MoreVert,
-                                        contentDescription = "Más opciones",
+                    Text(
+                        text = sitiosRecogidaConfirmados[index].nombreSitio,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if(canEdit) {
+                        Box {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "Más opciones",
+                                    tint = Color.Black
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.background(FondoTarjetaInception)
+                            ) {
+                                DropdownMenuItem(onClick = {
+                                    expanded = false
+                                    onSitioEscogido(sitiosRecogidaConfirmados[index])
+                                },
+                                    text = {Text("Ver en el mapa", color = Color.Black)},
+                                    leadingIcon = { Icon(
+                                        Icons.Filled.LocationOn,
+                                        contentDescription = "Ver en el mapa",
                                         tint = Color.Black
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false },
-                                    modifier = Modifier.background(FondoTarjetaInception)
-                                ) {
-                                    DropdownMenuItem(onClick = {
-                                        expanded = false
-                                        onSitioEscogido(sitiosRecogidaConfirmados[index])
-                                    },
-                                        text = {Text("Ver en el mapa", color = Color.Black)},
-                                        leadingIcon = { Icon(
-                                            Icons.Filled.LocationOn,
-                                            contentDescription = "Ver en el mapa",
-                                            tint = Color.Black
-                                        )},
-                                        modifier = Modifier
-                                            .background(Color.Transparent)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .padding(3.dp)
-                                            .border(
-                                                1.dp,
-                                                ColorLogo,
-                                                RoundedCornerShape(10.dp)
-                                            )
-                                            .wrapContentSize()
-                                    )
-                                    DropdownMenuItem(onClick = {
-                                        expanded = false
-                                        indexActual = index
-                                        showEliminarDialog = true
-                                    },
-                                        text = {Text(text = "Eliminar evento", color = Color.Red)},
-                                        leadingIcon = {Icon(
-                                            Icons.Filled.Delete,
-                                            contentDescription = "Eliminar",
-                                            tint = Color.Black
-                                        )},
-                                        modifier = Modifier
-                                            .background(Color.Transparent)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .padding(3.dp)
-                                            .border(
-                                                1.dp,
-                                                ColorLogo,
-                                                RoundedCornerShape(10.dp)
-                                            )
-                                            .wrapContentSize()
-                                    )
-                                }
+                                    )},
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .padding(3.dp)
+                                        .border(
+                                            1.dp,
+                                            ColorLogo,
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .wrapContentSize()
+                                )
+                                DropdownMenuItem(onClick = {
+                                    expanded = false
+                                    indexActual = index
+                                    showEliminarDialog = true
+                                },
+                                    text = {Text(text = "Eliminar sitio", color = Color.Red)},
+                                    leadingIcon = {Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "Eliminar",
+                                        tint = Color.Black
+                                    )},
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .padding(3.dp)
+                                        .border(
+                                            1.dp,
+                                            ColorLogo,
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .wrapContentSize()
+                                )
                             }
-                        } else {
-                            IconButton(onClick = {
-                                onSitioEscogido(sitiosRecogidaConfirmados[index])
-                            },
-                                modifier = Modifier.weight(0.3f)) {
-                                Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Ver sitio", tint = Color.Black, modifier = Modifier.size(35.dp))
-                            }
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            onSitioEscogido(sitiosRecogidaConfirmados[index])
+                        },
+                            modifier = Modifier.weight(0.3f)) {
+                            Icon(painter = painterResource(id = R.drawable.opened_map), contentDescription = "Ver sitio", tint = Color.Black, modifier = Modifier.size(35.dp))
                         }
                     }
                 }
             }
         }
-    } else {
-        Text(text = "No hay sitios de recogida confirmados", color = Color.Black)
     }
+
     if (showEliminarDialog) {
         AlertDialog(
             containerColor = FondoApp,
@@ -2174,123 +2171,145 @@ fun ListaEventosConfirmados(
     val contexto = LocalContext.current
     val firestore = FirestoreManagerDAL()
 
-    if(eventosConfirmados.isNotEmpty()) {
-        LazyColumn(
-            verticalArrangement = Arrangement.Center
-        ) {
-            items(eventosConfirmados.size) { index ->
-                var actionsExpanded by remember { mutableStateOf(false) }
-                var infoExpanded by remember {mutableStateOf(false)}
-                Card(
+    LazyColumn(
+        verticalArrangement = Arrangement.Center
+    ) {
+        items(eventosConfirmados.size) { index ->
+            var actionsExpanded by remember { mutableStateOf(false) }
+            var infoExpanded by remember {mutableStateOf(false)}
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp)
+                    .clickable { infoExpanded = !infoExpanded }
+                    .clip(RoundedCornerShape(15.dp))
+                    .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
+                colors = CardDefaults.cardColors(
+                    containerColor = FondoIndvCards
+                )
+            ) {
+                Row (
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp)
-                        .clickable { infoExpanded = !infoExpanded }
-                        .clip(RoundedCornerShape(15.dp))
-                        .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp)),
-                    colors = CardDefaults.cardColors(
-                        containerColor = FondoIndvCards
-                    )
-                ) {
-                    Row (
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                        .fillMaxSize()
+                        .padding(5.dp)) {
+                    Column(
+                        Modifier
+                            .weight(0.1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = infoExpanded.let { if (!infoExpanded) {
+                                Icons.Default.KeyboardArrowDown
+                            } else {
+                                Icons.Default.KeyboardArrowUp
+                            } }, contentDescription = "Contraer",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clickable { infoExpanded = !infoExpanded },
+                            tint = Color.Black,)
+                    }
+                    Text(
+                        text = eventosConfirmados[index].titulo,
+                        fontSize = 16.sp,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(5.dp)) {
-                        Column(
-                            Modifier
-                                .weight(0.1f),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = infoExpanded.let { if (!infoExpanded) {
-                                    Icons.Default.KeyboardArrowDown
-                                } else {
-                                    Icons.Default.KeyboardArrowUp
-                                } }, contentDescription = "Contraer",
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clickable { infoExpanded = !infoExpanded },
-                                tint = Color.Black,)
+                            .weight(0.4f)
+                            .padding(5.dp)
+                            .align(Alignment.CenterVertically),
+                        color = Color.Black,
+                    )
+                    Text(
+                        text = eventosConfirmados[index].startDate,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .weight(0.4f)
+                            .align(Alignment.CenterVertically),
+                        fontSize = 16.sp
+                    )
+                    Box (modifier = Modifier.weight(0.1f)) {
+                        IconButton(onClick = { actionsExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.Black)
                         }
-                        Text(
-                            text = eventosConfirmados[index].titulo,
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .weight(0.4f)
-                                .padding(5.dp)
-                                .align(Alignment.CenterVertically),
-                            color = Color.Black,
-                        )
-                        Text(
-                            text = eventosConfirmados[index].startDate,
-                            color = Color.Black,
-                            modifier = Modifier
-                                .weight(0.4f)
-                                .align(Alignment.CenterVertically),
-                            fontSize = 16.sp
-                        )
-                        Box (modifier = Modifier.weight(0.1f)) {
-                            IconButton(onClick = { actionsExpanded = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.Black)
-                            }
-                            DropdownMenu(
-                                expanded = actionsExpanded,
-                                onDismissRequest = { actionsExpanded = false },
-                                modifier = Modifier.background(FondoTarjetaInception)
-                            ) {
-                                DropdownMenuItem(onClick = {
-                                    actionsExpanded = false
-                                    val arrayFecha = eventosConfirmados[index].startDate.split("/")
-                                    val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
-                                    val startMillis: Long = Calendar.getInstance().run {
-                                        set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
-                                        timeInMillis
-                                    }
-                                    val endMillis: Long = Calendar.getInstance().run {
-                                        set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt() + 2, arrayHora[1].toInt())
-                                        timeInMillis
-                                    }
+                        DropdownMenu(
+                            expanded = actionsExpanded,
+                            onDismissRequest = { actionsExpanded = false },
+                            modifier = Modifier.background(FondoTarjetaInception)
+                        ) {
+                            DropdownMenuItem(onClick = {
+                                actionsExpanded = false
+                                val arrayFecha = eventosConfirmados[index].startDate.split("/")
+                                val arrayHora = eventosConfirmados[index].horaComienzo.split(":")
+                                val startMillis: Long = Calendar.getInstance().run {
+                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt(), arrayHora[1].toInt())
+                                    timeInMillis
+                                }
+                                val endMillis: Long = Calendar.getInstance().run {
+                                    set(arrayFecha[2].toInt(), arrayFecha[1].toInt(), arrayFecha[0].toInt(), arrayHora[0].toInt() + 2, arrayHora[1].toInt())
+                                    timeInMillis
+                                }
 
-                                    Intent(Intent.ACTION_INSERT).apply {
-                                        data = CalendarContract.Events.CONTENT_URI
-                                        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
-                                        putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
-                                        putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
-                                        putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
-                                        putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
-                                        putExtra(CalendarContract.Events.DESCRIPTION, "Evento organizado por Regala Navidad")
-                                        putExtra(CalendarContract.Events.HAS_ALARM, 1)
-                                    }.also { intent ->
-                                        startActivity(contexto, intent, null)
-                                    }
-                                },
-                                    text = {Text("Añadir al calendario", color = Color.Black)},
-                                    leadingIcon = {Icon(
-                                        Icons.Filled.DateRange,
-                                        contentDescription = "Añadir al calendario",
-                                        tint = Color.Black
-                                    )},
-                                    modifier = Modifier
-                                        .background(Color.Transparent)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .padding(3.dp)
-                                        .border(
-                                            1.dp,
-                                            ColorLogo,
-                                            RoundedCornerShape(10.dp)
-                                        )
-                                        .wrapContentSize())
+                                Intent(Intent.ACTION_INSERT).apply {
+                                    data = CalendarContract.Events.CONTENT_URI
+                                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
+                                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                                    putExtra(CalendarContract.Events.TITLE, eventosConfirmados[index].titulo)
+                                    putExtra(CalendarContract.Events.EVENT_LOCATION, eventosConfirmados[index].lugar.direccionSitio)
+                                    putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                    putExtra(CalendarContract.Events.DESCRIPTION, "Evento organizado por Regala Navidad")
+                                    putExtra(CalendarContract.Events.HAS_ALARM, 1)
+                                }.also { intent ->
+                                    startActivity(contexto, intent, null)
+                                }
+                            },
+                                text = {Text("Añadir al calendario", color = Color.Black)},
+                                leadingIcon = {Icon(
+                                    Icons.Filled.DateRange,
+                                    contentDescription = "Añadir al calendario",
+                                    tint = Color.Black
+                                )},
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .padding(3.dp)
+                                    .border(
+                                        1.dp,
+                                        ColorLogo,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .wrapContentSize())
+                            DropdownMenuItem(onClick = {
+                                actionsExpanded = false
+                                onEventoEscogido(eventosConfirmados[index])
+                            },
+                                text = {Text("Ver en el mapa", color = Color.Black)},
+                                leadingIcon = { Icon(
+                                    Icons.Filled.LocationOn,
+                                    contentDescription = "Ver en el mapa",
+                                    tint = Color.Black
+                                )},
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .padding(3.dp)
+                                    .border(
+                                        1.dp,
+                                        ColorLogo,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .wrapContentSize()
+                            )
+                            if (canEdit) {
                                 DropdownMenuItem(onClick = {
                                     actionsExpanded = false
-                                    onEventoEscogido(eventosConfirmados[index])
+                                    indexActual = index
+                                    showEliminarDialog = true
                                 },
-                                    text = {Text("Ver en el mapa", color = Color.Black)},
-                                    leadingIcon = { Icon(
-                                        Icons.Filled.LocationOn,
-                                        contentDescription = "Ver en el mapa",
+                                    text = {Text(text = "Eliminar evento", color = Color.Red)},
+                                    leadingIcon = {Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "Eliminar",
                                         tint = Color.Black
                                     )},
                                     modifier = Modifier
@@ -2304,63 +2323,38 @@ fun ListaEventosConfirmados(
                                         )
                                         .wrapContentSize()
                                 )
-                                if (canEdit) {
-                                    DropdownMenuItem(onClick = {
-                                        actionsExpanded = false
-                                        indexActual = index
-                                        showEliminarDialog = true
-                                    },
-                                        text = {Text(text = "Eliminar evento", color = Color.Red)},
-                                        leadingIcon = {Icon(
-                                            Icons.Filled.Delete,
-                                            contentDescription = "Eliminar",
-                                            tint = Color.Black
-                                        )},
-                                        modifier = Modifier
-                                            .background(Color.Transparent)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .padding(3.dp)
-                                            .border(
-                                                1.dp,
-                                                ColorLogo,
-                                                RoundedCornerShape(10.dp)
-                                            )
-                                            .wrapContentSize()
-                                    )
-                                }
                             }
                         }
                     }
-                    if (infoExpanded){
-                        Column (
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .wrapContentHeight()
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Row (
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ){
-                                Text(text = "Sitio: ${eventosConfirmados[index].lugar.nombreSitio}",
-                                    color = Color.Black)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "|", fontSize = 28.sp, color = Color.Black)
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(text = "Hora: ${eventosConfirmados[index].horaComienzo}",
-                                    color = Color.Black)
-                            }
+                }
+                if (infoExpanded){
+                    Column (
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .wrapContentHeight()
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Row (
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ){
+                            Text(text = "Sitio: ${eventosConfirmados[index].lugar.nombreSitio}",
+                                color = Color.Black)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "|", fontSize = 28.sp, color = Color.Black)
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(text = "Hora: ${eventosConfirmados[index].horaComienzo}",
+                                color = Color.Black)
                         }
                     }
                 }
             }
         }
-    } else {
-        Text(text = "No hay eventos confirmados", color = Color.Black)
     }
+
     if (showEliminarDialog) {
         AlertDialog(
             containerColor = FondoApp,

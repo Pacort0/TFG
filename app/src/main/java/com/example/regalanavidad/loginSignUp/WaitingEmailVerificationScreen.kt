@@ -123,6 +123,7 @@ fun WaitForEmailVerificationScreen(navController: NavController) {
             user = auth.currentUser
             auth.currentUser?.reload() // Recargamos el usuario para comprobar cualquier actualización
             if (user?.isEmailVerified == true) {
+                Toast.makeText(context, "Iniciando sesión", Toast.LENGTH_SHORT).show()
                 // Si el email se ha verificado, se navega a la home screen
                 val intent = Intent(context, Home::class.java)
                 intent.putExtra("correo", email)

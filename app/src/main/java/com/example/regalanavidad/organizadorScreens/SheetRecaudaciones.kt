@@ -169,7 +169,7 @@ fun PaginaSheetRecaudaciones(navController: NavController, onMapaCambiado: (Bool
                             onExpandedChange = { expanded = !expanded },
                             modifier = Modifier
                                 .clip(RoundedCornerShape(15.dp))
-                                .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+                                .border(1.dp, ColorLogo, RoundedCornerShape(15.dp))
                                 .background(FondoTarjetaInception)
                         ) {
                             TextField(

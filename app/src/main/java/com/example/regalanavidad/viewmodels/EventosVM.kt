@@ -20,8 +20,15 @@ class EventosVM: ViewModel() {
     val proximoEvento: StateFlow<Evento> = _proximoEvento.asStateFlow()
     init {
         viewModelScope.launch {
-            _proximoEvento.value = firestore.getProximoEvento()!!
-            Log.d("ProxEvento", "Proximo evento: ${_proximoEvento.value.titulo}")
+            if (firestore.getProximoEvento() == null) {
+                Log.d("ProxEvento", "No hay proximo evento")
+                val evento = Evento()
+                evento.titulo = "Sin eventos próximos"
+                _proximoEvento.value = evento
+            } else {
+                _proximoEvento.value = firestore.getProximoEvento()!!
+                Log.d("ProxEvento", "Proximo evento: ${_proximoEvento.value.titulo}")
+            }
         }
     }
 }

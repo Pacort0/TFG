@@ -70,7 +70,7 @@ fun ProfileScreen() {
                 .size(100.dp)
                 .clip(CircleShape)
         )
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(50.dp))
 
         // Editable username
         /*OutlinedTextField(
@@ -89,17 +89,17 @@ fun ProfileScreen() {
                 imeAction = ImeAction.Next
             ),
         )*/
-        Text(text = "Nombre de usuario: ${usuario.nombre}", color = Color.Black, fontSize = 18.sp)
+        Text(text = "Usuario: ${usuario.nombre}", color = Color.Black, fontSize = 18.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = "Dirección de correi: ${usuario.correo}", color = Color.Black, fontSize = 18.sp)
+        Text(text = "Correo: ${usuario.correo}", color = Color.Black, fontSize = 18.sp)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = "Rol de usuario: ${usuario.nombreRango}", color = Color.Black, fontSize = 18.sp)
+        Text(text = "Rol: ${usuario.nombreRango}", color = Color.Black, fontSize = 18.sp)
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         // Clickable "Cerrar sesión" text
         ClickableText(
