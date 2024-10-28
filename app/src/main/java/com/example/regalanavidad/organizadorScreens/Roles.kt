@@ -267,44 +267,61 @@ fun TabRoles(voluntarios: Boolean){
                         if (voluntarios) {
                             usuario.nombreRango == "Voluntario"
                         } else {
-                            usuario.nombreRango != "Voluntario"
+                            usuario.nombreRango != "Voluntario" && usuario.nombreRango != "Coordinador"
                         }
                     }) }
-                    LazyColumn (
-                        Modifier
-                            .fillMaxSize()
-                            .weight(1f)
-                            .padding(8.dp)) {
+                    Column (
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ){
                         if (usuariosFiltrados.isEmpty()){
-                            item {
-                                Text("Todos los usuarios son Voluntarios", Modifier.padding(8.dp))
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ){
+                                Icon(
+                                    painter = painterResource(id = R.drawable.no_users_icon),
+                                    contentDescription = "No hay usuarios",
+                                    modifier = Modifier.size(160.dp),
+                                    tint = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(if (voluntarios) "Todos los usuarios tienen rol" else "Todos los usuarios son Coordinadores",
+                                    Modifier.padding(8.dp), color = Color.Black)
                             }
                         } else {
-                            items(usuariosFiltrados) { usuarioRegistrado ->
-                                if (usuarioRegistrado.nombreRango != "Coordinador"){
-                                    Card (
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(4.dp)
-                                            .clip(RoundedCornerShape(15.dp))
-                                            .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
-                                            .wrapContentHeight(),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = FondoIndvCards
-                                        )) {
-                                        Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                                            Column (Modifier.weight(0.4f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                                Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
-                                            }
-                                            Column (Modifier.weight(0.6f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-                                                RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                            LazyColumn (
+                                Modifier
+                                    .fillMaxSize()
+                                    .weight(1f)
+                                    .padding(8.dp)) {
+                                items(usuariosFiltrados) { usuarioRegistrado ->
+                                    if (usuarioRegistrado.nombreRango != "Coordinador"){
+                                        Card (
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(4.dp)
+                                                .clip(RoundedCornerShape(15.dp))
+                                                .border(0.dp, Color.Transparent, RoundedCornerShape(15.dp))
+                                                .wrapContentHeight(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = FondoIndvCards
+                                            )) {
+                                            Row (horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+                                                Column (Modifier.weight(0.4f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                                    Text(text = usuarioRegistrado.nombre, fontSize = 18.sp, color = Color.Black)
+                                                }
+                                                Column (Modifier.weight(0.6f), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
+                                                    RolesSubMenu(drawerState, scope, usuarioRegistrado)
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-
                     }
                 }
             }

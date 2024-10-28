@@ -348,8 +348,16 @@ fun TareasTabScreen(completadas: Boolean){
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.no_tasks),
+                                    contentDescription = "No hay tareas",
+                                    modifier = Modifier.size(160.dp),
+                                    tint = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Text(
-                                    text = "No hay tareas pendientes",
+                                    text = if (completadas) "No hay tareas completadas" else "No hay tareas pendientes",
+                                    color = Color.Black,
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
                             }
